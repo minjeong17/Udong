@@ -18,7 +18,7 @@ public class AesGcmCrypto {
     private static final int GCM_TAG_LENGTH_BITS = 128;   // 16바이트 태그
     private static final int IV_LENGTH_BYTES = 12;        // 권장 12바이트
 
-    @Value("${app.crypto.aes.key-base64}")
+    @Value("${app.crypto.aes256_key_b64}")
     private String keyBase64;
 
     private SecretKey key;

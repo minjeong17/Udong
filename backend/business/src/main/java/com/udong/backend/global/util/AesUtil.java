@@ -15,7 +15,7 @@ public class AesUtil {
 
     private final SecretKeySpec keySpec;
 
-    public AesUtil(@Value("${app.crypto.aes.key-base64}") String base64Key) {
+    public AesUtil(@Value("${app.crypto.aes256_key_b64}") String base64Key) {
         byte[] keyBytes = Base64.getDecoder().decode(base64Key);
         this.keySpec = new SecretKeySpec(keyBytes, "AES");
     }

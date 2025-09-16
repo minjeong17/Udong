@@ -1,6 +1,6 @@
 spring:
   config:
-    import: "optional:file:./backend/business/.env[.properties]"
+    import: "optional:file:./.env[.properties]"
   application:
     name: backend
   datasource:
@@ -11,7 +11,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -31,7 +31,7 @@ jwt:
 
 app:
   crypto:
-    # 32¹ÙÀÌÆ® Å°(Base64) ? È¯°æº¯¼ö APP_AES_KEY_B64 ·Î ÁÖÀÔ ±ÇÀå
+    # 32ë°”ì´íŠ¸ í‚¤(Base64) â€” í™˜ê²½ë³€ìˆ˜ APP_AES_KEY_B64 ë¡œ ì£¼ì… ê¶Œì¥
     aes256_key_b64: ${APP_AES_KEY_B64:UBrwY6Zk70SmfGKKz+HX7gsjF2MoPRx7YVbRI/UxiNE=}
     key_version: 1
 
