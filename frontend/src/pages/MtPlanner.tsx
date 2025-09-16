@@ -74,11 +74,6 @@ const MtPlanner: React.FC<MtPlannerProps> = ({onNavigateToOnboarding, currentRou
       <Header onNavigateToOnboarding={onNavigateToOnboarding} currentRoute={currentRoute} />
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-auto">
-<<<<<<< HEAD
-=======
-
-
->>>>>>> cdc24e12583f2e2d4f87d56ef9e35b82918101e8
         {/* Content */}
         <div className="p-8 flex-1 overflow-auto">
           {!mtPlan ? (
@@ -124,32 +119,19 @@ const MtPlanner: React.FC<MtPlannerProps> = ({onNavigateToOnboarding, currentRou
             </div>
           ) : (
             <div className="max-w-6xl mx-auto">
-<<<<<<< HEAD
                 <div className="flex justify-between items-center mb-8 pt-10">
-=======
-                <div className="flex justify-between items-center mb-8 pt-8">
->>>>>>> cdc24e12583f2e2d4f87d56ef9e35b82918101e8
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">MT 계획서</h2>
                     <p className="text-gray-600">생성된 MT 계획을 확인하고 수정하세요</p>
                   </div>
                   <div className="flex gap-3">
                     <button
-<<<<<<< HEAD
                      onClick={() => {
                       setMtPlan(null);
                       setFormData({ duration: "", weather: "", participants: "", genderRatio: "", specialNotes: "" });
                       setShowPlanModal(true);
                      }}
                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
-=======
-                      onClick={() => {
-                      setMtPlan(null);
-                      setFormData({ duration: "", weather: "", participants: "", genderRatio: "", specialNotes: "" });
-                      setShowPlanModal(true);
-                    }}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
->>>>>>> cdc24e12583f2e2d4f87d56ef9e35b82918101e8
                     >
                       <span>🔄</span>
                       <span>새로 만들기</span>
