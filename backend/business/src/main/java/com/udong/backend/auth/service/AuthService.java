@@ -94,6 +94,16 @@ public class AuthService {
                 .build();
     }
 
+    /** 단일 기기 로그아웃: 전달받은 RT 무효화(삭제) */
+    @Transactional  // ← 쓰기 트랜잭션 (readOnly 금지)
+    public void logout(String rawRefreshToken) {
+        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            return; // idempotent: 토큰 없으면 그냥 종료
+        }
+        String hash = sha256(rawRefreshToken);
+        refreshTokenRepository.deleteByRefreshTokenHash(hash); // 존재하지 않아도 0건 삭제로 끝
+    }
+
     private static String sha256(String v) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
