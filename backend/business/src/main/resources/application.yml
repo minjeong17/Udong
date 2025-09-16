@@ -1,0 +1,45 @@
+spring:
+  config:
+    import: "optional:file:./.env[.properties]"
+  application:
+    name: backend
+  datasource:
+    url: jdbc:mysql://ssafy-mysql-db.mysql.database.azure.com:3306/S13P21A310?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8
+    username: S13P21A310
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+server:
+  servlet:
+    context-path: /api
+  error:
+    include-stacktrace: never
+    include-message: always
+
+jwt:
+  secret:
+    key: 6vYp9dR2xL8fTzQ1wE7hK3nB5mU4aJ2oC6rZ8tQ0yX9dL3kF1pS7uW5vE3hY9tM2
+
+app:
+  crypto:
+    # 32바이트 키(Base64) — 환경변수 APP_AES_KEY_B64 로 주입 권장
+    aes256_key_b64: ${APP_AES_KEY_B64:UBrwY6Zk70SmfGKKz+HX7gsjF2MoPRx7YVbRI/UxiNE=}
+    key_version: 1
+
+logging:
+  level:
+    com.udong.backend.external.gms: DEBUG
+    org.springframework.web.client: DEBUG
+
+cloud:
+  aws:
+    region: ap-southeast-2

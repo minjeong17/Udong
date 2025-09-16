@@ -38,6 +38,7 @@ export default {
       animation: {
         'mascot-wiggle': 'mascot-wiggle 2s ease-in-out infinite',
         'float': 'float 6s ease-in-out infinite',
+        'bounce-slow': 'float 3s ease-in-out infinite',
         'drift': 'drift 15s ease-in-out infinite',
         'drift-reverse': 'drift-reverse 20s ease-in-out infinite',
       }

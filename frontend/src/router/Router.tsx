@@ -5,10 +5,11 @@ import Signup from '../pages/Signup'
 import ClubSelection from '../pages/ClubSelection'
 import ClubCreation from '../pages/ClubCreation'
 import ClubList from '../pages/ClubList'
+import ClubDashboard from '../pages/ClubDashboard'
 import Notification from '../pages/Notification'
 import MtPlanner from '../pages/MtPlanner'
 
-type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'notification' | 'mt-planner'
+type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner'
 
 const Router = () => {
   const [currentRoute, setCurrentRoute] = useState<Route>(() => {
@@ -18,6 +19,7 @@ const Router = () => {
     if (path === '/club-selection') return 'club-selection'
     if (path === '/club-creation') return 'club-creation'
     if (path === '/club-list') return 'club-list'
+    if (path === '/club-dashboard') return 'club-dashboard'
     if (path === '/notification') return 'notification'
     if (path === '/mt-planner') return 'mt-planner'
     return 'onboarding'
@@ -37,6 +39,7 @@ const Router = () => {
       else if (path === '/club-selection') setCurrentRoute('club-selection')
       else if (path === '/club-creation') setCurrentRoute('club-creation')
       else if (path === '/club-list') setCurrentRoute('club-list')
+      else if (path === '/club-dashboard') setCurrentRoute('club-dashboard')
       else if (path === '/notification') setCurrentRoute('notification')
       else if (path === '/mt-planner') setCurrentRoute('mt-planner')
       else setCurrentRoute('onboarding')
@@ -75,6 +78,12 @@ const Router = () => {
       />
     case 'club-list':
       return <ClubList
+        onNavigateToOnboarding={() => navigate('onboarding')}
+        onNavigateToClubDashboard={() => navigate('club-dashboard')}
+        currentRoute={currentRoute}
+      />
+    case 'club-dashboard':
+      return <ClubDashboard
         onNavigateToOnboarding={() => navigate('onboarding')}
         currentRoute={currentRoute}
       />

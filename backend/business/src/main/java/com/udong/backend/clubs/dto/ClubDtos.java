@@ -1,0 +1,23 @@
+package com.udong.backend.clubs.dto;
+
+import jakarta.validation.constraints.*;
+
+public class ClubDtos {
+    public record CreateReq(
+            @NotBlank String name,
+            @NotBlank String category,
+            String description,
+            @NotNull Integer leaderUserId,
+            @NotBlank String accountNumber            // ✅ 추가
+    ) {}
+
+    public record UpdateReq(String name, String category, String description) {}
+
+    // ✅ accountMasked 추가 (평문은 절대 내보내지 않음)
+    public record Res(Integer id, String name, String category, String description,
+                      String codeUrl, Integer activeMascotId, String accountMasked) {}
+
+    public record InviteCodeRes(String codeUrl) {}
+    public record JoinByCodeReq(@NotBlank String code) {}
+}
+

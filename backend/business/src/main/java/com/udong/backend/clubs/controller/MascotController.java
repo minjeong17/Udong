@@ -1,0 +1,67 @@
+package com.udong.backend.clubs.controller;
+
+import com.udong.backend.clubs.entity.Mascot;
+import com.udong.backend.clubs.service.MascotService;
+import com.udong.backend.clubs.dto.MascotCreateReq;
+import com.udong.backend.clubs.dto.MascotDtos;
+import com.udong.backend.global.dto.response.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/v1/clubs/{clubId}")
+@RequiredArgsConstructor
+public class MascotController {
+
+    private final MascotService mascots;
+
+    /** 현재 활성 마스코트 조회 */
+    @GetMapping("/mascot")
+    public ResponseEntity<com.udong.backend.global.dto.response.ApiResponse<MascotDtos.Res>> active(@PathVariable Integer clubId) {
+        Mascot m = mascots.getActive(clubId);
+        MascotDtos.Res body = (m == null)
+                ? null
+                : new MascotDtos.Res(m.getId(), m.getClub().getId(), m.getImageUrl(), m.getPromptMeta(), m.getCreatedAt());
+        return ResponseEntity.ok(ApiResponse.ok(body));  // m 없으면 data=null 로 통일
+    }
+
+    /** 마스코트 생성(=reroll) — 바디는 선택적 (clubCategory, activate만 사용) */
+    @PostMapping("/mascot-create")
+    public ResponseEntity<ApiResponse<MascotDtos.Res>> create(
+            @PathVariable Integer clubId,
+            @RequestBody(required = false) MascotCreateReq req
+    ) {
+        Mascot m = mascots.reroll(clubId, req);
+        MascotDtos.Res body = new MascotDtos.Res(m.getId(), m.getClub().getId(), m.getImageUrl(), m.getPromptMeta(), m.getCreatedAt());
+        return ResponseEntity.status(201).body(ApiResponse.ok(body));
+    }
+
+    /** 마스코트 목록 페이징 조회(최신순) */
+    @GetMapping("/mascots")
+    public ResponseEntity<ApiResponse<Page<MascotDtos.Res>>> list(
+            @PathVariable Integer clubId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<MascotDtos.Res> data = mascots.list(clubId, page, size)
+                .map(m -> new MascotDtos.Res(m.getId(), m.getClub().getId(), m.getImageUrl(), m.getPromptMeta(), m.getCreatedAt()));
+        return ResponseEntity.ok(ApiResponse.ok(data));
+    }
+
+    /** 특정 마스코트 단건 조회 */
+    @GetMapping("/mascots/{mascotId}")
+    public ResponseEntity<ApiResponse<MascotDtos.Res>> get(@PathVariable Integer clubId, @PathVariable Integer mascotId) {
+        Mascot m = mascots.get(clubId, mascotId);
+        MascotDtos.Res body = new MascotDtos.Res(m.getId(), m.getClub().getId(), m.getImageUrl(), m.getPromptMeta(), m.getCreatedAt());
+        return ResponseEntity.ok(ApiResponse.ok(body));
+    }
+
+    /** 특정 마스코트를 활성 마스코트로 지정 */
+    @PostMapping("/mascots/{mascotId}:activate")
+    public ResponseEntity<ApiResponse<String>> activate(@PathVariable Integer clubId, @PathVariable Integer mascotId) {
+        mascots.activate(clubId, mascotId);
+        return ResponseEntity.ok(ApiResponse.ok("activated"));
+    }
+}

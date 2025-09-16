@@ -3,6 +3,7 @@ import Header from '../components/Header';
 
 interface ClubListProps {
   onNavigateToOnboarding: () => void;
+  onNavigateToClubDashboard?: () => void;
   currentRoute?: string;
 }
 
@@ -18,7 +19,7 @@ interface Club {
   image?: string;
 }
 
-const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, currentRoute }) => {
+const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateToClubDashboard, currentRoute }) => {
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [inviteCode, setInviteCode] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -112,9 +113,9 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, currentRout
   };
 
   const handleEnterClub = () => {
-    if (selectedClub) {
+    if (selectedClub && onNavigateToClubDashboard) {
       console.log('Entering club:', selectedClub.name);
-      // 실제로는 동아리 내부 페이지로 이동
+      onNavigateToClubDashboard();
     }
   };
 
