@@ -1,7 +1,7 @@
 package com.udong.backend.clubs.service;
 
 import com.udong.backend.clubs.external.gms.GmsImageClient;
-import com.udong.backend.clubs.s3.S3Uploader;
+import com.udong.backend.global.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -39,7 +39,7 @@ public class MascotImageService {
     @Value("${S3_PUBLIC_BASE_URL:}") private String s3Base;
     @Value("${S3_BUCKET}") private String bucket;
     @Value("${AWS_REGION}") private String region;
-    @Value("${S3_KEY_PREFIX:clubs}") private String keyPrefix; // ← 너가 선택한 'clubs'
+    @Value("${S3_PREFIX_CLUBS:clubs}") private String keyPrefix; // ← 너가 선택한 'clubs'
 
     public record Result(String imageUrl, String s3Key, String promptUsed) {}
 

@@ -1,6 +1,7 @@
 package com.udong.backend.users.entity;
 
 import com.udong.backend.auth.entity.RefreshToken;
+import com.udong.backend.events.entity.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -86,6 +87,22 @@ public class User {
         availabilities.remove(availability);
         availability.setUser(null);
     }
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Event> createdEvents = new ArrayList<>();
+
+    // 편의 메서드
+    public void addCreatedEvent(Event event) {
+        createdEvents.add(event);
+        event.setCreatedBy(this);
+    }
+
+    public void removeCreatedEvent(Event event) {
+        createdEvents.remove(event);
+        event.setCreatedBy(null);
+    }
+
 
     public enum Gender { M, F }
 

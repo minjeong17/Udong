@@ -1,4 +1,4 @@
-package com.udong.backend.clubs.s3;
+package com.udong.backend.global.s3;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
