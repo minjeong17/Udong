@@ -1,6 +1,7 @@
 package com.udong.backend.dutchpay.service;
 
 import com.udong.backend.dutchpay.dto.CreateDutchpayRequest;
+import com.udong.backend.dutchpay.dto.DutchpayListResponse;
 import com.udong.backend.dutchpay.entity.Dutchpay;
 import com.udong.backend.dutchpay.entity.DutchpayParticipant;
 import com.udong.backend.dutchpay.repository.DutchpayRepository;
@@ -12,15 +13,20 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -92,6 +98,30 @@ public class DutchpayService {
         dutchpayRepository.save(dutchpay);
     }
 
+    /**
+     * 현재 사용자(userId)가 '참여자'로 포함된 정산 목록을 status로 필터링해서 반환
+     * status:  "open" | "completed"
+     */
+    public List<DutchpayListResponse> findByUserAndStatus(Long userId, String status) {
+        if (status == null || status.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "status 파라미터는 필수입니다."
+            );
+        }
+
+        List<DutchpayListResponse> entities;
+        String s = status.toLowerCase(Locale.ROOT).trim();
+        return switch (s) {
+            case "open"      -> dutchpayRepository.findSummaryByUserAndStatus(userId, false);
+            case "completed" -> dutchpayRepository.findSummaryByUserAndStatus(userId, true);
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "status는 open 또는 completed만 허용됩니다."
+            );
+        };
+    }
+
+
+
     // --------- helper ---------
 
     /** 파일 기본 검증: 5MB 이하 & image/* */
@@ -120,5 +150,25 @@ public class DutchpayService {
         } catch (IOException e) {
             throw new RuntimeException("이미지 처리 실패", e);
         }
+    }
+
+    private DutchpayListResponse toListResponse(Dutchpay d) {
+        int participantCount = (d.getParticipants() == null) ? 0 : d.getParticipants().size();
+
+        // Event.id가 Integer라면 다음처럼 Long으로 변환
+        Long eventId = (d.getEvent() == null || d.getEvent().getId() == null)
+                ? null
+                : d.getEvent().getId().longValue();
+
+        String eventTitle = (d.getEvent() == null) ? null : d.getEvent().getTitle();
+
+        return DutchpayListResponse.builder()
+                .id(d.getId())
+                .createdAt(d.getCreatedAt())
+                .note(d.getNote())
+                .participantCount(participantCount)
+                .eventId(eventId)
+                .eventTitle(eventTitle)
+                .build();
     }
 }
