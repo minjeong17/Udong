@@ -33,8 +33,8 @@ public class RefreshToken {
     @Column(name = "refresh_token_hash", nullable = false, length = 128)
     private String refreshTokenHash;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", unique = true)  // 유저당 1개 보장
     private User user;
 
     // 첫 생성 시각(첫 로그인/최초 발급)

@@ -1,4 +1,4 @@
-package com.udong.backend.clubs.crypto;
+package com.udong.backend.global.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

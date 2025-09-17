@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -14,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -59,7 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String userId = jwtTokenProvider.getUserId(token); // 문자열 또는 Long.toString()
                     String role   = jwtTokenProvider.getRole(token);   // e.g., "ROLE_USER"
 
-                    var authorities = List.of(new SimpleGrantedAuthority(role));
+                    Collection<? extends GrantedAuthority> authorities = (role != null)
+                            ? List.of(new SimpleGrantedAuthority(role))
+                            : java.util.Collections.emptyList();   // ← null이면 빈 권한
                     var auth = new UsernamePasswordAuthenticationToken(
                             userId,               // principal (간단히 userId 사용)
                             null,                 // credentials
