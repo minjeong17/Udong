@@ -77,17 +77,15 @@ pipeline {
                             set -e
                             echo "--- Copying .env file to host ---"
                             
-                            # 기존 파일 처리 (잠겨있을 수 있으므로 이름 변경 방식 사용)
+                            # 기존 파일이 있다면 제거 (파일 잠김 문제 해결)
                             ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "
                                 if [ -f /home/ubuntu/udong/backend/business/.env ]; then
-                                    echo 'Backing up existing .env file'
-                                    cp /home/ubuntu/udong/backend/business/.env /home/ubuntu/udong/backend/business/.env.backup || true
-                                    echo 'Moving existing .env file (to avoid file lock)'
-                                    mv /home/ubuntu/udong/backend/business/.env /home/ubuntu/udong/backend/business/.env.old || true
+                                    echo 'Removing existing .env file'
+                                    rm -f /home/ubuntu/udong/backend/business/.env
                                 fi
                             "
                             
-                            # 새 파일 생성 (파일 잠김 문제 해결됨)
+                            # 새 파일 생성
                             ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "cat > /home/ubuntu/udong/backend/business/.env" < "$ENV_FILE"
                             
                             # 권한 설정
