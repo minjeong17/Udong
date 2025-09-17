@@ -73,12 +73,31 @@ pipeline {
                 echo 'Preparing environment files...'
                 withCredentials([file(credentialsId: 'business-api-env', variable: 'ENV_FILE')]) {
                     sshagent(credentials: ['host-ssh-key']) {
-                        sh """
+                        sh '''
                             set -e
                             echo "--- Copying .env file to host ---"
-                            scp -o StrictHostKeyChecking=no \${ENV_FILE} ${HOST_USER}@${HOST_IP}:${PROJECT_DIR}/backend/business/.env
+                            
+                            # 기존 파일 백업 (있다면)
+                            ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "
+                                if [ -f /home/ubuntu/udong/backend/business/.env ]; then
+                                    cp /home/ubuntu/udong/backend/business/.env /home/ubuntu/udong/backend/business/.env.backup
+                                    echo 'Existing .env file backed up'
+                                fi
+                            "
+                            
+                            # SSH cat 리다이렉션으로 파일 전송 (SCP 대신 사용)
+                            ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "cat > /home/ubuntu/udong/backend/business/.env" < "$ENV_FILE"
+                            
+                            # 생성 확인
+                            ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "
+                                echo 'New .env file created:'
+                                ls -la /home/ubuntu/udong/backend/business/.env
+                                echo 'First 3 lines (without values):'
+                                head -3 /home/ubuntu/udong/backend/business/.env | cut -d'=' -f1
+                            "
+                            
                             echo "Environment file copied successfully"
-                        """
+                        '''
                     }
                 }
             }
@@ -100,6 +119,7 @@ pipeline {
                                     set -e
                                     echo "--- Building Frontend ---"
                                     cd ${PROJECT_DIR}
+                                    # 캐시 없이 빌드하여 최신 변경사항 반영
                                     if ! docker-compose build --no-cache frontend; then
                                         echo "Frontend build failed!"
                                         docker-compose logs frontend || true
@@ -115,6 +135,7 @@ pipeline {
                                     set -e
                                     echo "--- Deploying Frontend ---"
                                     cd ${PROJECT_DIR}
+                                    # 의존성 없이 해당 서비스만 재시작
                                     docker-compose up -d --no-deps frontend
                                     echo "Frontend deployment completed!"
                                 '''
@@ -137,6 +158,12 @@ pipeline {
                                     set -e
                                     echo "--- Building Business API ---"
                                     cd ${PROJECT_DIR}
+                                    # .env 파일 존재 확인
+                                    if [ ! -f backend/business/.env ]; then
+                                        echo "ERROR: .env file not found!"
+                                        exit 1
+                                    fi
+                                    # 캐시 없이 빌드하여 최신 변경사항 반영
                                     if ! docker-compose build --no-cache business-api; then
                                         echo "Business API build failed!"
                                         docker-compose logs business-api || true
@@ -152,6 +179,7 @@ pipeline {
                                     set -e
                                     echo "--- Deploying Business API ---"
                                     cd ${PROJECT_DIR}
+                                    # 의존성 없이 해당 서비스만 재시작
                                     docker-compose up -d --no-deps business-api
                                     echo "Business API deployment completed!"
                                 '''
@@ -174,6 +202,7 @@ pipeline {
                                     set -e
                                     echo "--- Building Chat API ---"
                                     cd ${PROJECT_DIR}
+                                    # 캐시 없이 빌드하여 최신 변경사항 반영
                                     if ! docker-compose build --no-cache chat-api; then
                                         echo "Chat API build failed!"
                                         docker-compose logs chat-api || true
@@ -189,6 +218,7 @@ pipeline {
                                     set -e
                                     echo "--- Deploying Chat API ---"
                                     cd ${PROJECT_DIR}
+                                    # 의존성 없이 해당 서비스만 재시작
                                     docker-compose up -d --no-deps chat-api
                                     echo "Chat API deployment completed!"
                                 '''
@@ -207,6 +237,7 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
                             echo "--- Cleanup ---"
+                            # 사용하지 않는 이미지 정리로 디스크 공간 확보
                             docker image prune -f
                             echo "Cleanup completed!"
                         '''
@@ -227,7 +258,7 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed!'
-            // 실패 시 알림 로직을 여기에 추가할 수 있음
+            // 실패 시 진단 정보 수집
             sshagent(credentials: ['host-ssh-key']) {
                 sh """
                     ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
