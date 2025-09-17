@@ -2,6 +2,7 @@ package com.udong.backend.dutchpay.controller;
 
 import com.udong.backend.dutchpay.dto.CreateDutchpayRequest;
 import com.udong.backend.dutchpay.dto.DutchpayDetailResponse;
+import com.udong.backend.dutchpay.dto.DutchpayListResponse;
 import com.udong.backend.dutchpay.service.DutchpayService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
@@ -39,7 +40,6 @@ public class DutchpayController {
             @RequestParam Integer amount,
             @RequestParam("participantUserIds") List<Long> participantUserIds
     ) {
-        System.out.println("dutchpayyyyyyyyyyyy");
         Long userId = securityUtils.currentUserId();
 
         // DTO로 묶고 서비스 호출
@@ -54,5 +54,15 @@ public class DutchpayController {
         return ResponseEntity.ok(ApiResponse.ok("정산 생성 완료"));
     }
 
+    /** 내 정산 목록 조회: GET /api/v1/dutchpay?status=open,completed */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<DutchpayListResponse>>> getMyDutchpays(
+            @RequestParam(name = "status", required = false) String status) {
+        Long userId = securityUtils.currentUserId();
+
+        List<DutchpayListResponse> list = dutchpayService.findByUserAndStatus(userId, status);
+
+        return ResponseEntity.ok(ApiResponse.ok(list));
+    }
 
 }
