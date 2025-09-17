@@ -39,7 +39,8 @@ public class SecurityConfig {
                                 "/v1/users/signup",
                                 "/v1/auth/login",
                                 "/v1/auth/refresh",
-                                "/v1/auth/logout"
+                                "/v1/auth/logout",
+                                "/v1/codes/details"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
