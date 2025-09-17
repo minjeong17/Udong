@@ -1,13 +1,30 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
+import Sidebar from '../components/Sidebar';
+import Notification from './Notification';
 
-export default function ChatPage() {
+interface ChatProps {
+  onNavigateToOnboarding: () => void;
+  onNavigateToClubDashboard?: () => void;
+  onNavigateToMtPlanner?: () => void;
+  onNavigateToSettlement?: () => void;
+  onNavigateToVote?: () => void;
+}
+
+export default function ChatPage({
+  onNavigateToOnboarding,
+  onNavigateToClubDashboard,
+  onNavigateToMtPlanner,
+  onNavigateToSettlement,
+  onNavigateToVote,
+}: ChatProps) {
   const [selectedChannel, setSelectedChannel] = useState("general")
   const [message, setMessage] = useState("")
   const [showVoteModal, setShowVoteModal] = useState(false)
   const [showSettlementModal, setShowSettlementModal] = useState(false)
   const [showMemberCheckModal, setShowMemberCheckModal] = useState(false)
   const [showParticipantsModal, setShowParticipantsModal] = useState(false)
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [isParticipantsConfirmed, setIsParticipantsConfirmed] = useState(false)
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
   const [settlementAmount, setSettlementAmount] = useState("")
@@ -200,35 +217,16 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="flex">
-        {/* 사이드바 */}
-        <div className="w-20 bg-white border-r border-orange-200 shadow-lg">
-          <div className="p-4">
-            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white text-xl">🐻</span>
-            </div>
-          </div>
-          <nav className="space-y-2 px-2">
-            {["🏠", "👥", "📅", "🛒"].map((icon, index) => (
-              <div
-                key={index}
-                className="w-12 h-12 bg-orange-100 hover:bg-orange-200 rounded-xl flex items-center justify-center text-orange-600 transition-all duration-200 cursor-pointer"
-              >
-                <span className="text-lg text-orange-600">{icon}</span>
-              </div>
-            ))}
-            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-md">
-              <span className="text-lg text-white">💬</span>
-            </div>
-            {["🗳️", "⚙️"].map((icon, index) => (
-              <div
-                key={index}
-                className="w-12 h-12 bg-orange-100 hover:bg-orange-200 rounded-xl flex items-center justify-center text-orange-600 transition-all duration-200 cursor-pointer"
-              >
-                <span className="text-lg text-orange-600">{icon}</span>
-              </div>
-            ))}
-          </nav>
-        </div>
+        {/* Left Sidebar */}
+        <Sidebar
+          onNavigateToOnboarding={onNavigateToOnboarding}
+          onNavigateToClubDashboard={onNavigateToClubDashboard}
+          onNavigateToMtPlanner={onNavigateToMtPlanner}
+          onNavigateToSettlement={onNavigateToSettlement}
+          onNavigateToChat={() => {}} // 채팅 페이지에서는 자기 자신이므로 빈 함수
+          onNavigateToVote={onNavigateToVote}
+          onShowNotification={() => setShowNotificationModal(true)}
+        />
 
         {/* 메인 콘텐츠 */}
         <div className="flex-1 flex">
@@ -803,8 +801,30 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-700 font-jua">알림</h2>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-0">
+              <Notification onNavigateToOnboarding={onNavigateToOnboarding} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-    
+
   )
 }
 

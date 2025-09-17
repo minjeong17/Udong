@@ -8,8 +8,11 @@ import ClubList from '../pages/ClubList'
 import ClubDashboard from '../pages/ClubDashboard'
 import Notification from '../pages/Notification'
 import MtPlanner from '../pages/MtPlanner'
+import Settlement from '../pages/Settlement'
+import Chat from '../pages/Chat'
+import Vote from '../pages/Vote'
 
-type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner'
+type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner' | 'settlement' | 'chat' | 'vote'
 
 const Router = () => {
   const [currentRoute, setCurrentRoute] = useState<Route>(() => {
@@ -22,6 +25,9 @@ const Router = () => {
     if (path === '/club-dashboard') return 'club-dashboard'
     if (path === '/notification') return 'notification'
     if (path === '/mt-planner') return 'mt-planner'
+    if (path === '/settlement') return 'settlement'
+    if (path === '/chat') return 'chat'
+    if (path === '/vote') return 'vote'
     return 'onboarding'
   })
 
@@ -42,6 +48,9 @@ const Router = () => {
       else if (path === '/club-dashboard') setCurrentRoute('club-dashboard')
       else if (path === '/notification') setCurrentRoute('notification')
       else if (path === '/mt-planner') setCurrentRoute('mt-planner')
+      else if (path === '/settlement') setCurrentRoute('settlement')
+      else if (path === '/chat') setCurrentRoute('chat')
+      else if (path === '/vote') setCurrentRoute('vote')
       else setCurrentRoute('onboarding')
     }
 
@@ -54,6 +63,7 @@ const Router = () => {
       return <Login
         onNavigateToOnboarding={() => navigate('onboarding')}
         onNavigateToSignup={() => navigate('signup')}
+        onNavigateToClubSelection={() => navigate('club-selection')}
         currentRoute={currentRoute}
       />
     case 'signup':
@@ -80,11 +90,17 @@ const Router = () => {
       return <ClubList
         onNavigateToOnboarding={() => navigate('onboarding')}
         onNavigateToClubDashboard={() => navigate('club-dashboard')}
+        onNavigateToClubSelection={() => navigate('club-selection')}
         currentRoute={currentRoute}
       />
     case 'club-dashboard':
       return <ClubDashboard
         onNavigateToOnboarding={() => navigate('onboarding')}
+        onNavigateToClubList={() => navigate('club-list')}
+        onNavigateToMtPlanner={() => navigate('mt-planner')}
+        onNavigateToSettlement={() => navigate('settlement')}
+        onNavigateToChat={() => navigate('chat')}
+        onNavigateToVote={() => navigate('vote')}
         currentRoute={currentRoute}
       />
     case 'notification':
@@ -94,6 +110,35 @@ const Router = () => {
     case 'mt-planner':
       return <MtPlanner
         onNavigateToOnboarding={() => navigate('onboarding')}
+        onNavigateToClubDashboard={() => navigate('club-dashboard')}
+        onNavigateToClubList={() => navigate('club-list')}
+        onNavigateToSettlement={() => navigate('settlement')}
+        onNavigateToChat={() => navigate('chat')}
+        onNavigateToVote={() => navigate('vote')}
+      />
+    case 'settlement':
+      return <Settlement
+        onNavigateToOnboarding={() => navigate('onboarding')}
+        onNavigateToClubDashboard={() => navigate('club-dashboard')}
+        onNavigateToMtPlanner={() => navigate('mt-planner')}
+        onNavigateToChat={() => navigate('chat')}
+        onNavigateToVote={() => navigate('vote')}
+      />
+    case 'chat':
+      return <Chat
+        onNavigateToOnboarding={() => navigate('onboarding')}
+        onNavigateToClubDashboard={() => navigate('club-dashboard')}
+        onNavigateToMtPlanner={() => navigate('mt-planner')}
+        onNavigateToSettlement={() => navigate('settlement')}
+        onNavigateToVote={() => navigate('vote')}
+      />
+    case 'vote':
+      return <Vote
+        onNavigateToOnboarding={() => navigate('onboarding')}
+        onNavigateToClubDashboard={() => navigate('club-dashboard')}
+        onNavigateToMtPlanner={() => navigate('mt-planner')}
+        onNavigateToSettlement={() => navigate('settlement')}
+        onNavigateToChat={() => navigate('chat')}
       />
     default:
       return <Onboarding onNavigateToLogin={() => navigate('login')} />

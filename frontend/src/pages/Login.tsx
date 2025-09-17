@@ -4,10 +4,11 @@ import Header from '../components/Header';
 interface LoginProps {
   onNavigateToOnboarding: () => void;
   onNavigateToSignup?: () => void;
+  onNavigateToClubSelection?: () => void;
   currentRoute?: string;
 }
 
-const Login: React.FC<LoginProps> = ({ onNavigateToOnboarding, onNavigateToSignup, currentRoute }) => {
+const Login: React.FC<LoginProps> = ({ onNavigateToOnboarding, onNavigateToSignup, onNavigateToClubSelection, currentRoute }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [autoLogin, setAutoLogin] = useState(false);
@@ -15,6 +16,10 @@ const Login: React.FC<LoginProps> = ({ onNavigateToOnboarding, onNavigateToSignu
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Login attempt:', { email, password, autoLogin });
+    // 개발 편의를 위해 바로 club-selection으로 이동
+    if (onNavigateToClubSelection) {
+      onNavigateToClubSelection();
+    }
   };
 
   return (
