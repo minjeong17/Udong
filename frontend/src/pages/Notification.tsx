@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import Header from '../components/Header';
 import { Bell, Check, Clock, CreditCard, Users, Vote } from "lucide-react";
 
 interface NotificationProps {
   onNavigateToOnboarding: () => void;
+  currentRoute?: string;
 }
 
 interface Notification {
@@ -36,7 +38,7 @@ const mockNotifications: Notification[] = [
   },
 ];
 
-const Notification: React.FC<NotificationProps> = () => {
+const Notification: React.FC<NotificationProps> = ({onNavigateToOnboarding, currentRoute}) => {
   const [notifications, setNotifications] = useState(mockNotifications);
   const [filter, setFilter] = useState<Notification["type"] | "all">("all");
 
@@ -91,6 +93,7 @@ const Notification: React.FC<NotificationProps> = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 p-6">
       {/* Header */}
+      <Header onNavigateToOnboarding={onNavigateToOnboarding} currentRoute={currentRoute} />
       <div className="max-w-4xl mx-auto flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <Bell className="h-8 w-8 text-orange-600" />

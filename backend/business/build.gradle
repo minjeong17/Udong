@@ -41,6 +41,15 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5' // JSON 파싱 (Jackson 기반)
+
+	implementation "io.github.cdimascio:dotenv-java:3.0.2"
+	implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+	implementation 'org.jetbrains:annotations:24.1.0'
+	implementation platform("software.amazon.awssdk:bom:2.25.68")
+	implementation "software.amazon.awssdk:s3"
+	implementation "com.github.f4b6a3:ulid-creator:5.2.2"
+
+
 }
 
 tasks.named('test') {
