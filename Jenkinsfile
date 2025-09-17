@@ -77,22 +77,30 @@ pipeline {
                             set -e
                             echo "--- Copying .env file to host ---"
                             
-                            # 기존 파일 백업 (있다면)
+                            # 기존 파일 처리 (잠겨있을 수 있으므로 이름 변경 방식 사용)
                             ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "
                                 if [ -f /home/ubuntu/udong/backend/business/.env ]; then
-                                    cp /home/ubuntu/udong/backend/business/.env /home/ubuntu/udong/backend/business/.env.backup
-                                    echo 'Existing .env file backed up'
+                                    echo 'Backing up existing .env file'
+                                    cp /home/ubuntu/udong/backend/business/.env /home/ubuntu/udong/backend/business/.env.backup || true
+                                    echo 'Moving existing .env file (to avoid file lock)'
+                                    mv /home/ubuntu/udong/backend/business/.env /home/ubuntu/udong/backend/business/.env.old || true
                                 fi
                             "
                             
-                            # SSH cat 리다이렉션으로 파일 전송 (SCP 대신 사용)
+                            # 새 파일 생성 (파일 잠김 문제 해결됨)
                             ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "cat > /home/ubuntu/udong/backend/business/.env" < "$ENV_FILE"
+                            
+                            # 권한 설정
+                            ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "
+                                chown ubuntu:ubuntu /home/ubuntu/udong/backend/business/.env
+                                chmod 644 /home/ubuntu/udong/backend/business/.env
+                            "
                             
                             # 생성 확인
                             ssh -o StrictHostKeyChecking=no ubuntu@172.17.0.1 "
                                 echo 'New .env file created:'
                                 ls -la /home/ubuntu/udong/backend/business/.env
-                                echo 'First 3 lines (without values):'
+                                echo 'File content check (first 3 environment variable names):'
                                 head -3 /home/ubuntu/udong/backend/business/.env | cut -d'=' -f1
                             "
                             
