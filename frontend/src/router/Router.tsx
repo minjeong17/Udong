@@ -8,8 +8,9 @@ import ClubList from '../pages/ClubList'
 import ClubDashboard from '../pages/ClubDashboard'
 import Notification from '../pages/Notification'
 import MtPlanner from '../pages/MtPlanner'
+import MyPage from '../pages/MyPage'
 
-type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner'
+type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner' | 'my-page'
 
 const Router = () => {
   const [currentRoute, setCurrentRoute] = useState<Route>(() => {
@@ -22,6 +23,7 @@ const Router = () => {
     if (path === '/club-dashboard') return 'club-dashboard'
     if (path === '/notification') return 'notification'
     if (path === '/mt-planner') return 'mt-planner'
+    if (path === '/my-page') return 'my-page'
     return 'onboarding'
   })
 
@@ -42,6 +44,7 @@ const Router = () => {
       else if (path === '/club-dashboard') setCurrentRoute('club-dashboard')
       else if (path === '/notification') setCurrentRoute('notification')
       else if (path === '/mt-planner') setCurrentRoute('mt-planner')
+      else if (path === '/my-page') setCurrentRoute('my-page')
       else setCurrentRoute('onboarding')
     }
 
@@ -93,6 +96,10 @@ const Router = () => {
       />
     case 'mt-planner':
       return <MtPlanner
+        onNavigateToOnboarding={() => navigate('onboarding')}
+      />
+    case 'my-page':
+      return <MyPage
         onNavigateToOnboarding={() => navigate('onboarding')}
       />
     default:
