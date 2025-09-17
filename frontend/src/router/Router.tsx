@@ -11,8 +11,9 @@ import MtPlanner from '../pages/MtPlanner'
 import Settlement from '../pages/Settlement'
 import Chat from '../pages/Chat'
 import Vote from '../pages/Vote'
+import Calendar from '../pages/Calendar'
+import { RouterContext, type Route } from '../hooks/useRouter'
 
-type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner' | 'settlement' | 'chat' | 'vote'
 
 const Router = () => {
   const [currentRoute, setCurrentRoute] = useState<Route>(() => {
@@ -28,6 +29,7 @@ const Router = () => {
     if (path === '/settlement') return 'settlement'
     if (path === '/chat') return 'chat'
     if (path === '/vote') return 'vote'
+    if (path === '/calendar') return 'calendar'
     return 'onboarding'
   })
 
@@ -51,6 +53,7 @@ const Router = () => {
       else if (path === '/settlement') setCurrentRoute('settlement')
       else if (path === '/chat') setCurrentRoute('chat')
       else if (path === '/vote') setCurrentRoute('vote')
+      else if (path === '/calendar') setCurrentRoute('calendar')
       else setCurrentRoute('onboarding')
     }
 
@@ -58,7 +61,13 @@ const Router = () => {
     return () => window.removeEventListener('popstate', handlePopstate)
   }, [])
 
-  switch (currentRoute) {
+  const routerValue = {
+    currentRoute,
+    navigate
+  }
+
+  const renderPage = () => {
+    switch (currentRoute) {
     case 'login':
       return <Login
         onNavigateToOnboarding={() => navigate('onboarding')}
@@ -96,11 +105,6 @@ const Router = () => {
     case 'club-dashboard':
       return <ClubDashboard
         onNavigateToOnboarding={() => navigate('onboarding')}
-        onNavigateToClubList={() => navigate('club-list')}
-        onNavigateToMtPlanner={() => navigate('mt-planner')}
-        onNavigateToSettlement={() => navigate('settlement')}
-        onNavigateToChat={() => navigate('chat')}
-        onNavigateToVote={() => navigate('vote')}
         currentRoute={currentRoute}
       />
     case 'notification':
@@ -110,39 +114,33 @@ const Router = () => {
     case 'mt-planner':
       return <MtPlanner
         onNavigateToOnboarding={() => navigate('onboarding')}
-        onNavigateToClubDashboard={() => navigate('club-dashboard')}
-        onNavigateToClubList={() => navigate('club-list')}
-        onNavigateToSettlement={() => navigate('settlement')}
-        onNavigateToChat={() => navigate('chat')}
-        onNavigateToVote={() => navigate('vote')}
       />
     case 'settlement':
       return <Settlement
         onNavigateToOnboarding={() => navigate('onboarding')}
-        onNavigateToClubDashboard={() => navigate('club-dashboard')}
-        onNavigateToMtPlanner={() => navigate('mt-planner')}
-        onNavigateToChat={() => navigate('chat')}
-        onNavigateToVote={() => navigate('vote')}
       />
     case 'chat':
       return <Chat
         onNavigateToOnboarding={() => navigate('onboarding')}
-        onNavigateToClubDashboard={() => navigate('club-dashboard')}
-        onNavigateToMtPlanner={() => navigate('mt-planner')}
-        onNavigateToSettlement={() => navigate('settlement')}
-        onNavigateToVote={() => navigate('vote')}
       />
     case 'vote':
       return <Vote
         onNavigateToOnboarding={() => navigate('onboarding')}
-        onNavigateToClubDashboard={() => navigate('club-dashboard')}
-        onNavigateToMtPlanner={() => navigate('mt-planner')}
-        onNavigateToSettlement={() => navigate('settlement')}
-        onNavigateToChat={() => navigate('chat')}
+      />
+    case 'calendar':
+      return <Calendar
+        onNavigateToOnboarding={() => navigate('onboarding')}
       />
     default:
       return <Onboarding onNavigateToLogin={() => navigate('login')} />
+    }
   }
+
+  return (
+    <RouterContext.Provider value={routerValue}>
+      {renderPage()}
+    </RouterContext.Provider>
+  )
 }
 
 export default Router

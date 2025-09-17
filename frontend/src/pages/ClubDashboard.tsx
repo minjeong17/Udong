@@ -1,26 +1,41 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Notification from './Notification';
+import MascotChangeModal from '../components/MascotChangeModal';
+import { useRouter } from '../hooks/useRouter';
 
 interface ClubDashboardProps {
   onNavigateToOnboarding: () => void;
-  onNavigateToClubList?: () => void;
-  onNavigateToMtPlanner?: () => void;
-  onNavigateToSettlement?: () => void;
-  onNavigateToChat?: () => void;
-  onNavigateToVote?: () => void;
   currentRoute?: string;
 }
 
 const ClubDashboard: React.FC<ClubDashboardProps> = ({
-  onNavigateToOnboarding,
-  onNavigateToClubList,
-  onNavigateToMtPlanner,
-  onNavigateToSettlement,
-  onNavigateToChat,
-  onNavigateToVote
+  onNavigateToOnboarding
 }) => {
+  const { navigate } = useRouter();
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showMascotModal, setShowMascotModal] = useState(false);
+  const [currentMascotId, setCurrentMascotId] = useState(1);
+
+  const handleMascotChange = async (mascotId: number): Promise<void> => {
+    try {
+      // TODO: 실제 API 호출로 교체
+      // await fetch('/api/clubs/mascot', {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ mascotId, clubId: 'current-club-id' })
+      // });
+
+      // 임시 시뮬레이션
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setCurrentMascotId(mascotId);
+      console.log('마스코트 변경 성공:', mascotId);
+    } catch (error) {
+      console.error('마스코트 변경 실패:', error);
+      throw new Error('마스코트 변경에 실패했습니다.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#fcf9f5] relative overflow-hidden">
@@ -39,12 +54,6 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
         {/* Left Sidebar */}
         <Sidebar
           onNavigateToOnboarding={onNavigateToOnboarding}
-          onNavigateToClubList={onNavigateToClubList}
-          onNavigateToClubDashboard={() => {}} // 대시보드에서는 자기 자신이므로 빈 함수
-          onNavigateToMtPlanner={onNavigateToMtPlanner}
-          onNavigateToSettlement={onNavigateToSettlement}
-          onNavigateToChat={onNavigateToChat}
-          onNavigateToVote={onNavigateToVote}
           onShowNotification={() => setShowNotificationModal(true)}
         />
 
@@ -56,7 +65,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
               <div className="flex items-center space-x-4">
                 <div className="w-24 h-16 bg-orange-200 rounded-xl flex items-center justify-center">
                   <img
-                    src="/images/mas_1.png"
+                    src={`/images/mas_${currentMascotId}.png`}
                     alt="동아리 마스코트"
                     className="w-12 h-12 object-contain"
                   />
@@ -88,7 +97,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             <div className="absolute bg-orange-50 rounded-full shadow-2xl border border-orange-100 w-96 h-96 flex flex-col items-center justify-center z-10 top-60">
               <div className="w-40 h-40 flex items-center justify-center mb-1 pt-8">
                 <img
-                  src="/images/mas_1.png"
+                  src={`/images/mas_${currentMascotId}.png`}
                   alt="마스코트"
                   className="w-48 h-48 object-contain animate-bounce-slow"
                 />
@@ -98,6 +107,19 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
               <div className="w-20 h-2 bg-orange-200 rounded-full">
                 <div className="w-16 h-2 bg-orange-500 rounded-full"></div>
               </div>
+
+              {/* 마스코트 변경 버튼 - 원형 카드의 오른쪽 하단 */}
+              <button
+                onClick={() => setShowMascotModal(true)}
+                className="absolute bottom-28 right-12 w-16 h-16 bg-gradient-to-br from-green-100 to-lime-100 hover:from-green-200 hover:to-lime-200 rounded-full shadow-lg border-2 border-white hover:border-green-200 flex items-center justify-center transition-all duration-300 transform hover:scale-110 group"
+                title="마스코트 변경"
+              >
+                <img
+                  src="/images/button/masChange.png"
+                  alt="마스코트 변경"
+                  className="w-16 h-16 object-contain"
+                />
+              </button>
             </div>
 
             {/* 동아리 전체 채팅방 - 중앙 위쪽, 매우 가깝게 */}
@@ -110,7 +132,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 전체 채팅방
               </h3>
               <button
-                onClick={onNavigateToChat}
+                onClick={() => navigate('chat')}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full font-jua transition-colors text-sm">
                 입장하기
               </button>
@@ -218,6 +240,15 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Mascot Change Modal */}
+      <MascotChangeModal
+        isOpen={showMascotModal}
+        onClose={() => setShowMascotModal(false)}
+        onMascotChange={handleMascotChange}
+        currentMascotId={currentMascotId}
+        clubId={1} // TODO: 실제 클럽 ID로 교체
+      />
     </div>
   );
 };
