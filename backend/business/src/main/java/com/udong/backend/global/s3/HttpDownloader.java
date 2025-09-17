@@ -1,4 +1,4 @@
-package com.udong.backend.clubs.s3;
+package com.udong.backend.global.s3;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

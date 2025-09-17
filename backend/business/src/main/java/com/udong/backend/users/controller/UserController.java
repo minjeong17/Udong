@@ -2,6 +2,7 @@ package com.udong.backend.users.controller;
 
 import com.udong.backend.auth.service.AuthService;
 import com.udong.backend.global.dto.response.ApiResponse;
+import com.udong.backend.global.util.SecurityUtils;
 import com.udong.backend.users.service.UserService;
 import com.udong.backend.users.dto.SignUpRequest;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserController {
 
     private final UserService userService;
+    private final SecurityUtils securityUtils;
 
     @PostMapping("/users/signup")
     public ResponseEntity<ApiResponse<?>> signUp(@Valid @RequestBody SignUpRequest req) {
@@ -33,7 +35,7 @@ public class UserController {
     @DeleteMapping("/me")
     public ResponseEntity<?> deleteMe() {
 
-        Long userId = currentUserId(); // SecurityContext에서 AT로 파싱
+        Long userId = securityUtils.currentUserId(); // SecurityContext에서 AT로 파싱
 
         userService.deleteAccount(userId);   // 유저/연관 데이터 삭제
 
@@ -49,12 +51,12 @@ public class UserController {
                 .body(ApiResponse.ok("회원 탈퇴 완료"));
     }
 
-    private Long currentUserId() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "unauthenticated");
-        }
-
-        return Long.valueOf(auth.getName()); // 필터에서 principal=userId로 넣었음
-    }
+//    private Long currentUserId() {
+//        var auth = SecurityContextHolder.getContext().getAuthentication();
+//        if (auth == null || !auth.isAuthenticated()) {
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "unauthenticated");
+//        }
+//
+//        return Long.valueOf(auth.getName()); // 필터에서 principal=userId로 넣었음
+//    }
 }
