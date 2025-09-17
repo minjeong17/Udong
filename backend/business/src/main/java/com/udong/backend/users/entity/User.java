@@ -1,5 +1,6 @@
 package com.udong.backend.users.entity;
 
+import com.udong.backend.auth.entity.RefreshToken;
 import com.udong.backend.global.config.AccountNumberConverter;
 import jakarta.persistence.*;
 import lombok.*;
@@ -70,6 +71,9 @@ public class User {
     )
     @Builder.Default
     private List<UserAvailability> availabilities = new ArrayList<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private RefreshToken refreshToken;
 
     // 양방향 편의 메서드
     public void addAvailability(UserAvailability availability) {

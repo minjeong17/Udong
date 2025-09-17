@@ -55,4 +55,13 @@ public class UserService {
         User saved = userRepository.save(user);
 //        return new SignUpResponse(saved.getId(), saved.getEmail(), saved.getName());
     }
+
+    @Transactional
+    public void deleteAccount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found"));
+
+        // JPA cascade/orphanRemoval이 먹도록 '엔티티 삭제'로 처리
+        userRepository.delete(user);
+    }
 }
