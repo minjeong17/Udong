@@ -5,18 +5,10 @@ import Notification from './Notification';
 
 interface ChatProps {
   onNavigateToOnboarding: () => void;
-  onNavigateToClubDashboard?: () => void;
-  onNavigateToMtPlanner?: () => void;
-  onNavigateToSettlement?: () => void;
-  onNavigateToVote?: () => void;
 }
 
 export default function ChatPage({
   onNavigateToOnboarding,
-  onNavigateToClubDashboard,
-  onNavigateToMtPlanner,
-  onNavigateToSettlement,
-  onNavigateToVote,
 }: ChatProps) {
   const [selectedChannel, setSelectedChannel] = useState("general")
   const [message, setMessage] = useState("")
@@ -220,11 +212,6 @@ export default function ChatPage({
         {/* Left Sidebar */}
         <Sidebar
           onNavigateToOnboarding={onNavigateToOnboarding}
-          onNavigateToClubDashboard={onNavigateToClubDashboard}
-          onNavigateToMtPlanner={onNavigateToMtPlanner}
-          onNavigateToSettlement={onNavigateToSettlement}
-          onNavigateToChat={() => {}} // 채팅 페이지에서는 자기 자신이므로 빈 함수
-          onNavigateToVote={onNavigateToVote}
           onShowNotification={() => setShowNotificationModal(true)}
         />
 

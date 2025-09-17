@@ -80,18 +80,10 @@ const getUserVoteCapacity = (p: Poll, uid = currentUserId) =>
 
 interface VoteProps {
   onNavigateToOnboarding: () => void;
-  onNavigateToClubDashboard?: () => void;
-  onNavigateToMtPlanner?: () => void;
-  onNavigateToSettlement?: () => void;
-  onNavigateToChat?: () => void;
 }
 
 export default function VotingPage({
   onNavigateToOnboarding,
-  onNavigateToClubDashboard,
-  onNavigateToMtPlanner,
-  onNavigateToSettlement,
-  onNavigateToChat,
 }: VoteProps) {
   // 예시 인벤토리
   const [inventory, setInventory] = useState({ extraVoteTickets: 2 })
@@ -425,11 +417,6 @@ export default function VotingPage({
         {/* Left Sidebar */}
         <Sidebar
           onNavigateToOnboarding={onNavigateToOnboarding}
-          onNavigateToClubDashboard={onNavigateToClubDashboard}
-          onNavigateToMtPlanner={onNavigateToMtPlanner}
-          onNavigateToSettlement={onNavigateToSettlement}
-          onNavigateToChat={onNavigateToChat}
-          onNavigateToVote={() => {}} // 투표 페이지에서는 자기 자신이므로 빈 함수
           onShowNotification={() => setShowNotificationModal(true)}
         />
 

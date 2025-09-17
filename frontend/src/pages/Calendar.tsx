@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Sidebar from '../components/Sidebar';
+import Notification from './Notification';
 
 /* =========================
    Types
@@ -108,9 +110,18 @@ const Pin = (p: React.SVGProps<SVGSVGElement>) => (
 );
 
 /* =========================
+   Props
+   ========================= */
+interface CalendarProps {
+  onNavigateToOnboarding: () => void;
+}
+
+/* =========================
    Component
    ========================= */
-export default function Calendar() {
+const Calendar: React.FC<CalendarProps> = ({
+  onNavigateToOnboarding
+}) => {
   // Demo events — 1/12에 3개
   const [events, setEvents] = useState<EventItem[]>([
     { id: 1, title: "지난 모임", date: "2024-01-10", time: "19:00", category: "번개모임", createdById: "u2" },
@@ -133,6 +144,7 @@ export default function Calendar() {
   const [dayModalDate, setDayModalDate] = useState<Date | null>(null);
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [eventModalItem, setEventModalItem] = useState<EventItem | null>(null);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -292,19 +304,27 @@ export default function Calendar() {
      Render
      ========================= */
   return (
-    <div className="w-full min-h-screen flex bg-gradient-to-br from-orange-50 via-white to-orange-100">
-      {/* ===== Left Sidebar ===== */}
-      <aside className="w-20 bg-gradient-to-b from-orange-500 to-orange-400 text-white flex flex-col items-center py-4 space-y-2 shadow-lg">
-        <div className="w-12 h-12 rounded-2xl bg-white/15 grid place-items-center text-xl">🐻</div>
-        {["🏠","👥","📅","🧾","💬","🧺","⚙️"].map((icon, i) => (
-          <div key={i} className={`w-12 h-12 rounded-2xl grid place-items-center cursor-pointer transition ${icon==="📅" ? "bg-white text-orange-600 shadow" : "hover:bg-white/15"}`}>
-            <span className="text-xl">{icon}</span>
-          </div>
-        ))}
-      </aside>
+    <div className="min-h-screen bg-[#fcf9f5] relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-orange-200 rounded-full opacity-20 animate-drift"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-yellow-200 rounded-full opacity-25 animate-drift-reverse"></div>
+        <div className="absolute bottom-32 left-20 w-28 h-28 bg-pink-200 rounded-full opacity-15 animate-drift"></div>
+        <div className="absolute bottom-60 right-32 w-20 h-20 bg-blue-200 rounded-full opacity-30 animate-drift-reverse"></div>
+        <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-purple-200 rounded-full opacity-20 animate-drift"></div>
+        <div className="absolute top-1/3 right-1/3 w-36 h-36 bg-green-200 rounded-full opacity-10 animate-drift-reverse"></div>
+        <div className="absolute bottom-20 right-10 w-22 h-22 bg-orange-300 rounded-full opacity-25 animate-drift"></div>
+      </div>
 
-      {/* ===== Main (header + two columns) ===== */}
-      <main className="flex-1 px-8 py-6">
+      <div className="flex relative z-10">
+        {/* Left Sidebar */}
+        <Sidebar
+          onNavigateToOnboarding={onNavigateToOnboarding}
+          onShowNotification={() => setShowNotificationModal(true)}
+        />
+
+        {/* Main Content */}
+        <main className="flex-1 px-8 py-6 bg-gradient-to-br from-orange-50 via-white to-orange-100">
         {/* 헤더 */}
         <div className="mb-5">
           <h1 className="text-2xl font-extrabold text-gray-900">일정 관리</h1>
@@ -705,9 +725,32 @@ export default function Calendar() {
           role={currentUser.role}
         />
       )}
+
+      {/* Notification Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-700 font-jua">알림</h2>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-0">
+              <Notification onNavigateToOnboarding={onNavigateToOnboarding} />
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
-}
+};
 
 /* =========================================================
    EventFormModal: 일정 등록/수정 공용 모달
@@ -941,3 +984,5 @@ function EventFormModal({
     </div>
   );
 }
+
+export default Calendar;

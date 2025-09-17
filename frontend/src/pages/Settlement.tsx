@@ -31,18 +31,10 @@ export type Settlement = {
 
 interface SettlementProps {
   onNavigateToOnboarding: () => void;
-  onNavigateToClubDashboard?: () => void;
-  onNavigateToMtPlanner?: () => void;
-  onNavigateToChat?: () => void;
-  onNavigateToVote?: () => void;
 }
 
 export default function SettlementPage({
   onNavigateToOnboarding,
-  onNavigateToClubDashboard,
-  onNavigateToMtPlanner,
-  onNavigateToChat,
-  onNavigateToVote,
 }: SettlementProps) {
   const [selectedSettlement, setSelectedSettlement] = useState<number | null>(1)
   const [paymentCompleted, setPaymentCompleted] = useState(false)
@@ -203,11 +195,6 @@ export default function SettlementPage({
         {/* Left Sidebar */}
         <Sidebar
           onNavigateToOnboarding={onNavigateToOnboarding}
-          onNavigateToClubDashboard={onNavigateToClubDashboard}
-          onNavigateToMtPlanner={onNavigateToMtPlanner}
-          onNavigateToSettlement={() => {}} // 정산 페이지에서는 자기 자신이므로 빈 함수
-          onNavigateToChat={onNavigateToChat}
-          onNavigateToVote={onNavigateToVote}
           onShowNotification={() => setShowNotificationModal(true)}
         />
 

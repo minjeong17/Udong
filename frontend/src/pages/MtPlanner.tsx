@@ -4,12 +4,6 @@ import Notification from './Notification';
 
 interface MtPlannerProps {
   onNavigateToOnboarding: () => void;
-  onNavigateToClubDashboard?: () => void;
-  onNavigateToClubList?: () => void;
-  onNavigateToSettlement?: () => void;
-  onNavigateToChat?: () => void;
-  onNavigateToVote?: () => void;
-  onShowNotification?: () => void;
 }
 
 interface MtPlan {
@@ -21,12 +15,7 @@ interface MtPlan {
 }
 
 const MtPlanner: React.FC<MtPlannerProps> = ({
-  onNavigateToOnboarding,
-  onNavigateToClubDashboard,
-  onNavigateToClubList,
-  onNavigateToSettlement,
-  onNavigateToChat,
-  onNavigateToVote
+  onNavigateToOnboarding
 }) => {
   const [mtPlan, setMtPlan] = useState<MtPlan | null>(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -85,11 +74,6 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
       {/* Left Sidebar */}
       <Sidebar
         onNavigateToOnboarding={onNavigateToOnboarding}
-        onNavigateToClubList={onNavigateToClubList}
-        onNavigateToClubDashboard={onNavigateToClubDashboard}
-        onNavigateToSettlement={onNavigateToSettlement}
-        onNavigateToChat={onNavigateToChat}
-        onNavigateToVote={onNavigateToVote}
         onShowNotification={() => setShowNotificationModal(true)}
       />
       {/* Main Content */}

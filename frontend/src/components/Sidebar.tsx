@@ -1,26 +1,16 @@
 import React from 'react';
+import { useRouter } from '../hooks/useRouter';
 
 interface SidebarProps {
-  onNavigateToOnboarding: () => void;
-  onNavigateToClubList?: () => void;
-  onNavigateToClubDashboard?: () => void;
-  onNavigateToMtPlanner?: () => void;
-  onNavigateToSettlement?: () => void;
-  onNavigateToChat?: () => void;
-  onNavigateToVote?: () => void;
+  onNavigateToOnboarding: () => void; // 로그아웃은 특별히 처리
   onShowNotification?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   onNavigateToOnboarding,
-  onNavigateToClubList,
-  onNavigateToClubDashboard,
-  onNavigateToMtPlanner,
-  onNavigateToSettlement,
-  onNavigateToChat,
-  onNavigateToVote,
   onShowNotification
 }) => {
+  const { navigate } = useRouter();
   return (
     <div className="w-20 bg-white shadow-lg min-h-screen">
       <div className="flex flex-col items-center py-4 space-y-4">
@@ -37,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex flex-col space-y-4">
           {/* 1. 동아리 목록으로 이동 */}
           <button
-            onClick={onNavigateToClubList}
+            onClick={() => navigate('club-list')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group"
             title="동아리 목록"
           >
@@ -46,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
           {/* 2. 대시보드로 돌아가기 */}
           <button
-            onClick={onNavigateToClubDashboard}
+            onClick={() => navigate('club-dashboard')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group"
             title="대시보드"
           >
@@ -69,34 +59,36 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
 
           {/* 5. 캘린더 */}
-          <button className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="캘린더">
+          <button
+            onClick={() => navigate('calendar')}
+            className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="캘린더">
             <img src="/images/button/Calender.png" alt="캘린더" className="w-14 h-14" />
           </button>
 
           {/* 6. 정산 */}
           <button
-            onClick={onNavigateToSettlement}
+            onClick={() => navigate('settlement')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="정산">
             <img src="/images/button/nbbang.png" alt="정산" className="w-14 h-14" />
           </button>
 
           {/* 7. 투표 */}
           <button
-            onClick={onNavigateToVote}
+            onClick={() => navigate('vote')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="투표">
             <img src="/images/button/Vote.png" alt="투표" className="w-14 h-14" />
           </button>
 
           {/* 8. 채팅방 */}
           <button
-            onClick={onNavigateToChat}
+            onClick={() => navigate('chat')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="채팅방">
             <img src="/images/button/Chat.png" alt="채팅방" className="w-14 h-14" />
           </button>
 
           {/* 9. MT내용추천 */}
           <button
-            onClick={onNavigateToMtPlanner}
+            onClick={() => navigate('mt-planner')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="MT추천">
             <img src="/images/button/Mt.png" alt="MT추천" className="w-14 h-14" />
           </button>
