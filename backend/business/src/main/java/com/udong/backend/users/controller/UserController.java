@@ -23,9 +23,10 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/users/signup")
-    public ResponseEntity<Void> signUp(@Valid @RequestBody SignUpRequest req) {
+    public ResponseEntity<ApiResponse<?>> signUp(@Valid @RequestBody SignUpRequest req) {
         userService.signUp(req);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.ok()
+                .body(ApiResponse.ok("회원 가입 완료"));
     }
 
     /** 내 계정 탈퇴 (인증 필요) */
