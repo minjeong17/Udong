@@ -109,32 +109,46 @@ pipeline {
                     }
                     steps {
                         echo 'Building and deploying Business API...'
-                        sshagent(credentials: ['host-ssh-key']) {
-                            // Docker Build
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
-                                    set -e
-                                    echo "--- Building Business API ---"
-                                    cd ${PROJECT_DIR}
-                                    if ! docker-compose build --no-cache business-api; then
-                                        echo "Business API build failed!"
-                                        docker-compose logs business-api || true
-                                        exit 1
-                                    fi
-                                    echo "Business API build successful!"
-                                '''
-                            """
+                        
+                        // withCredentials 블록으로 Secret file을 불러옵니다.
+                        withCredentials([file(credentialsId: 'business-api-env', variable: 'ENV_FILE')]) {
                             
-                            // Deploy
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
+                            sshagent(credentials: ['host-ssh-key']) {
+                                
+                                // scp 명령어로 배포 서버에 .env 파일을 복사하는 단계 추가
+                                sh """
                                     set -e
-                                    echo "--- Deploying Business API ---"
-                                    cd ${PROJECT_DIR}
-                                    docker-compose up -d --no-deps business-api
-                                    echo "Business API deployment completed!"
-                                '''
-                            """
+                                    echo "--- Copying .env file to host ---"
+                                    # .env 파일을 docker-compose가 사용할 위치로 복사
+                                    scp -o StrictHostKeyChecking=no \${ENV_FILE} ${HOST_USER}@${HOST_IP}:${PROJECT_DIR}/backend/business/.env
+                                """
+                                
+                                // Docker Build
+                                sh """
+                                    ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
+                                        set -e
+                                        echo "--- Building Business API ---"
+                                        cd ${PROJECT_DIR}
+                                        if ! docker-compose build --no-cache business-api; then
+                                            echo "Business API build failed!"
+                                            docker-compose logs business-api || true
+                                            exit 1
+                                        fi
+                                        echo "Business API build successful!"
+                                    '''
+                                """
+                                
+                                // Deploy
+                                sh """
+                                    ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
+                                        set -e
+                                        echo "--- Deploying Business API ---"
+                                        cd ${PROJECT_DIR}
+                                        docker-compose up -d --no-deps business-api
+                                        echo "Business API deployment completed!"
+                                    '''
+                                """
+                            }
                         }
                         echo 'Business API deployment pipeline completed!'
                     }
