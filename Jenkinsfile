@@ -64,6 +64,27 @@ pipeline {
             }
         }
 
+        // 먼저 .env 파일 준비 (Business API 변경 시에만)
+        stage('Prepare Environment') {
+            when {
+                environment name: 'BUSINESS_CHANGED', value: 'true'
+            }
+            steps {
+                echo 'Preparing environment files...'
+                withCredentials([file(credentialsId: 'business-api-env', variable: 'ENV_FILE')]) {
+                    sshagent(credentials: ['host-ssh-key']) {
+                        sh """
+                            set -e
+                            echo "--- Copying .env file to host ---"
+                            scp -o StrictHostKeyChecking=no \${ENV_FILE} ${HOST_USER}@${HOST_IP}:${PROJECT_DIR}/backend/business/.env
+                            echo "Environment file copied successfully"
+                        """
+                    }
+                }
+            }
+        }
+
+        // 이제 병렬 빌드 (env 파일이 이미 준비됨)
         stage('Deploy Services') {
             parallel {
                 stage('Deploy Frontend') {
@@ -109,46 +130,32 @@ pipeline {
                     }
                     steps {
                         echo 'Building and deploying Business API...'
-                        
-                        // withCredentials 블록으로 Secret file을 불러옵니다.
-                        withCredentials([file(credentialsId: 'business-api-env', variable: 'ENV_FILE')]) {
-                            
-                            sshagent(credentials: ['host-ssh-key']) {
-                                
-                                // scp 명령어로 배포 서버에 .env 파일을 복사하는 단계 추가
-                                sh """
+                        sshagent(credentials: ['host-ssh-key']) {
+                            // Docker Build (.env 파일이 이미 준비되어 있음)
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
                                     set -e
-                                    echo "--- Copying .env file to host ---"
-                                    # .env 파일을 docker-compose가 사용할 위치로 복사
-                                    scp -o StrictHostKeyChecking=no \${ENV_FILE} ${HOST_USER}@${HOST_IP}:${PROJECT_DIR}/backend/business/.env
-                                """
-                                
-                                // Docker Build
-                                sh """
-                                    ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
-                                        set -e
-                                        echo "--- Building Business API ---"
-                                        cd ${PROJECT_DIR}
-                                        if ! docker-compose build --no-cache business-api; then
-                                            echo "Business API build failed!"
-                                            docker-compose logs business-api || true
-                                            exit 1
-                                        fi
-                                        echo "Business API build successful!"
-                                    '''
-                                """
-                                
-                                // Deploy
-                                sh """
-                                    ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
-                                        set -e
-                                        echo "--- Deploying Business API ---"
-                                        cd ${PROJECT_DIR}
-                                        docker-compose up -d --no-deps business-api
-                                        echo "Business API deployment completed!"
-                                    '''
-                                """
-                            }
+                                    echo "--- Building Business API ---"
+                                    cd ${PROJECT_DIR}
+                                    if ! docker-compose build --no-cache business-api; then
+                                        echo "Business API build failed!"
+                                        docker-compose logs business-api || true
+                                        exit 1
+                                    fi
+                                    echo "Business API build successful!"
+                                '''
+                            """
+                            
+                            // Deploy
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
+                                    set -e
+                                    echo "--- Deploying Business API ---"
+                                    cd ${PROJECT_DIR}
+                                    docker-compose up -d --no-deps business-api
+                                    echo "Business API deployment completed!"
+                                '''
+                            """
                         }
                         echo 'Business API deployment pipeline completed!'
                     }
