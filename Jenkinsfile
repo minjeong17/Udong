@@ -30,17 +30,14 @@ pipeline {
                     
                     env.FRONTEND_CHANGED = (changedFiles.contains('frontend/') || changedFiles == 'all') ? 'true' : 'false'
                     env.BUSINESS_CHANGED = (changedFiles.contains('backend/business/') || changedFiles == 'all') ? 'true' : 'false'
-                    env.CHAT_CHANGED = (changedFiles.contains('backend/chatting/') || changedFiles == 'all') ? 'true' : 'false'
-                    
+
                     echo "Frontend changed: ${env.FRONTEND_CHANGED}"
                     echo "Business API changed: ${env.BUSINESS_CHANGED}"
-                    echo "Chat API changed: ${env.CHAT_CHANGED}"
                     
                     // 변경된 서비스가 없으면 마지막 커밋이 Jenkinsfile 수정 등일 수 있으므로 전체 배포
-                    if (!changedFiles.contains('frontend/') && !changedFiles.contains('backend/business/') && !changedFiles.contains('backend/chatting/')) {
+                    if (!changedFiles.contains('frontend/') && !changedFiles.contains('backend/business/')) {
                         env.FRONTEND_CHANGED = 'true'
                         env.BUSINESS_CHANGED = 'true'
-                        env.CHAT_CHANGED = 'true'
                         echo "No specific service changes detected, deploying all services"
                     }
                 }
@@ -195,44 +192,6 @@ pipeline {
                     }
                 }
                 
-                stage('Deploy Chat API') {
-                    when {
-                        environment name: 'CHAT_CHANGED', value: 'true'
-                    }
-                    steps {
-                        echo 'Building and deploying Chat API...'
-                        sshagent(credentials: ['host-ssh-key']) {
-                            // Docker Build
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
-                                    set -e
-                                    echo "--- Building Chat API ---"
-                                    cd ${PROJECT_DIR}
-                                    # 캐시 없이 빌드하여 최신 변경사항 반영
-                                    if ! docker-compose build --no-cache chat-api; then
-                                        echo "Chat API build failed!"
-                                        docker-compose logs chat-api || true
-                                        exit 1
-                                    fi
-                                    echo "Chat API build successful!"
-                                '''
-                            """
-                            
-                            // Deploy
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} '''
-                                    set -e
-                                    echo "--- Deploying Chat API ---"
-                                    cd ${PROJECT_DIR}
-                                    # 의존성 없이 해당 서비스만 재시작
-                                    docker-compose up -d --no-deps chat-api
-                                    echo "Chat API deployment completed!"
-                                '''
-                            """
-                        }
-                        echo 'Chat API deployment pipeline completed!'
-                    }
-                }
             }
         }
 
