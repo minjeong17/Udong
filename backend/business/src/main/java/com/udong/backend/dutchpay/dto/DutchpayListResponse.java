@@ -1,39 +1,39 @@
 package com.udong.backend.dutchpay.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class DutchpayListResponse {
 
-    private Integer id;             // 정산 ID
-    private LocalDateTime createdAt; // 생성일시
-    private String note;            // 메모
-    private Integer amount;
-    private int participantCount;   // 총 인원 수
-    private Long eventId;        // 행사 ID
-    private String eventTitle;      // 행사 제목
+    private Integer id;               // d.id
+    private LocalDateTime createdAt;  // d.createdAt
+    private String note;              // d.note
+    private Integer amount;           // d.amount
+    private Long participantCount;    // (select count(...)) -> Long !!!
+    private Integer eventId;          // e.id
+    private String eventTitle;        // e.title
 
-    public DutchpayListResponse(Integer id,
-                                LocalDateTime createdAt,
-                                String note,
-                                Integer amount,
-                                Long participantCount,   // count(p) → Long
-                                Integer eventId,         // e.id → Integer
-                                String eventTitle) {
+    // JPQL constructor expression과 "완전히" 동일한 시그니처
+    public DutchpayListResponse(
+            Integer id,
+            LocalDateTime createdAt,
+            String note,
+            Integer amount,
+            Long participantCount,   // <-- Long이어야 함
+            Integer eventId,
+            String eventTitle
+    ) {
         this.id = id;
         this.createdAt = createdAt;
         this.note = note;
         this.amount = amount;
-        this.participantCount = (participantCount == null) ? 0 : participantCount.intValue();
-        this.eventId = (eventId == null) ? null : eventId.longValue();
+        this.participantCount = (participantCount == null) ? 0L : participantCount;
+        this.eventId = eventId;
         this.eventTitle = eventTitle;
     }
 }

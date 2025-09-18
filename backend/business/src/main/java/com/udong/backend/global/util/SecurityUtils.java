@@ -11,13 +11,13 @@ public class SecurityUtils {
 
     private SecurityUtils() {}
 
-    public Long currentUserId() {
+    public Integer currentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "unauthenticated");
         }
         try {
-            return Long.valueOf(auth.getName()); // principal=userId 로 세팅됨
+            return Integer.valueOf(auth.getName()); // principal=userId 로 세팅됨
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid principal");
         }

@@ -20,7 +20,7 @@ public class UserAvailability {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id") // INT AUTO_INCREMENT
-    private Long id;
+    private Integer id;
 
     // 팀 규칙에 맞게 0~6(일~토) 혹은 1~7(월~일) 사용
     @Column(name = "day_of_week", nullable = false) // TINYINT

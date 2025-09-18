@@ -19,8 +19,8 @@ public class CreateDutchpayRequest {
     private String note;
 
     @NotNull
-    private Long eventId;
+    private Integer eventId;
 
     @NotEmpty
-    private List<Long> participantUserIds; // users.id 리스트
+    private List<Integer> participantUserIds; // users.id 리스트
 }

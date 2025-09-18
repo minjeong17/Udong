@@ -34,7 +34,7 @@ public class JwtTokenProvider {
     }
 
     // 클럽 선택 후: userId + clubId + role 포함
-    public String createClubAccessToken(String userId, Long clubId, String clubRole) {
+    public String createClubAccessToken(String userId, Integer clubId, String clubRole) {
         return createToken(userId, clubId, clubRole, ACCESS_EXPIRATION);
     }
 
@@ -43,7 +43,7 @@ public class JwtTokenProvider {
         return createToken(userId, null, null, REFRESH_EXPIRATION);
     }
 
-    private String createToken(String userId, Long clubId, String role, long validityMs) {
+    private String createToken(String userId, Integer clubId, String role, long validityMs) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + validityMs);
 
@@ -81,9 +81,9 @@ public class JwtTokenProvider {
         return v == null ? null : v.toString();
     }
 
-    public Long getClubId(String token) {
+    public Integer getClubId(String token) {
         Object v = parseClaims(token).get("clubId");
-        return v == null ? null : Long.valueOf(v.toString());
+        return v == null ? null : Integer.valueOf(v.toString());
     }
 
     public String getRole(String token) {
