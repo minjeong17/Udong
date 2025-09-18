@@ -1,13 +1,18 @@
 package com.udong.backend.clubs.controller;
 
+import com.udong.backend.clubs.dto.InviteDtos;
 import com.udong.backend.clubs.entity.Club;
+import com.udong.backend.clubs.entity.Membership;
 import com.udong.backend.clubs.service.ClubService;
 import com.udong.backend.clubs.dto.ClubDtos.*;
 import com.udong.backend.global.dto.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/v1/clubs")
@@ -16,7 +21,7 @@ public class ClubController {
     private final ClubService clubs;
 
     @PostMapping
-    public ResponseEntity<com.udong.backend.global.dto.response.ApiResponse<Res>> create(@RequestBody @Valid CreateReq req){
+    public ResponseEntity<ApiResponse<Res>> create(@RequestBody @Valid CreateReq req){
         Club c = clubs.create(req.name(), req.category(), req.description(), req.leaderUserId(), req.accountNumber());
         String masked = clubs.getMaskedAccount(c.getId());
 
@@ -64,5 +69,32 @@ public class ClubController {
     public ResponseEntity<ApiResponse<InviteCodeRes>> reissue(@PathVariable Integer clubId){
         String code = clubs.reissueInviteCode(clubId);
         return ResponseEntity.ok(ApiResponse.ok(new InviteCodeRes(code)));
+    }
+
+    /** 초대코드로 가입: JWT의 userId를 principal로 받는다 */
+    @PostMapping("/join-by-code")
+    public ResponseEntity<ApiResponse<InviteDtos.JoinRes>> joinByCode(
+            @RequestBody @Valid JoinByCodeReq req,
+            @AuthenticationPrincipal String userIdStr
+    ) {
+        if (userIdStr == null || userIdStr.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+        final Integer userId;
+        try {
+            userId = Integer.parseInt(userIdStr);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 사용자 식별자");
+        }
+
+        Membership m = clubs.joinByCode(req.code(), userId);
+
+        InviteDtos.MembershipRes memRes = new InviteDtos.MembershipRes(
+                m.getClub().getId(),
+                m.getUserId(),
+                m.getRoleCode(),
+                clubs.toIsoKST(m.getCreatedAt())
+        );
+        return ResponseEntity.ok(ApiResponse.ok(new InviteDtos.JoinRes(memRes)));
     }
 }
