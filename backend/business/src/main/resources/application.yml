@@ -61,5 +61,15 @@ finapi:
   base-url: https://finopenapi.ssafy.io/ssafy/api/v1
   userkey-path: /member/search
   api-key: ${FIN_API_KEY}
-  institution-code: 00100
-  app-no: 001
+  institution-code: "00100"
+  app-no: "001"
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
