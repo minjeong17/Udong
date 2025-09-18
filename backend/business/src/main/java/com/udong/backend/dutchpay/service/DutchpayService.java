@@ -1,21 +1,26 @@
 package com.udong.backend.dutchpay.service;
 
-import com.udong.backend.dutchpay.dto.CreateDutchpayRequest;
-import com.udong.backend.dutchpay.dto.DutchpayDetailResponse;
-import com.udong.backend.dutchpay.dto.DutchpayListResponse;
+import com.udong.backend.dutchpay.dto.*;
 import com.udong.backend.dutchpay.entity.Dutchpay;
 import com.udong.backend.dutchpay.entity.DutchpayParticipant;
 import com.udong.backend.dutchpay.repository.DutchpayParticipantRepository;
 import com.udong.backend.dutchpay.repository.DutchpayRepository;
 import com.udong.backend.events.entity.Event;
+import com.udong.backend.fin.client.FinApiClient;
+import com.udong.backend.fin.dto.FinHeader;
+import com.udong.backend.fin.util.FinHeaderFactory;
+import com.udong.backend.global.config.AccountCrypto;
 import com.udong.backend.global.s3.S3Uploader;
 import com.udong.backend.users.entity.User;
 import com.github.f4b6a3.ulid.UlidCreator;
+import com.udong.backend.users.repository.UserRepository;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,13 +41,26 @@ import java.util.Locale;
 public class DutchpayService {
 
     private final DutchpayRepository dutchpayRepository;
+    private final UserRepository userRepository;
     private final DutchpayParticipantRepository participantRepository;
     private final EntityManager em;
     private final S3Uploader s3Uploader;
+    private final AccountCrypto accountCrypto;
+    private final FinApiClient finApiClient; // 외부 API 호출용 (WebClient 감싼 클래스)
 
     // 도메인별 프리픽스 (env 없으면 기본값 'dutchpay')
     @Value("${S3_PREFIX_DUTCHPAY:dutchpay}")
     private String dutchpayPrefix;
+
+    // application.yml에서 주입
+    @Value("${finapi.institution-code:00100}")
+    private String institutionCode;
+
+    @Value("${finapi.fintech-app-no:001}")
+    private String fintechAppNo;
+
+    @Value("${finapi.api-key}")
+    private String apiKey;
 
     public void createWithOptionalImage(CreateDutchpayRequest req,
                                         int createdByUserId,
@@ -154,6 +172,65 @@ public class DutchpayService {
                 .build();
     }
 
+    public PayResponse pay(Integer dutchpayId, Integer withdrawalUserId, PayRequest req) {
+        // 1) 정산 존재 확인
+        Dutchpay dutchpay = dutchpayRepository.findById(dutchpayId)
+                .orElseThrow(() -> new IllegalArgumentException("정산 없음: " + dutchpayId));
+
+        // 2) 출금자/입금자 조회
+        User withdrawalUser = userRepository.findById(withdrawalUserId)
+                .orElseThrow(() -> new IllegalArgumentException("출금자 없음: " + withdrawalUserId));
+        User depositUser = userRepository.findById(req.getDepositUserId())
+                .orElseThrow(() -> new IllegalArgumentException("입금자 없음: " + req.getDepositUserId()));
+
+        // 3) 출금자/입금자 계좌 + userKey 복호화
+        String withdrawalAccount = accountCrypto.decrypt(withdrawalUser.getAccountCipher());
+        String depositAccount = accountCrypto.decrypt(depositUser.getAccountCipher());
+        String userKey = accountCrypto.decrypt(withdrawalUser.getUserKeyCipher());
+
+
+        System.out.println("userKeyyyyyyyyyyyyyyyyyyyyyy " + userKey);
+
+        if (req.getAmount() <= 0) throw new IllegalArgumentException("금액은 0보다 커야 합니다.");
+
+        // 4) FinHeaderFactory 이용해서 헤더 생성
+        FinHeader header = FinHeaderFactory.create(
+                "updateDemandDepositAccountTransfer",
+                institutionCode,
+                fintechAppNo,
+                apiKey,
+                userKey
+        );
+
+        // 5) 요청 DTO 조립
+        FinTransferRequest finReq = FinTransferRequest.builder()
+                .header(header)
+                .depositAccountNo(depositAccount)
+                .depositTransactionSummary("(수시입출금) : 입금(이체)")
+                .transactionBalance(String.valueOf(req.getAmount()))
+                .withdrawalAccountNo(withdrawalAccount)
+                .withdrawalTransactionSummary("(수시입출금) : 출금(이체)")
+                .build();
+
+        // 6) 외부 API 호출
+        FinTransferResponse res = finApiClient.post(
+                "/edu/demandDeposit/updateDemandDepositAccountTransfer",
+                finReq,
+                FinTransferResponse.class
+        );
+
+        String code = res.getHeader() != null ? res.getHeader().getResponseCode() : null;
+        String msg = res.getHeader() != null ? res.getHeader().getResponseMessage() : null;
+
+        if (!"H0000".equals(code)) {
+            throw new IllegalStateException("이체 실패: " + code + " - " + msg);
+        }
+
+//      7) 성공 → 참가자 납부 처리
+        participantRepository.markPaid(dutchpayId, withdrawalUserId);
+
+        return new PayResponse(true, code, msg);
+    }
 
 
     // --------- helper ---------
@@ -204,5 +281,24 @@ public class DutchpayService {
                 .eventId(eventId)
                 .eventTitle(eventTitle)
                 .build();
+    }
+
+    public void deleteDutchpay(Integer dutchpayId, Integer currentUserId) {
+        // 1. 조회 (없으면 404)
+        Dutchpay dutchpay = dutchpayRepository.findById(dutchpayId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "해당 정산이 존재하지 않습니다.")
+                );
+
+        // 2. 생성자(소유자)와 현재 사용자 동일 여부 확인 (다르면 403)
+        Integer ownerId = dutchpay.getCreatedBy().getId(); // <- 여기 필드명만 맞춰주세요.
+        if (!ownerId.equals(currentUserId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "정산 삭제 권한이 없습니다."
+            );
+        }
+
+        // 3. 삭제 (연관관계 cascade 설정 필요)
+        dutchpayRepository.delete(dutchpay);
     }
 }

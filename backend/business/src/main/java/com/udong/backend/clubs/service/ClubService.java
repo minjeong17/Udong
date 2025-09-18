@@ -26,24 +26,43 @@ public class ClubService {
     private final MembershipRepository membershipRepository;
 
     @Transactional
-    public Club create(String name, String category, String description, Integer leaderUserId, String accountNumber) {
+    public Club create(String name, String category, String description,
+                       Integer leaderUserId, String accountNumber) {
+
         if (clubs.existsByName(name)) throw new IllegalArgumentException("동아리명이 이미 존재합니다");
 
-        // 계좌 정규화 + 최소 길이 검증
         String normalized = accountCrypto.normalize(accountNumber);
         if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다");
 
         String code = generateCode();
         String cipher = accountCrypto.encrypt(normalized);
 
-        Club c = Club.builder()
-                .name(name).category(category).description(description)
-                .codeUrl(code).leaderUserId(leaderUserId)
-                .accountCipher(cipher)
-                .accountKeyVer((short) accountCrypto.keyVersion())
-                .build();
-        return clubs.save(c);
+        Club saved = clubs.save(
+                Club.builder()
+                        .name(name).category(category).description(description)
+                        .codeUrl(code).leaderUserId(leaderUserId)
+                        .accountCipher(cipher)
+                        .accountKeyVer((short) accountCrypto.keyVersion())
+                        .build()
+        );
+
+        // ✅ LEADER 코드 존재 검증 (group_name = 'memberships')
+        codeDetails.findByCodeGroup_GroupNameAndCodeName("memberships", "LEADER")
+                .orElseThrow(() -> new IllegalStateException("공통코드(memberships/LEADER)가 없습니다"));
+
+        // 리더 멤버십 자동 등록
+        memberships.save(
+                Membership.builder()
+                        .club(saved)
+                        .userId(leaderUserId)
+                        .roleCode("LEADER")   // 문자열 코드 저장
+                        .build()
+        );
+
+        return saved;
     }
+
+
 
     @Transactional(readOnly = true)
     public Club get(Integer id) { return clubs.findById(id).orElseThrow(() -> new IllegalArgumentException("동아리를 찾을 수 없습니다")); }

@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
+import { AuthApi } from '../apis/auth';
+import type { SignInRequest } from '../apis/auth';
+import { useAuthStore } from '../stores/authStore';
 
 interface LoginProps {
   onNavigateToOnboarding: () => void;
@@ -11,14 +14,66 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onNavigateToOnboarding, onNavigateToSignup, onNavigateToClubSelection, currentRoute }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [autoLogin, setAutoLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Login attempt:', { email, password, autoLogin });
-    // 개발 편의를 위해 바로 club-selection으로 이동
-    if (onNavigateToClubSelection) {
+  // Zustand store 사용
+  const { isAuthenticated } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
+
+  // 이미 로그인 상태면 club-selection으로 자동 리다이렉트
+  useEffect(() => {
+    if (isAuthenticated && onNavigateToClubSelection) {
       onNavigateToClubSelection();
+    }
+  }, [isAuthenticated, onNavigateToClubSelection]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const loginData: SignInRequest = {
+        email,
+        password,
+      };
+
+      // 로그인 API 호출 - userId 반환
+      const userId = await AuthApi.signIn(loginData);
+
+      // userId로 유저 정보 구성
+      const user = {
+        id: userId,
+        // name은 추후 프로필 API에서 가져올 예정
+      };
+
+      // Zustand store에 로그인 상태 저장
+      login(user);
+
+      // 성공 알림 표시
+      alert('로그인 되었습니다! 🎉');
+
+      // 성공 시 club-selection으로 이동
+      if (onNavigateToClubSelection) {
+        onNavigateToClubSelection();
+      }
+
+    } catch (error) {
+      console.error('Login failed:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('UNAUTHORIZED')) {
+          setError('이메일 또는 비밀번호가 잘못되었습니다.');
+        } else if (error.message.includes('email')) {
+          setError('이메일 형식이 올바르지 않습니다.');
+        } else {
+          setError('로그인에 실패했습니다. 다시 시도해주세요.');
+        }
+      } else {
+        setError('로그인에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,28 +146,20 @@ const Login: React.FC<LoginProps> = ({ onNavigateToOnboarding, onNavigateToSignu
               />
             </div>
 
-            {/* Auto Login & Forgot Password */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={autoLogin}
-                  onChange={(e) => setAutoLogin(e.target.checked)}
-                  className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500"
-                />
-                <span className="ml-2 text-gray-600 font-gowun">자동 로그인</span>
-              </label>
-              <a href="#" className="text-orange-400 hover:text-orange-500 font-gowun">
-                비밀번호 찾기
-              </a>
-            </div>
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-red-600 text-sm font-gowun">{error}</p>
+              </div>
+            )}
 
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-2xl transition-colors border border-orange-400 font-gowun text-base"
+              disabled={isLoading}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-2xl transition-colors border border-orange-400 font-gowun text-base"
             >
-              로그인
+              {isLoading ? '로그인 중...' : '로그인'}
             </button>
 
             {/* Divider */}

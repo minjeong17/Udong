@@ -7,7 +7,6 @@ public class ClubDtos {
             @NotBlank String name,
             @NotBlank String category,
             String description,
-            @NotNull Integer leaderUserId,
             @NotBlank String accountNumber            // ✅ 추가
     ) {}
 

@@ -1,8 +1,6 @@
 package com.udong.backend.dutchpay.controller;
 
-import com.udong.backend.dutchpay.dto.CreateDutchpayRequest;
-import com.udong.backend.dutchpay.dto.DutchpayDetailResponse;
-import com.udong.backend.dutchpay.dto.DutchpayListResponse;
+import com.udong.backend.dutchpay.dto.*;
 import com.udong.backend.dutchpay.service.DutchpayService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
@@ -64,6 +62,25 @@ public class DutchpayController {
     public ResponseEntity<ApiResponse<DutchpayDetailResponse>> getDetail(@PathVariable int dutchPayId) {
         DutchpayDetailResponse body = dutchpayService.getDetail(dutchPayId);
         return ResponseEntity.ok(ApiResponse.ok(body));
+    }
+
+    /** 정산하기 (출금자 → 입금자) */
+    @PostMapping("/{dutchpayId}/pay")
+    public ResponseEntity<ApiResponse<PayResponse>> pay(
+            @PathVariable Integer dutchpayId,
+            @RequestBody PayRequest req
+    ) {
+        Integer currentUserId = securityUtils.currentUserId();
+        PayResponse result = dutchpayService.pay(dutchpayId, currentUserId, req);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
+    /** 정산 삭제 */
+    @DeleteMapping("/{dutchpayId}")
+    public ResponseEntity<ApiResponse<?>> deleteDutchpay(@PathVariable Integer dutchpayId) {
+        Integer currentUserId = securityUtils.currentUserId();
+        dutchpayService.deleteDutchpay(dutchpayId, currentUserId);
+        return ResponseEntity.ok(ApiResponse.ok("정산 삭제 완료"));
     }
 
 }
