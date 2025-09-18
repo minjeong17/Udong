@@ -21,10 +21,23 @@ public class ClubController {
     private final ClubService clubs;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Res>> create(@RequestBody @Valid CreateReq req){
-        Club c = clubs.create(req.name(), req.category(), req.description(), req.leaderUserId(), req.accountNumber());
-        String masked = clubs.getMaskedAccount(c.getId());
+    public ResponseEntity<ApiResponse<Res>> create(
+            @RequestBody @Valid CreateReq req,
+            // A안: 프린시펄의 id 프로퍼티가 있을 때 (ex. AuthUser.getId())
+            @AuthenticationPrincipal String userIdStr
+    ) {
 
+        Integer userId = Integer.valueOf(userIdStr);
+
+        Club c = clubs.create(
+                req.name(),
+                req.category(),
+                req.description(),
+                userId,                       // ★ 서버가 리더를 강제 지정
+                req.accountNumber()
+        );
+
+        String masked = clubs.getMaskedAccount(c.getId());
         Res body = new Res(
                 c.getId(), c.getName(), c.getCategory(), c.getDescription(),
                 c.getCodeUrl(), c.getActiveMascot()==null?null:c.getActiveMascot().getId(),
@@ -32,6 +45,7 @@ public class ClubController {
         );
         return ResponseEntity.status(201).body(ApiResponse.ok(body));
     }
+
 
     @GetMapping("/{clubId}")
     public ResponseEntity<ApiResponse<Res>> get(@PathVariable Integer clubId){
