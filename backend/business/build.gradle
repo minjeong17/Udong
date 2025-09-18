@@ -48,7 +48,7 @@ dependencies {
 	implementation platform("software.amazon.awssdk:bom:2.25.68")
 	implementation "software.amazon.awssdk:s3"
 	implementation "com.github.f4b6a3:ulid-creator:5.2.2"
-
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 }
 
