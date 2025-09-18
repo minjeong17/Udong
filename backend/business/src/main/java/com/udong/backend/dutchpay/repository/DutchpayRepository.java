@@ -2,11 +2,13 @@ package com.udong.backend.dutchpay.repository;
 
 import com.udong.backend.dutchpay.dto.DutchpayListResponse;
 import com.udong.backend.dutchpay.entity.Dutchpay;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DutchpayRepository extends JpaRepository<Dutchpay, Integer> {
 
@@ -32,29 +34,10 @@ public interface DutchpayRepository extends JpaRepository<Dutchpay, Integer> {
     order by d.createdAt desc
     """)
     List<DutchpayListResponse> findSummaryByUserAndStatus(
-            @Param("userId") Long userId,
+            @Param("userId") Integer userId,
             @Param("isDone") boolean isDone);
 
-
-    // 유저가 '참여자'로 들어가 있고 isDone = false (열린 정산)
-    @Query("""
-           select distinct d
-           from Dutchpay d
-             join d.participants p
-           where p.user.id = :userId
-             and d.isDone = false
-           order by d.createdAt desc
-           """)
-    List<Dutchpay> findOpenByParticipantUserId(@Param("userId") Long userId);
-
-    // 유저가 '참여자'로 들어가 있고 isDone = true (완료 정산)
-    @Query("""
-           select distinct d
-           from Dutchpay d
-             join d.participants p
-           where p.user.id = :userId
-             and d.isDone = true
-           order by d.createdAt desc
-           """)
-    List<Dutchpay> findCompletedByParticipantUserId(@Param("userId") Long userId);
+    // 상세 조회 시 event, createdBy, participants.user 를 한 방에 가져오기
+    @EntityGraph(attributePaths = {"event", "createdBy", "participants.user"})
+    Optional<Dutchpay> findWithAllById(Integer id);
 }

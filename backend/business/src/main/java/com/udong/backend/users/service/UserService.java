@@ -69,7 +69,7 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteAccount(Long userId) {
+    public void deleteAccount(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found"));
 

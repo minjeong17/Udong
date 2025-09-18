@@ -23,24 +23,23 @@ public class DutchpayController {
     private final DutchpayService dutchpayService;
     private final SecurityUtils securityUtils;
 
-    /**
-     * 정산 생성
-     * - Body: CreateDutchpayRequest (amount, note, eventId, s3Key, imageUrl, participantUserIds)
-     * - createdBy: SecurityContext에서 추출
-     * - path: /api/v1/dutchpay/{eventId}
-     */
+    /** 정산 생성 */
     @PostMapping(
             value = "/{eventId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<ApiResponse<?>> createDutchpay(
-            @PathVariable Long eventId,
+            @PathVariable Integer eventId,
             @RequestPart(name = "receipt", required = false) MultipartFile receipt,
             @RequestParam(required = false) String note,
             @RequestParam Integer amount,
-            @RequestParam("participantUserIds") List<Long> participantUserIds
+            @RequestParam("participantUserIds") List<Integer> participantUserIds
     ) {
-        Long userId = securityUtils.currentUserId();
+        Integer userId = securityUtils.currentUserId();
+
+        System.out.println("participantUserIds = " + participantUserIds);   // [1, 2, 3] 이어야 정상
+        System.out.println("size = " + (participantUserIds == null ? 0 : participantUserIds.size()));
+
 
         // DTO로 묶고 서비스 호출
         CreateDutchpayRequest req = CreateDutchpayRequest.builder()
@@ -58,11 +57,17 @@ public class DutchpayController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<DutchpayListResponse>>> getMyDutchpays(
             @RequestParam(name = "status", required = false) String status) {
-        Long userId = securityUtils.currentUserId();
+        Integer userId = securityUtils.currentUserId();
 
         List<DutchpayListResponse> list = dutchpayService.findByUserAndStatus(userId, status);
 
         return ResponseEntity.ok(ApiResponse.ok(list));
+    }
+
+    @GetMapping("/detail/{dutchPayId}")
+    public ResponseEntity<ApiResponse<DutchpayDetailResponse>> getDetail(@PathVariable int dutchPayId) {
+        DutchpayDetailResponse body = dutchpayService.getDetail(dutchPayId);
+        return ResponseEntity.ok(ApiResponse.ok(body));
     }
 
 }

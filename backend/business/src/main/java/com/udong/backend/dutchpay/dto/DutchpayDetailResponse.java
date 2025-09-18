@@ -5,21 +5,36 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
 @Builder
+@AllArgsConstructor
 public class DutchpayDetailResponse {
     private Integer id;
     private Integer amount;
     private String note;
     private LocalDateTime createdAt;
-    private Integer eventId;
-    private Integer createdBy;
+    private String createdBy;    // User.name
+    private boolean isDone;
     private String s3Key;
     private String imageUrl;
-    private boolean isDone;
-    private int participantCount;
-    private int perPersonAmount;
-    private List<DutchpayParticipantResponse> participants;
+    private EventInfo event;
+    private List<ParticipantInfo> participants;
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class EventInfo {
+        private Integer id;
+        private String title;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class ParticipantInfo {
+        private Integer userId;
+        private String name;
+        private boolean isPaid;
+    }
 }
+

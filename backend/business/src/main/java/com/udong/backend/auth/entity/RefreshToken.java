@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 public class RefreshToken {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     // 원문 저장 금지: 해시만 저장
     @Setter

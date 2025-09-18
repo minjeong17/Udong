@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 public class DutchpayParticipantResponse {
     private Integer id;
-    private Long userId;
+    private Integer userId;
     private String name;
     private boolean isPaid;
 }

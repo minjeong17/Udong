@@ -35,7 +35,7 @@ public class UserController {
     @DeleteMapping("/me")
     public ResponseEntity<?> deleteMe() {
 
-        Long userId = securityUtils.currentUserId(); // SecurityContext에서 AT로 파싱
+        Integer userId = securityUtils.currentUserId(); // SecurityContext에서 AT로 파싱
 
         userService.deleteAccount(userId);   // 유저/연관 데이터 삭제
 
@@ -50,13 +50,4 @@ public class UserController {
                 .header(HttpHeaders.SET_COOKIE, remove.toString())
                 .body(ApiResponse.ok("회원 탈퇴 완료"));
     }
-
-//    private Long currentUserId() {
-//        var auth = SecurityContextHolder.getContext().getAuthentication();
-//        if (auth == null || !auth.isAuthenticated()) {
-//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "unauthenticated");
-//        }
-//
-//        return Long.valueOf(auth.getName()); // 필터에서 principal=userId로 넣었음
-//    }
 }

@@ -1,9 +1,11 @@
 package com.udong.backend.dutchpay.service;
 
 import com.udong.backend.dutchpay.dto.CreateDutchpayRequest;
+import com.udong.backend.dutchpay.dto.DutchpayDetailResponse;
 import com.udong.backend.dutchpay.dto.DutchpayListResponse;
 import com.udong.backend.dutchpay.entity.Dutchpay;
 import com.udong.backend.dutchpay.entity.DutchpayParticipant;
+import com.udong.backend.dutchpay.repository.DutchpayParticipantRepository;
 import com.udong.backend.dutchpay.repository.DutchpayRepository;
 import com.udong.backend.events.entity.Event;
 import com.udong.backend.global.s3.S3Uploader;
@@ -34,6 +36,7 @@ import java.util.Locale;
 public class DutchpayService {
 
     private final DutchpayRepository dutchpayRepository;
+    private final DutchpayParticipantRepository participantRepository;
     private final EntityManager em;
     private final S3Uploader s3Uploader;
 
@@ -42,8 +45,9 @@ public class DutchpayService {
     private String dutchpayPrefix;
 
     public void createWithOptionalImage(CreateDutchpayRequest req,
-                                        long createdByUserId,
+                                        int createdByUserId,
                                         @Nullable MultipartFile receipt) {
+        
 
         var uniqueUserIds = new HashSet<>(req.getParticipantUserIds());
         if (uniqueUserIds.isEmpty()) {
@@ -85,7 +89,7 @@ public class DutchpayService {
                 .isDone(false)
                 .build();
 
-        for (Long uid : uniqueUserIds) {
+        for (Integer uid : uniqueUserIds) {
             User userRef = em.getReference(User.class, uid);
             dutchpay.addParticipant(
                     DutchpayParticipant.builder()
@@ -102,7 +106,7 @@ public class DutchpayService {
      * 현재 사용자(userId)가 '참여자'로 포함된 정산 목록을 status로 필터링해서 반환
      * status:  "open" | "completed"
      */
-    public List<DutchpayListResponse> findByUserAndStatus(Long userId, String status) {
+    public List<DutchpayListResponse> findByUserAndStatus(Integer userId, String status) {
         if (status == null || status.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "status 파라미터는 필수입니다."
@@ -118,6 +122,36 @@ public class DutchpayService {
                     HttpStatus.BAD_REQUEST, "status는 open 또는 completed만 허용됩니다."
             );
         };
+    }
+
+    public DutchpayDetailResponse getDetail(Integer dutchpayId) {
+        Dutchpay d = dutchpayRepository.findWithAllById(dutchpayId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 정산이 존재하지 않습니다. id=" + dutchpayId));
+
+        // participants -> DTO 변환
+        List<DutchpayDetailResponse.ParticipantInfo> participants = d.getParticipants().stream()
+                .map(p -> DutchpayDetailResponse.ParticipantInfo.builder()
+                        .userId(p.getUser().getId())
+                        .name(p.getUser().getName())
+                        .isPaid(p.isPaid())
+                        .build())
+                .toList();
+
+        return DutchpayDetailResponse.builder()
+                .id(d.getId())
+                .amount(d.getAmount())
+                .note(d.getNote())
+                .createdAt(d.getCreatedAt())
+                .createdBy(d.getCreatedBy().getName())
+                .isDone(d.isDone())
+                .s3Key(d.getS3Key())
+                .imageUrl(d.getImageUrl())
+                .event(DutchpayDetailResponse.EventInfo.builder()
+                        .id(d.getEvent().getId())
+                        .title(d.getEvent().getTitle())
+                        .build())
+                .participants(participants)
+                .build();
     }
 
 
@@ -153,12 +187,12 @@ public class DutchpayService {
     }
 
     private DutchpayListResponse toListResponse(Dutchpay d) {
-        int participantCount = (d.getParticipants() == null) ? 0 : d.getParticipants().size();
+        long participantCount = (d.getParticipants() == null) ? 0 : d.getParticipants().size();
 
         // Event.id가 Integer라면 다음처럼 Long으로 변환
-        Long eventId = (d.getEvent() == null || d.getEvent().getId() == null)
+        Integer eventId = (d.getEvent() == null || d.getEvent().getId() == null)
                 ? null
-                : d.getEvent().getId().longValue();
+                : d.getEvent().getId();
 
         String eventTitle = (d.getEvent() == null) ? null : d.getEvent().getTitle();
 

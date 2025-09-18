@@ -22,7 +22,7 @@ public class User {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id") // INT AUTO_INCREMENT
-    private Long id;
+    private Integer id;
 
     @Column(name = "email", nullable = false, length = 100, unique = true)
     private String email;
