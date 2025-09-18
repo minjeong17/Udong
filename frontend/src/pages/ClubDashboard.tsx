@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
-import Notification from './Notification';
+import NotificationModal from '../components/NotificationModal';
 import MascotChangeModal from '../components/MascotChangeModal';
 import { useRouter } from '../hooks/useRouter';
 
@@ -85,7 +85,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 동아리원 관리
               </button>
             </div>
-            <p className="text-gray-600 mt-4 font-gowun">
+            <p className="text-gray-600 mt-4 font-jua">
               함께 성장하는 개발자들의 모임입니다. 매주 알고리즘 문제를 풀고
               프로젝트를 진행하며 서로의 실력을 향상시켜나가고 있어요.
             </p>
@@ -220,26 +220,11 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
       </div>
 
       {/* Notification Modal */}
-      {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-700 font-jua">알림</h2>
-              <button
-                onClick={() => setShowNotificationModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-0">
-              <Notification onNavigateToOnboarding={onNavigateToOnboarding} />
-            </div>
-          </div>
-        </div>
-      )}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onNavigateToOnboarding={onNavigateToOnboarding}
+      />
 
       {/* Mascot Change Modal */}
       <MascotChangeModal

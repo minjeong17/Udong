@@ -40,11 +40,13 @@ const Sidebar: React.FC<SidebarProps> = ({
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group"
             title="대시보드"
           >
-            <div className="text-2xl">🏠</div>
+            <img src="/images/button/Home.png" alt="홈" className="w-14 h-14" />
           </button>
 
           {/* 3. 마이페이지 */}
-          <button className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="마이페이지">
+          <button
+            onClick={() => navigate('mypage')}
+            className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="마이페이지">
             <img src="/images/button/MyPage.png" alt="마이페이지" className="w-14 h-14" />
           </button>
 
@@ -86,7 +88,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             <img src="/images/button/Chat.png" alt="채팅방" className="w-14 h-14" />
           </button>
 
-          {/* 9. MT내용추천 */}
+          {/* 9. 상점 */}
+          <button
+            onClick={() => navigate('shop')}
+            className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="상점">
+            <img src="/images/button/Shop.png" alt="상점" className="w-14 h-14" />
+          </button>
+
+          {/* 10. MT내용추천 */}
           <button
             onClick={() => navigate('mt-planner')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="MT추천">

@@ -12,6 +12,8 @@ import Settlement from '../pages/Settlement'
 import Chat from '../pages/Chat'
 import Vote from '../pages/Vote'
 import Calendar from '../pages/Calendar'
+import MyPage from '../pages/MyPage'
+import Shop from '../pages/Shop'
 import { RouterContext, type Route } from '../hooks/useRouter'
 
 
@@ -30,6 +32,8 @@ const Router = () => {
     if (path === '/chat') return 'chat'
     if (path === '/vote') return 'vote'
     if (path === '/calendar') return 'calendar'
+    if (path === '/mypage') return 'mypage'
+    if (path === '/shop') return 'shop'
     return 'onboarding'
   })
 
@@ -54,6 +58,8 @@ const Router = () => {
       else if (path === '/chat') setCurrentRoute('chat')
       else if (path === '/vote') setCurrentRoute('vote')
       else if (path === '/calendar') setCurrentRoute('calendar')
+      else if (path === '/mypage') setCurrentRoute('mypage')
+      else if (path === '/shop') setCurrentRoute('shop')
       else setCurrentRoute('onboarding')
     }
 
@@ -129,6 +135,14 @@ const Router = () => {
       />
     case 'calendar':
       return <Calendar
+        onNavigateToOnboarding={() => navigate('onboarding')}
+      />
+    case 'mypage':
+      return <MyPage
+        onNavigateToOnboarding={() => navigate('onboarding')}
+      />
+    case 'shop':
+      return <Shop
         onNavigateToOnboarding={() => navigate('onboarding')}
       />
     default:

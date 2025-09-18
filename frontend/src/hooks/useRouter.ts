@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner' | 'settlement' | 'chat' | 'vote' | 'calendar'
+type Route = 'onboarding' | 'login' | 'signup' | 'club-selection' | 'club-creation' | 'club-list' | 'club-dashboard' | 'notification' | 'mt-planner' | 'settlement' | 'chat' | 'vote' | 'calendar' | 'mypage' | 'shop'
 
 // Router Context 생성
 interface RouterContextType {

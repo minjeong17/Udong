@@ -1,7 +1,7 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Sidebar from '../components/Sidebar';
-import Notification from './Notification';
+import NotificationModal from '../components/NotificationModal';
 
 interface ChatProps {
   onNavigateToOnboarding: () => void;
@@ -221,7 +221,7 @@ export default function ChatPage({
           <div className="w-80 bg-white border-r border-orange-200 shadow-lg">
             <div className="p-6 border-b border-orange-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-800">채널</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">채널</h2>
               </div>
             </div>
             <div className="p-4 space-y-2">
@@ -237,9 +237,9 @@ export default function ChatPage({
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <div className="font-semibold"># {channel.name}</div>
+                      <div className="font-semibold font-jua"># {channel.name}</div>
                       <div
-                        className={`text-sm ${selectedChannel === channel.id ? "text-orange-100" : "text-gray-500"}`}
+                        className={`text-sm font-gowun ${selectedChannel === channel.id ? "text-orange-100" : "text-gray-500"}`}
                       >
                         {channel.description}
                       </div>
@@ -252,7 +252,7 @@ export default function ChatPage({
             <div className="p-4 border-t border-orange-200">
               <button
                 onClick={() => setShowVoteModal(true)}
-                className="w-full bg-orange-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-600 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-3"
+                className="w-full bg-orange-400 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-500 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-3 font-jua"
               >
                 <span className="text-lg text-white">🗳️</span>
                 <span className="text-white">투표 생성</span>
@@ -260,9 +260,9 @@ export default function ChatPage({
 
               <button
                 onClick={() => setShowMemberCheckModal(true)}
-                className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-3 ${
+                className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-3 font-jua ${
                   isParticipantsConfirmed
-                    ? "bg-blue-500 hover:bg-blue-600 text-white"
+                    ? "bg-blue-400 hover:bg-blue-500 text-white"
                     : "bg-gray-400 hover:bg-gray-500 text-white"
                 }`}
               >
@@ -275,9 +275,9 @@ export default function ChatPage({
               <button
                 onClick={() => setShowSettlementModal(true)}
                 disabled={!isParticipantsConfirmed}
-                className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-4 ${
+                className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-4 font-jua ${
                   isParticipantsConfirmed
-                    ? "bg-green-500 hover:bg-green-600 text-white"
+                    ? "bg-green-400 hover:bg-green-500 text-white"
                     : "bg-green-300 text-green-100 cursor-not-allowed"
                 }`}
               >
@@ -288,7 +288,7 @@ export default function ChatPage({
               <div className="border-t border-orange-200 pt-4 space-y-2">
                 <button
                   onClick={handleLeaveRoom}
-                  className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
                 >
                   <span className="text-gray-700">🚪</span>
                   <span className="text-gray-700">채팅방 나가기</span>
@@ -297,10 +297,10 @@ export default function ChatPage({
                 {isRoomOwner && (
                   <button
                     onClick={handleDeleteRoom}
-                    className="w-full py-2 px-4 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2 px-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
                   >
-                    <span className="text-red-700">🗑️</span>
-                    <span className="text-red-700">채팅방 삭제</span>
+                    <span className="text-red-600">🗑️</span>
+                    <span className="text-red-600">채팅방 삭제</span>
                   </button>
                 )}
               </div>
@@ -312,15 +312,15 @@ export default function ChatPage({
             <div className="p-6 bg-white border-b border-orange-200 shadow-sm">
               <div className="flex justify-between items-center">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">
+                  <h1 className="text-2xl font-bold text-gray-800 font-jua">
                     # {channels.find((c) => c.id === selectedChannel)?.name}
                   </h1>
-                  <p className="text-gray-600">{channels.find((c) => c.id === selectedChannel)?.description}</p>
+                  <p className="text-gray-600 font-gowun">{channels.find((c) => c.id === selectedChannel)?.description}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowParticipantsModal(true)}
-                    className="px-4 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-700 hover:bg-orange-200 transition-colors text-sm font-medium"
+                    className="px-4 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-700 hover:bg-orange-200 transition-colors text-sm font-medium font-jua"
                     aria-haspopup="dialog"
                   >
                     참여자 보기
@@ -339,8 +339,8 @@ export default function ChatPage({
                     <div className={`flex-1 max-w-lg ${msg.isOwn ? "text-right" : ""}`}>
                       {!msg.isOwn && (
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-800">{msg.user}</span>
-                          <span className="text-xs text-gray-500">{msg.timestamp}</span>
+                          <span className="font-semibold text-gray-800 font-jua">{msg.user}</span>
+                          <span className="text-xs text-gray-500 font-gowun">{msg.timestamp}</span>
                         </div>
                       )}
                       <div
@@ -350,9 +350,9 @@ export default function ChatPage({
                             : "bg-white border border-orange-100"
                         }`}
                       >
-                        <p className={msg.isOwn ? "text-white" : "text-gray-800"}>{msg.message}</p>
+                        <p className={`font-gowun ${msg.isOwn ? "text-white" : "text-gray-800"}`}>{msg.message}</p>
                       </div>
-                      {msg.isOwn && <div className="text-xs text-gray-500 mt-1">{msg.timestamp}</div>}
+                      {msg.isOwn && <div className="text-xs text-gray-500 mt-1 font-gowun">{msg.timestamp}</div>}
                     </div>
                   </div>
                 ))}
@@ -375,7 +375,7 @@ export default function ChatPage({
                   <button
                     type="submit"
                     disabled={!message.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-500 hover:to-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-500 hover:to-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
                   >
                     전송
                   </button>
@@ -392,10 +392,10 @@ export default function ChatPage({
             {/* 모달 헤더 */}
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-400 rounded-xl flex items-center justify-center">
                   <span className="text-white text-lg">👥</span>
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">실제 참여 인원 체크</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">실제 참여 인원 체크</h2>
               </div>
               <button
                 onClick={handleCancelMemberCheck}
@@ -407,7 +407,7 @@ export default function ChatPage({
 
             {/* 모달 바디 */}
             <div className="p-6">
-              <p className="text-gray-600 mb-4">정산에 참여할 실제 인원을 선택해주세요.</p>
+              <p className="text-gray-600 mb-4 font-gowun">정산에 참여할 실제 인원을 선택해주세요.</p>
               <div className="space-y-3">
                 {chatMembers.map((member) => (
                   <div key={member.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
@@ -418,17 +418,17 @@ export default function ChatPage({
                       onChange={() => handleMemberToggle(member.id)}
                       className="w-5 h-5 text-blue-500 rounded focus:ring-blue-400"
                     />
-                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                    <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                       {member.avatar}
                     </div>
-                    <label htmlFor={`member-${member.id}`} className="flex-1 font-medium text-gray-800 cursor-pointer">
+                    <label htmlFor={`member-${member.id}`} className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun">
                       {member.name}
                     </label>
                   </div>
                 ))}
               </div>
               <div className="mt-4 p-3 bg-blue-50 rounded-xl">
-                <p className="text-blue-800 font-semibold">선택된 인원: {selectedMembers.length}명</p>
+                <p className="text-blue-800 font-semibold font-jua">선택된 인원: {selectedMembers.length}명</p>
               </div>
             </div>
 
@@ -436,14 +436,14 @@ export default function ChatPage({
             <div className="flex gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={handleCancelMemberCheck}
-                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors"
+                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
               >
                 취소
               </button>
               <button
                 onClick={handleConfirmParticipants}
                 disabled={selectedMembers.length === 0}
-                className="flex-1 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 bg-blue-400 hover:bg-blue-500 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
               >
                 확정
               </button>
@@ -458,10 +458,10 @@ export default function ChatPage({
             {/* 모달 헤더 */}
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-green-400 rounded-xl flex items-center justify-center">
                   <span className="text-white text-lg">💰</span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800">정산 생성</h2>
+                <h2 className="text-2xl font-bold text-gray-800 font-jua">정산 생성</h2>
               </div>
               <button
                 onClick={() => setShowSettlementModal(false)}
@@ -475,7 +475,7 @@ export default function ChatPage({
             <div className="p-6 space-y-6">
               {/* 정산 받을 총 금액 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">정산 받을 총 금액 *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">정산 받을 총 금액 *</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -484,13 +484,13 @@ export default function ChatPage({
                     value={settlementAmount}
                     onChange={(e) => setSettlementAmount(e.target.value)}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">원</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium font-jua">원</span>
                 </div>
               </div>
 
               {/* 영수증 입력칸 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">영수증 *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">영수증 *</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-green-400 transition-colors">
                   <input
                     type="file"
@@ -503,14 +503,14 @@ export default function ChatPage({
                     {settlementReceipt ? (
                       <div className="space-y-2">
                         <div className="text-green-600 text-2xl">📄</div>
-                        <div className="text-green-700 font-medium">{settlementReceipt.name}</div>
-                        <div className="text-sm text-gray-500">클릭하여 다른 파일 선택</div>
+                        <div className="text-green-700 font-medium font-gowun">{settlementReceipt.name}</div>
+                        <div className="text-sm text-gray-500 font-gowun">클릭하여 다른 파일 선택</div>
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <div className="text-gray-400 text-2xl">📷</div>
-                        <div className="text-gray-600">영수증 이미지를 업로드하세요</div>
-                        <div className="text-sm text-gray-500">JPG, PNG 파일만 가능</div>
+                        <div className="text-gray-600 font-gowun">영수증 이미지를 업로드하세요</div>
+                        <div className="text-sm text-gray-500 font-gowun">JPG, PNG 파일만 가능</div>
                       </div>
                     )}
                   </label>
@@ -519,7 +519,7 @@ export default function ChatPage({
 
               {/* 정산 참여 인원 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">정산 참여 인원</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">정산 참여 인원</label>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {chatMembers
                     .filter((member) => selectedMembers.includes(member.id))
@@ -532,12 +532,12 @@ export default function ChatPage({
                           onChange={() => handleSettlementParticipantToggle(member.id)}
                           className="w-5 h-5 text-green-500 rounded focus:ring-green-400"
                         />
-                        <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                           {member.avatar}
                         </div>
                         <label
                           htmlFor={`settlement-${member.id}`}
-                          className="flex-1 font-medium text-gray-800 cursor-pointer"
+                          className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
                         >
                           {member.name}
                         </label>
@@ -545,7 +545,7 @@ export default function ChatPage({
                     ))}
                 </div>
                 <div className="mt-2 p-3 bg-green-50 rounded-xl">
-                  <p className="text-green-800 font-semibold">
+                  <p className="text-green-800 font-semibold font-jua">
                     선택된 인원: {settlementParticipants.length}명
                     {settlementAmount && settlementParticipants.length > 0 && (
                       <span className="ml-2 text-sm">
@@ -558,7 +558,7 @@ export default function ChatPage({
 
               {/* 정산 메모 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">정산 메모</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">정산 메모</label>
                 <textarea
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-400 transition-colors resize-none"
                   rows={4}
@@ -571,8 +571,8 @@ export default function ChatPage({
               {/* 정산 정보 미리보기 */}
               {settlementAmount && settlementParticipants.length > 0 && (
                 <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                  <div className="font-semibold text-green-800 mb-2">정산 정보 미리보기</div>
-                  <div className="space-y-1 text-sm text-green-700">
+                  <div className="font-semibold text-green-800 mb-2 font-jua">정산 정보 미리보기</div>
+                  <div className="space-y-1 text-sm text-green-700 font-gowun">
                     <div>
                       총 금액: <span className="font-semibold">{Number(settlementAmount).toLocaleString()}원</span>
                     </div>
@@ -596,14 +596,14 @@ export default function ChatPage({
             <div className="flex gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowSettlementModal(false)}
-                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors"
+                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
               >
                 취소
               </button>
               <button
                 onClick={handleCreateSettlement}
                 disabled={!settlementAmount.trim() || !settlementReceipt || settlementParticipants.length === 0}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
               >
                 생성
               </button>
@@ -618,10 +618,10 @@ export default function ChatPage({
             {/* 헤더 */}
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-orange-400 rounded-xl flex items-center justify-center">
                   <span className="text-white text-lg">👥</span>
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">참여자</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">참여자</h2>
               </div>
               <button
                 onClick={() => setShowParticipantsModal(false)}
@@ -635,15 +635,15 @@ export default function ChatPage({
             <div className="p-6">
               <ul className="divide-y">
                 <div className="mt-4 text-sm text-gray-600">
-                  총 <span className="font-semibold">{chatMembers.length}</span>명
+                  총 <span className="font-semibold font-jua">{chatMembers.length}</span>명
                 </div>
                 {chatMembers.map((m) => (
                   <li key={m.id} className="flex items-center gap-3 p-3">
-                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                    <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                       {m.avatar}
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium text-gray-800">{m.name}</div>
+                      <div className="font-medium text-gray-800 font-gowun">{m.name}</div>
                       {/* 필요하면 역할/상태 등 추가 */}
                     </div>
                   </li>
@@ -655,7 +655,7 @@ export default function ChatPage({
             <div className="p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowParticipantsModal(false)}
-                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors"
+                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
               >
                 닫기
               </button>
@@ -669,7 +669,7 @@ export default function ChatPage({
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* 모달 헤더 */}
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-800">투표 생성</h2>
+              <h2 className="text-2xl font-bold text-gray-800 font-jua">투표 생성</h2>
               <button
                 onClick={() => setShowVoteModal(false)}
                 className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 transition-colors"
@@ -682,7 +682,7 @@ export default function ChatPage({
             <div className="p-6 space-y-6">
               {/* 투표 제목 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">투표 제목 *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">투표 제목 *</label>
                 <input
                   type="text"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 transition-colors"
@@ -694,7 +694,7 @@ export default function ChatPage({
 
               {/* 투표 설명 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">설명</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">설명</label>
                 <textarea
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 transition-colors resize-none"
                   rows={3}
@@ -707,8 +707,8 @@ export default function ChatPage({
               {/* 다중 투표 허용 */}
               <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl">
                 <div>
-                  <div className="font-semibold text-gray-800">다중 투표 허용</div>
-                  <div className="text-sm text-gray-600">참여자가 여러 선택지를 선택할 수 있습니다</div>
+                  <div className="font-semibold text-gray-800 font-jua">다중 투표 허용</div>
+                  <div className="text-sm text-gray-600 font-gowun">참여자가 여러 선택지를 선택할 수 있습니다</div>
                 </div>
                 <button
                   onClick={() => setAllowMultiple(!allowMultiple)}
@@ -726,7 +726,7 @@ export default function ChatPage({
 
               {/* 마감일 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">마감일 *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">마감일 *</label>
                 <input
                   type="datetime-local"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 transition-colors"
@@ -737,7 +737,7 @@ export default function ChatPage({
 
               {/* 선택지들 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">선택지 *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">선택지 *</label>
                 <div className="space-y-3">
                   {options.map((option, index) => (
                     <div key={index} className="flex gap-2">
@@ -763,7 +763,7 @@ export default function ChatPage({
                     className="w-full py-3 border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl text-gray-600 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
                   >
                     <span className="text-lg">+</span>
-                    선택지 추가
+                    <span className="font-gowun">선택지 추가</span>
                   </button>
                 </div>
               </div>
@@ -773,14 +773,14 @@ export default function ChatPage({
             <div className="flex gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowVoteModal(false)}
-                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors"
+                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
               >
                 취소
               </button>
               <button
                 onClick={handleCreateVote}
                 disabled={!voteTitle.trim() || !deadline || options.filter((opt) => opt.trim()).length < 2}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
               >
                 생성
               </button>
@@ -790,26 +790,11 @@ export default function ChatPage({
       )}
 
       {/* Notification Modal */}
-      {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-700 font-jua">알림</h2>
-              <button
-                onClick={() => setShowNotificationModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-0">
-              <Notification onNavigateToOnboarding={onNavigateToOnboarding} />
-            </div>
-          </div>
-        </div>
-      )}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onNavigateToOnboarding={onNavigateToOnboarding}
+      />
     </div>
 
   )

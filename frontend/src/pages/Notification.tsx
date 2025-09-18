@@ -90,20 +90,20 @@ const Notification: React.FC<NotificationProps> = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-6">
       <div className="max-w-4xl mx-auto flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
+        <h1 className="text-3xl font-bold flex items-center gap-3 font-jua text-gray-800">
           <Bell className="h-8 w-8 text-orange-600" />
           알림
           {notifications.filter(n => !n.isRead).length > 0 && (
-            <span className="bg-orange-600 text-white text-sm px-2 py-1 rounded-full">
+            <span className="bg-orange-500 text-white text-sm px-3 py-1 rounded-full font-gowun">
               {notifications.filter(n => !n.isRead).length}개의 새 알림
             </span>
           )}
         </h1>
         <button
           onClick={markAllAsRead}
-          className="flex items-center gap-2 border border-orange-200 text-orange-700 px-4 py-2 rounded-full hover:bg-orange-50 transition"
+          className="flex items-center gap-2 border-2 border-orange-200 text-orange-700 px-4 py-2 rounded-xl hover:bg-orange-50 transition-all duration-200 font-jua shadow-md hover:shadow-lg"
         >
           <Check className="h-4 w-4" />
           모두 읽음 처리
@@ -111,15 +111,15 @@ const Notification: React.FC<NotificationProps> = () => {
       </div>
 
       {/* Filter Buttons */}
-      <div className="max-w-4xl mx-auto flex gap-2 mb-6 flex-wrap">
+      <div className="max-w-4xl mx-auto flex gap-3 mb-6 flex-wrap">
         {["all", "payment", "vote", "settlement", "general"].map((type) => (
           <button
             key={type}
             onClick={() => setFilter(type as any)}
-            className={`px-4 py-2 rounded-full text-sm transition ${
+            className={`px-4 py-2 rounded-xl text-sm transition-all duration-200 font-jua shadow-md hover:shadow-lg transform hover:scale-105 ${
               filter === type
-                ? "bg-orange-500 text-white"
-                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                ? "bg-orange-500 text-white border-2 border-orange-400"
+                : "bg-white border-2 border-orange-200 text-gray-700 hover:bg-orange-50 hover:border-orange-300"
             }`}
           >
             {type === "all" ? "전체" : type === "payment" ? "회비" : type === "vote" ? "투표" : type === "settlement" ? "정산" : "일반"}
@@ -130,16 +130,16 @@ const Notification: React.FC<NotificationProps> = () => {
       {/* Notification List */}
       <div className="max-w-4xl mx-auto space-y-4">
         {filteredNotifications.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-2xl shadow">
+          <div className="text-center py-12 bg-white rounded-2xl shadow-lg border border-orange-100">
             <Bell className="h-12 w-12 text-orange-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">알림이 없습니다</h3>
-            <p className="text-gray-600">새로운 알림이 있으면 여기에 표시됩니다.</p>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2 font-jua">알림이 없습니다</h3>
+            <p className="text-gray-600 font-gowun">새로운 알림이 있으면 여기에 표시됩니다.</p>
           </div>
         )}
         {filteredNotifications.map((notification) => (
           <div
             key={notification.id}
-            className={`flex items-start gap-4 p-6 rounded-2xl bg-white shadow hover:shadow-md transition border-l-4 ${
+            className={`flex items-start gap-4 p-6 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-200 border-l-4 border border-orange-100 hover:border-orange-200 ${
               !notification.isRead ? "border-l-orange-500" : "border-l-transparent"
             }`}
           >
@@ -151,18 +151,18 @@ const Notification: React.FC<NotificationProps> = () => {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className={`font-semibold ${!notification.isRead ? "text-gray-900" : "text-gray-700"}`}>
+                <h3 className={`font-semibold font-jua ${!notification.isRead ? "text-gray-800" : "text-gray-600"}`}>
                   {notification.title}
                 </h3>
                 {getPriorityIndicator(notification.priority)}
                 {!notification.isRead && (
-                  <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full">새 알림</span>
+                  <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full font-gowun">새 알림</span>
                 )}
               </div>
-              <p className={`text-sm mb-3 ${!notification.isRead ? "text-gray-800" : "text-gray-600"}`}>
+              <p className={`text-sm mb-3 font-gowun ${!notification.isRead ? "text-gray-700" : "text-gray-600"}`}>
                 {notification.message}
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+              <div className="flex items-center gap-2 text-xs text-gray-500 font-gowun">
                 <Clock className="h-3 w-3" />
                 {formatTimestamp(notification.timestamp)}
               </div>
@@ -173,12 +173,12 @@ const Notification: React.FC<NotificationProps> = () => {
               {!notification.isRead && (
                 <button
                   onClick={() => markAsRead(notification.id)}
-                  className="text-orange-700 hover:bg-orange-50 px-3 py-1 rounded-full text-sm transition"
+                  className="text-orange-700 hover:bg-orange-50 px-3 py-1 rounded-xl text-sm transition-all duration-200 font-jua border border-orange-200 hover:border-orange-300 shadow-sm hover:shadow-md"
                 >
                   읽음 처리
                 </button>
               )}
-              <button className="text-gray-400 hover:bg-gray-50 px-3 py-1 rounded-full text-sm transition">
+              <button className="text-gray-400 hover:bg-gray-50 px-3 py-1 rounded-xl text-sm transition-all duration-200 font-jua border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md">
                 삭제
               </button>
             </div>

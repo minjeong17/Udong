@@ -1,14 +1,17 @@
 import { useState } from "react";
+import Sidebar from '../components/Sidebar';
+import NotificationModal from '../components/NotificationModal';
+import { useRouter } from '../hooks/useRouter';
 
 /** 텍스트만 링크 (밑줄은 hover 때만) */
-function MyPageTextLink({ href = "#", className = "" }: { href?: string; className?: string }) {
+function MyPageTextLink({ onClick, className = "" }: { onClick?: () => void; className?: string }) {
   return (
-    <a
-      href={href}
-      className={`text-sm text-slate-600 hover:text-slate-800 hover:underline underline-offset-4 no-underline ${className}`}
+    <button
+      onClick={onClick}
+      className={`text-sm text-slate-600 hover:text-slate-800 hover:underline underline-offset-4 no-underline bg-transparent border-none cursor-pointer font-gowun ${className}`}
     >
       마이페이지에서 보기 →
-    </a>
+    </button>
   );
 }
 
@@ -28,11 +31,11 @@ function PointsBadge({ points, href = "#" }: { points: number; href?: string }) 
   return (
     <a
       href={href}
-      className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-3 py-1.5 text-white shadow-sm hover:shadow-md transition no-underline"
+      className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1.5 text-white shadow-sm hover:shadow-md transition no-underline"
       aria-label="마이페이지 포인트 현황으로 이동"
     >
       <CoinIcon />
-      <span className="text-sm font-bold tabular-nums">{points.toLocaleString()}P</span>
+      <span className="text-sm font-bold tabular-nums font-jua">{points.toLocaleString()}P</span>
     </a>
   );
 }
@@ -69,9 +72,15 @@ const INITIAL_INVENTORY: InventoryItem[] = [
   { id: "late_free",  icon: "⏰", name: "지각 면제권", quantity: "보유: 1개" },
 ];
 
-export default function Shop() {
+interface ShopProps {
+  onNavigateToOnboarding: () => void;
+}
+
+export default function Shop({ onNavigateToOnboarding }: ShopProps) {
+  const { navigate } = useRouter();
   const [points] = useState(2450);
   const [inventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const handleBuy = (name: string) => {
     if (window.confirm("정말 구매하시겠습니까??")) {
@@ -80,25 +89,21 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* 사이드바 (필요시 유지) */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-20 flex-col items-center py-5 bg-gradient-to-br from-orange-500 to-amber-400 text-white">
-        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/20 backdrop-blur mb-6 text-2xl">🛒</div>
-        <nav className="flex flex-col items-center gap-4">
-          {["🛒", "💬", "📅", "🧾", "✅", "🏆", "🎨", "📦", "📊", "🏠"].map((icon, idx) => (
-            <div key={idx} className={`w-12 h-12 grid place-items-center rounded-xl transition ${idx === 0 ? "bg-white text-orange-500 shadow-md" : "bg-white/10 hover:bg-white/20"}`} title="menu">
-              <span className="text-2xl">{icon}</span>
-            </div>
-          ))}
-        </nav>
-      </aside>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+      <div className="flex">
+        {/* Left Sidebar */}
+        <Sidebar
+          onNavigateToOnboarding={onNavigateToOnboarding}
+          onShowNotification={() => setShowNotificationModal(true)}
+        />
 
-      <main className="flex-1 md:ml-20">
+        {/* Main Content */}
+        <div className="flex-1">
         {/* 헤더 */}
         <header className="bg-white border-b border-slate-200 px-6 md:px-8 py-5 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-800">아이템 상점</h1>
-            <p className="text-slate-500 text-sm mt-1">포인트로 아이템을 구매하세요</p>
+            <h1 className="text-2xl font-semibold text-slate-800 font-jua">아이템 상점</h1>
+            <p className="text-slate-500 text-sm mt-1 font-gowun">포인트로 아이템을 구매하세요</p>
           </div>
           <div />
         </header>
@@ -108,8 +113,8 @@ export default function Shop() {
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800">🛍️ 아이템 상점</h3>
-                <p className="text-sm text-slate-500">아이템을 선택해 구매하세요</p>
+                <h3 className="text-lg font-semibold text-slate-800 font-jua">🛍️ 아이템 상점</h3>
+                <p className="text-sm text-slate-500 font-gowun">아이템을 선택해 구매하세요</p>
               </div>
               <PointsBadge points={points} />
             </div>
@@ -120,16 +125,16 @@ export default function Shop() {
                   <div className="flex items-start gap-3">
                     <div className="text-3xl shrink-0">{it.icon}</div>
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-slate-800 truncate">{it.name}</h4>
-                      <p className="text-sm text-slate-600">{it.description}</p>
+                      <h4 className="font-semibold text-slate-800 truncate font-jua">{it.name}</h4>
+                      <p className="text-sm text-slate-600 font-gowun">{it.description}</p>
                       {/* 유효기간/재고 배지 제거됨 */}
                     </div>
                   </div>
 
                   <div className="mt-4 flex items-center justify-between">
-                    <div className="text-orange-600 font-bold">{it.price}P</div>
+                    <div className="text-orange-500 font-bold font-jua">{it.price}P</div>
                     <button
-                      className="h-9 px-4 rounded-lg text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 active:translate-y-[1px] transition"
+                      className="h-9 px-4 rounded-lg text-sm font-medium bg-orange-400 text-white hover:bg-orange-500 active:translate-y-[1px] transition font-jua"
                       onClick={() => handleBuy(it.name)}
                     >
                       구매
@@ -144,11 +149,11 @@ export default function Shop() {
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="mb-1 flex items-center gap-2">
               <span className="text-xl" aria-hidden>📦</span>
-              <h3 className="text-lg font-semibold text-slate-800">내 아이템</h3>
+              <h3 className="text-lg font-semibold text-slate-800 font-jua">내 아이템</h3>
             </div>
-            <p className="text-sm text-slate-500">보유 중인 아이템과 사용 현황</p>
+            <p className="text-sm text-slate-500 font-gowun">보유 중인 아이템과 사용 현황</p>
             <div className="mt-1">
-              <MyPageTextLink />
+              <MyPageTextLink onClick={() => navigate('mypage')} />
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -156,8 +161,8 @@ export default function Shop() {
                 <div key={inv.id} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
                   <div className="text-2xl">{inv.icon}</div>
                   <div className="min-w-0">
-                    <div className="font-medium text-slate-800 truncate">{inv.name}</div>
-                    <div className="text-xs text-slate-500">{inv.quantity}</div>
+                    <div className="font-medium text-slate-800 truncate font-jua">{inv.name}</div>
+                    <div className="text-xs text-slate-500 font-gowun">{inv.quantity}</div>
                     {/* 만료 정보 제거됨 */}
                   </div>
                 </div>
@@ -165,7 +170,15 @@ export default function Shop() {
             </div>
           </section>
         </div>
-      </main>
+        </div>
+      </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onNavigateToOnboarding={onNavigateToOnboarding}
+      />
     </div>
   );
 }

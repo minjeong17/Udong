@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from '../components/Sidebar';
-import Notification from './Notification';
+import NotificationModal from '../components/NotificationModal';
 
 interface MtPlannerProps {
   onNavigateToOnboarding: () => void;
@@ -70,7 +70,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       {/* Left Sidebar */}
       <Sidebar
         onNavigateToOnboarding={onNavigateToOnboarding}
@@ -90,15 +90,15 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20"></div>
                 <div className="absolute bottom-6 left-6 text-white">
-                  <h2 className="text-4xl font-bold mb-2 drop-shadow-lg">완벽한 MT 계획</h2>
-                  <p className="text-xl opacity-90 drop-shadow-md">AI가 도와주는 맞춤형 MT 플래닝</p>
+                  <h2 className="text-4xl font-bold mb-2 drop-shadow-lg font-jua">완벽한 MT 계획</h2>
+                  <p className="text-xl opacity-90 drop-shadow-md font-gowun">AI가 도와주는 맞춤형 MT 플래닝</p>
                 </div>
                 <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/30">
                   <div className="flex items-center gap-2 text-white">
                     <span className="text-2xl">🗺️</span>
                     <div>
-                      <div className="text-sm font-semibold">AI 분석</div>
-                      <div className="text-xs opacity-80">최적 장소 탐색 중...</div>
+                      <div className="text-sm font-semibold font-jua">AI 분석</div>
+                      <div className="text-xs opacity-80 font-gowun">최적 장소 탐색 중...</div>
                     </div>
                   </div>
                 </div>
@@ -106,8 +106,8 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
 
               <div className="text-center mb-12">
                 <div className="text-6xl mb-6">🏕️</div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">MT 계획 생성기</h2>
-                <p className="text-lg text-gray-600 mb-8">
+                <h2 className="text-3xl font-bold text-gray-800 mb-4 font-jua">MT 계획 생성기</h2>
+                <p className="text-lg text-gray-600 mb-8 font-gowun">
                   몇 가지 정보만 입력하면 완벽한 MT 계획을 자동으로 생성해드립니다
                 </p>
                 <button
@@ -115,7 +115,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                     setShowPlanModal(true);
                     // 예제: 더미 mtPlan 생성
                   }}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200"
+                  className="bg-orange-400 hover:bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 font-jua"
                 >
                   ✨ MT 계획 시작하기
                 </button>
@@ -125,8 +125,8 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
             <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-center mb-8 pt-10">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">MT 계획서</h2>
-                    <p className="text-gray-600">생성된 MT 계획을 확인하고 수정하세요</p>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2 font-jua">MT 계획서</h2>
+                    <p className="text-gray-600 font-gowun">생성된 MT 계획을 확인하고 수정하세요</p>
                   </div>
                   <div className="flex gap-3">
                     <button
@@ -135,7 +135,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                       setFormData({ duration: "", weather: "", participants: "", genderRatio: "", specialNotes: "" });
                       setShowPlanModal(true);
                      }}
-                     className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                     className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 font-jua"
                     >
                       <span>🔄</span>
                       <span>새로 만들기</span>
@@ -146,44 +146,44 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* 장소 정보 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
                       <span>📍</span>
                       추천 장소
                     </h3>
                     <div className="space-y-3">
                       <div>
-                        <h4 className="font-semibold text-gray-800">{mtPlan.location.name}</h4>
-                        <p className="text-gray-600 text-sm">{mtPlan.location.reason}</p>
-                        <p className="text-orange-600 text-sm font-medium">이동시간: {mtPlan.location.distance}</p>
+                        <h4 className="font-semibold text-gray-800 font-jua">{mtPlan.location.name}</h4>
+                        <p className="text-gray-600 text-sm font-gowun">{mtPlan.location.reason}</p>
+                        <p className="text-orange-600 text-sm font-medium font-gowun">이동시간: {mtPlan.location.distance}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* 예산 정보 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
                       <span>💰</span>
                       예상 예산
                     </h3>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">숙박비</span>
-                        <span className="font-medium">{mtPlan.budget.accommodation.toLocaleString()}원</span>
+                        <span className="text-gray-600 font-gowun">숙박비</span>
+                        <span className="font-medium font-jua">{mtPlan.budget.accommodation.toLocaleString()}원</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">식비</span>
-                        <span className="font-medium">{mtPlan.budget.meals.toLocaleString()}원</span>
+                        <span className="text-gray-600 font-gowun">식비</span>
+                        <span className="font-medium font-jua">{mtPlan.budget.meals.toLocaleString()}원</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">활동비</span>
-                        <span className="font-medium">{mtPlan.budget.activities.toLocaleString()}원</span>
+                        <span className="text-gray-600 font-gowun">활동비</span>
+                        <span className="font-medium font-jua">{mtPlan.budget.activities.toLocaleString()}원</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">교통비</span>
-                        <span className="font-medium">{mtPlan.budget.transportation.toLocaleString()}원</span>
+                        <span className="text-gray-600 font-gowun">교통비</span>
+                        <span className="font-medium font-jua">{mtPlan.budget.transportation.toLocaleString()}원</span>
                       </div>
                       <div className="border-t pt-2 mt-2">
-                        <div className="flex justify-between font-bold text-orange-600">
+                        <div className="flex justify-between font-bold text-orange-600 font-jua">
                           <span>총 예산 (1인당)</span>
                           <span>{mtPlan.budget.total.toLocaleString()}원</span>
                         </div>
@@ -193,17 +193,17 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
 
                   {/* 일정표 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg lg:col-span-2">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
                       <span>📅</span>
                       상세 일정표
                     </h3>
                     <div className="space-y-3">
                       {mtPlan.schedule.map((item: any, index: number) => (
                         <div key={index} className="flex items-center gap-4 p-3 bg-orange-50 rounded-lg">
-                          <div className="text-orange-600 font-bold text-sm w-16">{item.time}</div>
+                          <div className="text-orange-600 font-bold text-sm w-16 font-jua">{item.time}</div>
                           <div className="flex-1">
-                            <div className="font-medium text-gray-800">{item.activity}</div>
-                            <div className="text-gray-600 text-sm">{item.location}</div>
+                            <div className="font-medium text-gray-800 font-jua">{item.activity}</div>
+                            <div className="text-gray-600 text-sm font-gowun">{item.location}</div>
                           </div>
                         </div>
                       ))}
@@ -212,39 +212,39 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
 
                   {/* 준비물 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
                       <span>🎒</span>
                       준비물 리스트
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-semibold text-red-600 mb-2">필수 준비물</h4>
+                        <h4 className="font-semibold text-red-500 mb-2 font-jua">필수 준비물</h4>
                         <ul className="space-y-1">
                           {mtPlan.items.essential.map((item: string, index: number) => (
-                            <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
-                              <span className="text-red-500">•</span>
+                            <li key={index} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
+                              <span className="text-red-400">•</span>
                               {item}
                             </li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="font-semibold text-orange-600 mb-2">권장 준비물</h4>
+                        <h4 className="font-semibold text-orange-500 mb-2 font-jua">권장 준비물</h4>
                         <ul className="space-y-1">
                           {mtPlan.items.recommended.map((item: string, index: number) => (
-                            <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
-                              <span className="text-orange-500">•</span>
+                            <li key={index} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
+                              <span className="text-orange-400">•</span>
                               {item}
                             </li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="font-semibold text-green-600 mb-2">제공 물품</h4>
+                        <h4 className="font-semibold text-green-500 mb-2 font-jua">제공 물품</h4>
                         <ul className="space-y-1">
                           {mtPlan.items.provided.map((item: string, index: number) => (
-                            <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
-                              <span className="text-green-500">•</span>
+                            <li key={index} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
+                              <span className="text-green-400">•</span>
                               {item}
                             </li>
                           ))}
@@ -255,34 +255,34 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
 
                   {/* 숙박 정보 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
                       <span>🏠</span>
                       숙박 정보
                     </h3>
                     <div className="space-y-3">
                       <div>
-                        <span className="text-gray-600 text-sm">숙박 유형:</span>
-                        <span className="ml-2 font-medium">{mtPlan.accommodation.type}</span>
+                        <span className="text-gray-600 text-sm font-gowun">숙박 유형:</span>
+                        <span className="ml-2 font-medium font-jua">{mtPlan.accommodation.type}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600 text-sm">수용 인원:</span>
-                        <span className="ml-2 font-medium">{mtPlan.accommodation.capacity}</span>
+                        <span className="text-gray-600 text-sm font-gowun">수용 인원:</span>
+                        <span className="ml-2 font-medium font-jua">{mtPlan.accommodation.capacity}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600 text-sm">객실 구성:</span>
-                        <span className="ml-2 font-medium">{mtPlan.accommodation.rooms}</span>
+                        <span className="text-gray-600 text-sm font-gowun">객실 구성:</span>
+                        <span className="ml-2 font-medium font-jua">{mtPlan.accommodation.rooms}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600 text-sm">체크인/아웃:</span>
-                        <span className="ml-2 font-medium">
+                        <span className="text-gray-600 text-sm font-gowun">체크인/아웃:</span>
+                        <span className="ml-2 font-medium font-jua">
                           {mtPlan.accommodation.checkIn} / {mtPlan.accommodation.checkOut}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-600 text-sm">편의시설:</span>
+                        <span className="text-gray-600 text-sm font-gowun">편의시설:</span>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {mtPlan.accommodation.facilities.map((facility: string, index: number) => (
-                            <span key={index} className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs">
+                            <span key={index} className="bg-orange-100 text-orange-600 px-2 py-1 rounded text-xs font-gowun">
                               {facility}
                             </span>
                           ))}
@@ -296,26 +296,11 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
         </div>
       </div>
       {/* Notification Modal */}
-      {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-700 font-jua">알림</h2>
-              <button
-                onClick={() => setShowNotificationModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-0">
-              <Notification onNavigateToOnboarding={onNavigateToOnboarding} />
-            </div>
-          </div>
-        </div>
-      )}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onNavigateToOnboarding={onNavigateToOnboarding}
+      />
     {showPlanModal && (
         <div
           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm"
@@ -331,8 +316,8 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                   <span className="text-white text-xl">🏕️</span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-800">MT 정보 입력</h3>
-                  <p className="text-gray-600 text-sm mt-1">MT 계획 생성을 위한 기본 정보를 입력해주세요</p>
+                  <h3 className="text-2xl font-bold text-gray-800 font-jua">MT 정보 입력</h3>
+                  <p className="text-gray-600 text-sm mt-1 font-gowun">MT 계획 생성을 위한 기본 정보를 입력해주세요</p>
                 </div>
               </div>
               <button
@@ -345,7 +330,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 font-jua">
                   <span className="text-orange-600">⏰</span>
                   MT 기간 <span className="text-red-500">*</span>
                 </label>
@@ -363,7 +348,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 font-jua">
                   <span className="text-orange-600">🌤️</span>
                   예상 날씨 <span className="text-red-500">*</span>
                 </label>
@@ -382,7 +367,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 font-jua">
                   <span className="text-orange-600">👥</span>
                   참여 인원 <span className="text-red-500">*</span>
                 </label>
@@ -398,7 +383,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 font-jua">
                   <span className="text-orange-600">⚖️</span>
                   성비 <span className="text-red-500">*</span>
                 </label>
@@ -417,7 +402,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 font-jua">
                   <span className="text-orange-600">📝</span>
                   특이사항
                 </label>
@@ -433,14 +418,14 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
               <div className="flex justify-end gap-4 pt-6 border-t border-orange-200">
                 <button
                   type="button"
-                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-200"
+                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-200 font-jua"
                   onClick={() => setShowPlanModal(false)}
                 >
                   취소
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-xl font-bold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-bold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2 font-jua"
                 >
                   <span>✨</span>
                   <span>MT 계획 생성</span>
