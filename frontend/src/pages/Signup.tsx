@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
+import { AuthApi } from '../apis/auth';
+import type { SignUpRequest } from '../apis/auth';
 
 interface SignupProps {
   onNavigateToOnboarding: () => void;
@@ -17,6 +19,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
     major: '',
     residence: '',
     phone: '',
+    account: '', // 계좌번호 필드 추가
     availabilities: [] as Array<{
       day_of_week: string;
       start_time: string;
@@ -24,6 +27,9 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
     }>,
     agreeToTerms: false
   });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -72,9 +78,67 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Signup attempt:', formData);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // 요일을 문자열에서 숫자로 변환하는 매핑 (0-6: 일-토)
+      const dayMapping: Record<string, number> = {
+        'sunday': 0,
+        'monday': 1,
+        'tuesday': 2,
+        'wednesday': 3,
+        'thursday': 4,
+        'friday': 5,
+        'saturday': 6
+      };
+
+      // API 요청 데이터 형태로 변환
+      const requestData: SignUpRequest = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        gender: formData.gender as 'M' | 'F',
+        account: formData.account,
+        ...(formData.university && { university: formData.university }),
+        ...(formData.major && { major: formData.major }),
+        ...(formData.residence && { residence: formData.residence }),
+        ...(formData.phone && { phone: formData.phone }),
+        ...(formData.availabilities.length > 0 && {
+          availability: formData.availabilities.map(avail => ({
+            dayOfWeek: dayMapping[avail.day_of_week],
+            startTime: avail.start_time,
+            endTime: avail.end_time
+          }))
+        })
+      };
+
+      await AuthApi.signUp(requestData);
+
+      // 성공 시 로그인 페이지로 이동
+      alert('회원가입이 완료되었습니다! 로그인해주세요.');
+      onNavigateToLogin();
+
+    } catch (error) {
+      console.error('Signup failed:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('이미 사용 중인 이메일입니다')) {
+          setError('이미 사용 중인 이메일입니다.');
+        } else if (error.message.includes('계좌번호')) {
+          setError('계좌번호 형식이 올바르지 않습니다.');
+        } else if (error.message.includes('email')) {
+          setError('이메일 형식이 올바르지 않습니다.');
+        } else {
+          setError('회원가입에 실패했습니다. 다시 시도해주세요.');
+        }
+      } else {
+        setError('회원가입에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const days = [
@@ -189,9 +253,23 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 required
               >
                 <option value="">선택하세요</option>
-                <option value="male">남성</option>
-                <option value="female">여성</option>
+                <option value="M">남성</option>
+                <option value="F">여성</option>
               </select>
+            </div>
+
+            {/* Account */}
+            <div>
+              <label className="block text-gray-600 text-sm mb-2 font-gowun">계좌번호 - <span className='text-orange-500'>자동 정산 결제 기능</span>을 위해 사용됩니다.</label>
+              <input
+                type="text"
+                name="account"
+                value={formData.account}
+                onChange={handleInputChange}
+                className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
+                placeholder="예시 형식) 10002000300045"
+                required
+              />
             </div>
 
             {/* University (Optional) */}
@@ -243,7 +321,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 value={formData.phone}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="예시) 01012348888"
+                placeholder="예시 형식) 010-1234-8888"
                 required
               />
             </div>
@@ -345,12 +423,20 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
               <span className="ml-2 text-gray-600 font-gowun text-sm">이용약관 및 개인정보처리방침에 동의합니다</span>
             </div>
 
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-red-600 text-sm font-gowun">{error}</p>
+              </div>
+            )}
+
             {/* Signup Button */}
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-2xl transition-colors border border-orange-400 font-gowun text-base"
+              disabled={isLoading}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-2xl transition-colors border border-orange-400 font-gowun text-base"
             >
-              회원가입
+              {isLoading ? '가입 중...' : '회원가입'}
             </button>
 
             {/* Login link */}
