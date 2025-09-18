@@ -50,6 +50,7 @@ dependencies {
 	implementation "com.github.f4b6a3:ulid-creator:5.2.2"
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'  // WebClient 포함됨
 }
 
 tasks.named('test') {
