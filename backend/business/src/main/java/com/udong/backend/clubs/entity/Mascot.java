@@ -26,7 +26,7 @@ public class Mascot {
     private String imageUrl;
 
 
-    @Lob @Column(name = "prompt_meta", nullable = false)
+    @Lob @Column(name = "prompt_meta", nullable = false, columnDefinition = "MEDIUMTEXT")
     private String promptMeta;
 
 
