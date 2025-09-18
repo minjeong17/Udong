@@ -31,7 +31,7 @@ interface ItemHistory {
   points?: number; // 차감된 포인트 (구매 시만)
 }
 
-const MyPage: React.FC<MyPageProps> = ({ onNavigateToOnboarding, currentRoute }) => {
+const MyPage: React.FC<MyPageProps> = ({ onNavigateToOnboarding }) => {
   const { navigate } = useRouter();
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
