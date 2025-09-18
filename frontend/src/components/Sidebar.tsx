@@ -44,7 +44,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
 
           {/* 3. 마이페이지 */}
-          <button className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="마이페이지">
+          <button
+            onClick={() => navigate('mypage')}
+            className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="마이페이지">
             <img src="/images/button/MyPage.png" alt="마이페이지" className="w-14 h-14" />
           </button>
 

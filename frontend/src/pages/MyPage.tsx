@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import Header from "../components/Header"
+import Sidebar from '../components/Sidebar';
+import NotificationModal from '../components/NotificationModal';
 
 interface MyPageProps {
   onNavigateToOnboarding: () => void
@@ -30,7 +31,8 @@ interface ItemHistory {
 }
 
 const MyPage: React.FC<MyPageProps> = ({ onNavigateToOnboarding, currentRoute }) => {
-  
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+
   const [profile] = useState<UserProfile>({
     name: "김동아리",
     joinDate: "2025-09-01",
@@ -58,16 +60,17 @@ const MyPage: React.FC<MyPageProps> = ({ onNavigateToOnboarding, currentRoute })
   const [showPointModal, setShowPointModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+      <div className="flex">
+        {/* Left Sidebar */}
+        <Sidebar
+          onNavigateToOnboarding={onNavigateToOnboarding}
+          onShowNotification={() => setShowNotificationModal(true)}
+        />
 
-      <Header
-        onNavigateToOnboarding={onNavigateToOnboarding}
-        variant="default"
-        showBackButton={true}
-        currentRoute={currentRoute}
-      />
-
-      <div className="pt-24 px-4 max-w-6xl mx-auto">
+        {/* Main Content */}
+        <div className="flex-1 p-8">
+          <div className="max-w-6xl mx-auto">
         {/* Profile Header */}
         <div className="bg-white rounded-3xl shadow-lg p-8 mb-6 relative">
           <div className="flex items-start justify-between">
@@ -517,8 +520,17 @@ const MyPage: React.FC<MyPageProps> = ({ onNavigateToOnboarding, currentRoute })
               <div className="text-xs text-red-500">만료: -150P</div>
             </div>
           </div>
+          </div>
         </div>
       </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onNavigateToOnboarding={onNavigateToOnboarding}
+      />
+    </div>
     </div>
   )
 }
