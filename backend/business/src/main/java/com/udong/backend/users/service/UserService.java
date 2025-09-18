@@ -2,19 +2,26 @@ package com.udong.backend.users.service;
 
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.global.config.AccountCrypto;
+import com.udong.backend.global.util.FinApiClient;
 import com.udong.backend.users.dto.SignUpRequest;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.entity.UserAvailability;
 import com.udong.backend.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalTime;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -25,6 +32,7 @@ public class UserService {
     private final AccountCrypto accountCrypto;
     private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RND = new SecureRandom();
+    private final FinApiClient finApiClient;
 
     @Transactional
     public void signUp(SignUpRequest req) {
@@ -32,13 +40,20 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
         }
 
-        // 계좌 정규화 + 최소 길이 검증
+        // 1) 계좌 암호화 (기존)
         String normalized = accountCrypto.normalize(req.getAccount());
         if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다");
+        String accountCipher = accountCrypto.encrypt(normalized);
+        short keyVer = (short) accountCrypto.keyVersion();
 
-        String code = generateCode();
-        String cipher = accountCrypto.encrypt(normalized);
+        // 2) 외부 API로 userKey 가져오기 → 검증 → 암호화
+        String plainUserKey = finApiClient.fetchUserKeyByEmail(req.getEmail());         // ★ 아래 private 메서드
 
+        System.out.println("plainUserKeyyyyyyyyyyyyyyyy " + plainUserKey);
+
+        String userKeyCipher = accountCrypto.encrypt(plainUserKey);        // 계좌와 동일한 암호화기/키버전
+
+        // 3) 엔티티 생성/저장
         User user = User.builder()
                 .email(req.getEmail())
                 .passwordHash(passwordEncoder.encode(req.getPassword()))
@@ -47,12 +62,12 @@ public class UserService {
                 .major(req.getMajor())
                 .residence(req.getResidence())
                 .phone(req.getPhone())
-                .gender(User.Gender.valueOf(req.getGender())) // "M"/"F"만 허용
-                .accountCipher(cipher)
-                .accountKeyVer((short) accountCrypto.keyVersion())
+                .gender(User.Gender.valueOf(req.getGender()))
+                .accountCipher(accountCipher)
+                .accountKeyVer(keyVer)     // 계좌 + userKey 공용 버전
+                .userKeyCipher(userKeyCipher)
                 .build();
 
-        // 가능 시간 같이 들어오면 추가
         if (req.getAvailability() != null) {
             for (var a : req.getAvailability()) {
                 UserAvailability ua = UserAvailability.builder()
@@ -60,12 +75,11 @@ public class UserService {
                         .startTime(LocalTime.parse(a.getStartTime()))
                         .endTime(LocalTime.parse(a.getEndTime()))
                         .build();
-                user.addAvailability(ua); // 양방향 세팅 (cascade로 함께 저장)
+                user.addAvailability(ua);
             }
         }
 
-        User saved = userRepository.save(user);
-//        return new SignUpResponse(saved.getId(), saved.getEmail(), saved.getName());
+        userRepository.save(user);
     }
 
     @Transactional

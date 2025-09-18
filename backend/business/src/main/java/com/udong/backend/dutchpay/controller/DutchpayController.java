@@ -37,10 +37,6 @@ public class DutchpayController {
     ) {
         Integer userId = securityUtils.currentUserId();
 
-        System.out.println("participantUserIds = " + participantUserIds);   // [1, 2, 3] 이어야 정상
-        System.out.println("size = " + (participantUserIds == null ? 0 : participantUserIds.size()));
-
-
         // DTO로 묶고 서비스 호출
         CreateDutchpayRequest req = CreateDutchpayRequest.builder()
                 .amount(amount)

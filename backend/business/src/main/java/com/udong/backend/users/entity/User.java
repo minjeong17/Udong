@@ -52,6 +52,10 @@ public class User {
     @Column(name = "account_key_ver", nullable = false)
     private short accountKeyVer;
 
+    // === 금융망 userKey (암호화 저장) ===
+    @Column(name = "user_key_cipher", length = 512)
+    private String userKeyCipher;       // 평문 getter/setter로 접근하면 컨버터가 자동 암/복호
+
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", nullable = false, length = 50) // "M" / "F"
     private Gender gender;
