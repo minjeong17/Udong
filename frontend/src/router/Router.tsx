@@ -146,7 +146,10 @@ const Router = () => {
         onNavigateToOnboarding={() => navigate('onboarding')}
       />
     default:
-      return <Onboarding onNavigateToLogin={() => navigate('login')} />
+      return <Onboarding
+        onNavigateToLogin={() => navigate('login')}
+        onNavigateToClubSelection={() => navigate('club-selection')}
+      />
     }
   }
 
