@@ -83,4 +83,12 @@ public class DutchpayController {
         return ResponseEntity.ok(ApiResponse.ok("정산 삭제 완료"));
     }
 
+    /** 정산 종료 */
+    @PutMapping("/{dutchpayId}")
+    public ResponseEntity<ApiResponse<?>> dutchpayDone(@PathVariable Integer dutchpayId) {
+        Integer currentUserId = securityUtils.currentUserId();
+        dutchpayService.dutchpayDone(dutchpayId, currentUserId);
+        return ResponseEntity.ok(ApiResponse.ok("정산 종료 완료"));
+    }
+
 }

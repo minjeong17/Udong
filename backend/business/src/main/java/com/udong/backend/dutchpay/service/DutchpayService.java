@@ -291,7 +291,7 @@ public class DutchpayService {
                 );
 
         // 2. 생성자(소유자)와 현재 사용자 동일 여부 확인 (다르면 403)
-        Integer ownerId = dutchpay.getCreatedBy().getId(); // <- 여기 필드명만 맞춰주세요.
+        Integer ownerId = dutchpay.getCreatedBy().getId();
         if (!ownerId.equals(currentUserId)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "정산 삭제 권한이 없습니다."
@@ -300,5 +300,27 @@ public class DutchpayService {
 
         // 3. 삭제 (연관관계 cascade 설정 필요)
         dutchpayRepository.delete(dutchpay);
+    }
+
+    public void dutchpayDone(Integer dutchpayId, Integer currentUserId) {
+        // 1) 존재 확인 (404)
+        Dutchpay dutchpay = dutchpayRepository.findById(dutchpayId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "해당 정산이 존재하지 않습니다."));
+
+        // 2) 권한 확인 (403) - 작성자만 종료 가능
+        Integer ownerId = dutchpay.getCreatedBy().getId();
+        if (!ownerId.equals(currentUserId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "정산 종료 권한이 없습니다.");
+        }
+
+        // 3) 이미 종료된 경우 (409)
+        if (dutchpay.isDone()) {
+             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 종료된 정산입니다.");
+        }
+
+        // 4) 종료 처리 (더티 체킹으로 UPDATE 수행됨)
+        dutchpay.setDone(true);
     }
 }
