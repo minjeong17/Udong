@@ -85,7 +85,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 동아리원 관리
               </button>
             </div>
-            <p className="text-gray-600 mt-4 font-gowun">
+            <p className="text-gray-600 mt-4 font-jua">
               함께 성장하는 개발자들의 모임입니다. 매주 알고리즘 문제를 풀고
               프로젝트를 진행하며 서로의 실력을 향상시켜나가고 있어요.
             </p>
