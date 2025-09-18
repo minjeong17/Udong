@@ -42,7 +42,14 @@ public class SecurityConfig {
                                 "/v1/auth/refresh",
                                 "/v1/auth/logout",
                                 "/v1/codes/details",
-                                "/actuator/**"
+                                "/actuator/**",
+
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/clubs/join-by-code").authenticated()
                         .anyRequest().authenticated()
