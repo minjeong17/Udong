@@ -2,6 +2,7 @@ package com.udong.backend.auth.service;
 
 import com.udong.backend.auth.dto.AccessTokenResponse;
 import com.udong.backend.auth.dto.LoginRequest;
+import com.udong.backend.auth.dto.TokenPairDto;
 import com.udong.backend.auth.entity.RefreshToken;
 import com.udong.backend.auth.repository.RefreshTokenRepository;
 import com.udong.backend.auth.dto.TokenPair;
@@ -40,7 +41,7 @@ public class AuthService {
     }
 
     /** 로그인: 헤더=Access, 바디=Refresh */
-    public TokenPair login(LoginRequest req) {
+    public TokenPairDto login(LoginRequest req) {
         User user = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."));
@@ -73,7 +74,7 @@ public class AuthService {
                 }
         );
 
-        return new TokenPair(access, refresh);
+        return new TokenPairDto(user.getId(),access, refresh);
     }
 
     @Transactional(readOnly = true)
