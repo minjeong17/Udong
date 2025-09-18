@@ -1,13 +1,19 @@
 package com.udong.backend.clubs.service;
 
-import com.udong.backend.global.config.AccountCrypto;
 import com.udong.backend.clubs.entity.Club;
+import com.udong.backend.clubs.entity.Membership;
 import com.udong.backend.clubs.repository.ClubRepository;
+import com.udong.backend.clubs.repository.MembershipRepository;
+import com.udong.backend.codes.entity.CodeDetail;
+import com.udong.backend.codes.repository.CodeDetailRepository;
+import com.udong.backend.global.config.AccountCrypto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.util.List;
+import java.util.Locale;
 
 @Service @RequiredArgsConstructor
 public class ClubService {
@@ -15,6 +21,9 @@ public class ClubService {
     private final AccountCrypto accountCrypto;        // ✅ 추가
     private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RND = new SecureRandom();
+
+    private final CodeDetailRepository codeDetails;
+    private final MembershipRepository membershipRepository;
 
     @Transactional
     public Club create(String name, String category, String description, Integer leaderUserId, String accountNumber) {
@@ -71,5 +80,49 @@ public class ClubService {
         if (c.getAccountCipher() == null || c.getAccountCipher().isBlank()) return null;
         String plain = accountCrypto.decrypt(c.getAccountCipher());
         return accountCrypto.mask(plain);
+    }
+
+    private final MembershipRepository memberships;
+
+    @Transactional
+    public Membership joinByCode(String rawCode, Integer userId) {
+        String code = rawCode.trim().toUpperCase(Locale.ROOT);
+
+        Club club = clubs.findByCodeUrl(code)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 초대코드입니다."));
+
+        if (memberships.existsByUserIdAndClub_Id(userId, club.getId())) {
+            throw new IllegalStateException("이미 가입된 동아리입니다.");
+        }
+
+        // ✅ 공통코드에서 MEMBERSHIPS::MEMBER 검증
+        CodeDetail memberCode = codeDetails.findById("MEMBER")
+                .filter(cd -> cd.getCodeGroup().getGroupName().equals("memberships"))
+                .orElseThrow(() -> new IllegalStateException("회원 역할 코드가 유효하지 않습니다."));
+
+        Membership m = Membership.builder()
+                .userId(userId)
+                .club(club)
+                .roleCode(memberCode.getCodeName())   // "MEMBER"
+                .build();
+        return memberships.save(m);
+    }
+
+    /** ISO8601(Z) 포맷 문자열로 */
+    public static String toIsoZ(java.time.OffsetDateTime odt) {
+        return odt.toInstant().toString(); // 예: 2025-09-10T09:00:00Z
+    }
+
+    @Transactional(readOnly = true)
+    public List<Club> getClubsByUserId(Integer userId) {
+        List<Membership> memberships = membershipRepository.findByUserIdFetchClub(userId);
+        return memberships.stream()
+                .map(Membership::getClub)
+                .toList();
+    }
+
+    public static String toIsoKST(java.time.LocalDateTime dt) {
+        return dt.atZone(java.time.ZoneId.of("Asia/Seoul"))
+                .format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 }

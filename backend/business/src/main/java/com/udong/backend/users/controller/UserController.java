@@ -1,6 +1,9 @@
 package com.udong.backend.users.controller;
 
 import com.udong.backend.auth.service.AuthService;
+import com.udong.backend.clubs.dto.ClubDtos;
+import com.udong.backend.clubs.entity.Club;
+import com.udong.backend.clubs.service.ClubService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
 import com.udong.backend.users.service.UserService;
@@ -16,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1")
@@ -23,6 +28,8 @@ public class UserController {
 
     private final UserService userService;
     private final SecurityUtils securityUtils;
+
+    private final ClubService clubService;
 
     @PostMapping("/users/signup")
     public ResponseEntity<ApiResponse<?>> signUp(@Valid @RequestBody SignUpRequest req) {
@@ -49,5 +56,27 @@ public class UserController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, remove.toString())
                 .body(ApiResponse.ok("회원 탈퇴 완료"));
+    }
+
+    /** 내가 속한 모든 동아리 조회 */
+    @GetMapping("/me/clubs")
+    public ResponseEntity<ApiResponse<List<ClubDtos.Res>>> myClubs() {
+        Integer userId = securityUtils.currentUserId();
+
+        List<Club> clubs = clubService.getClubsByUserId(userId.intValue());
+
+        List<ClubDtos.Res> resList = clubs.stream()
+                .map(c -> new ClubDtos.Res(
+                        c.getId(),
+                        c.getName(),
+                        c.getCategory(),
+                        c.getDescription(),
+                        c.getCodeUrl(),
+                        c.getActiveMascot() == null ? null : c.getActiveMascot().getId(),
+                        clubService.getMaskedAccount(c.getId())
+                ))
+                .toList();
+
+        return ResponseEntity.ok(ApiResponse.ok(resList));
     }
 }
