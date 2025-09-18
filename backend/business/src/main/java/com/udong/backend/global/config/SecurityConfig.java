@@ -62,7 +62,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration conf = new CorsConfiguration();
         conf.setAllowedOrigins(List.of(
-                "https://j13a310.p.ssafy.io:5173"
+                "https://j13a310.p.ssafy.io:5173",
+                "http://localhost:5173"
         ));
         conf.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         conf.setAllowedHeaders(List.of("*"));
