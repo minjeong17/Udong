@@ -16,9 +16,11 @@ import com.github.f4b6a3.ulid.UlidCreator;
 import com.udong.backend.users.repository.UserRepository;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -279,5 +281,24 @@ public class DutchpayService {
                 .eventId(eventId)
                 .eventTitle(eventTitle)
                 .build();
+    }
+
+    public void deleteDutchpay(Integer dutchpayId, Integer currentUserId) {
+        // 1. 조회 (없으면 404)
+        Dutchpay dutchpay = dutchpayRepository.findById(dutchpayId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "해당 정산이 존재하지 않습니다.")
+                );
+
+        // 2. 생성자(소유자)와 현재 사용자 동일 여부 확인 (다르면 403)
+        Integer ownerId = dutchpay.getCreatedBy().getId(); // <- 여기 필드명만 맞춰주세요.
+        if (!ownerId.equals(currentUserId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "정산 삭제 권한이 없습니다."
+            );
+        }
+
+        // 3. 삭제 (연관관계 cascade 설정 필요)
+        dutchpayRepository.delete(dutchpay);
     }
 }

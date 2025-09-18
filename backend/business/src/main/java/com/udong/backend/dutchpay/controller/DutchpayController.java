@@ -75,4 +75,12 @@ public class DutchpayController {
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
+    /** 정산 삭제 */
+    @DeleteMapping("/{dutchpayId}")
+    public ResponseEntity<ApiResponse<?>> deleteDutchpay(@PathVariable Integer dutchpayId) {
+        Integer currentUserId = securityUtils.currentUserId();
+        dutchpayService.deleteDutchpay(dutchpayId, currentUserId);
+        return ResponseEntity.ok(ApiResponse.ok("정산 삭제 완료"));
+    }
+
 }
