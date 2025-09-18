@@ -204,7 +204,7 @@ export default function SettlementPage({
             {/* 헤더 */}
             <div className="p-6 border-b border-orange-200 bg-white">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">정산 목록</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">정산 목록</h2>
               </div>
 
               {/* 탭 */}
@@ -212,8 +212,8 @@ export default function SettlementPage({
                 <button
                   type="button"
                   onClick={() => setPaymentCompleted(false)}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors
-                    ${!paymentCompleted ? "bg-green-500 text-white shadow-sm" : "text-orange-700 hover:bg-orange-200 bg-transparent"}`}
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-gowun
+                    ${!paymentCompleted ? "bg-green-400 text-white shadow-sm" : "text-orange-700 hover:bg-orange-200 bg-transparent"}`}
                   aria-pressed={!paymentCompleted}
                 >
                   진행중 ({ongoingSettlements.length})
@@ -222,8 +222,8 @@ export default function SettlementPage({
                 <button
                   type="button"
                   onClick={() => setPaymentCompleted(true)}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors
-                    ${paymentCompleted ? "bg-green-500 text-white shadow-sm" : "text-orange-700 hover:bg-orange-200 bg-transparent"}`}
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-gowun
+                    ${paymentCompleted ? "bg-green-400 text-white shadow-sm" : "text-orange-700 hover:bg-orange-200 bg-transparent"}`}
                   aria-pressed={paymentCompleted}
                 >
                   완료 ({completedSettlements.length})
@@ -236,10 +236,10 @@ export default function SettlementPage({
               {visibleSettlements.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center px-4">
                   <div className="text-4xl mb-3">💰</div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2 font-jua">
                     {paymentCompleted ? "완료된 정산 없음" : "현재 진행중인 정산 없음"}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 font-gowun">
                     {paymentCompleted ? "완료된 정산이 여기 표시됩니다." : "새로운 정산을 생성해보세요!"}
                   </p>
                 </div>
@@ -249,20 +249,20 @@ export default function SettlementPage({
                     key={settlement.id}
                     onClick={() => setSelectedSettlement(settlement.id)}
                     className={`p-4 border-b border-orange-200 cursor-pointer transition-colors hover:bg-orange-50 ${
-                      selectedSettlement === settlement.id ? "bg-orange-100 border-l-4 border-l-green-500" : ""
+                      selectedSettlement === settlement.id ? "bg-orange-100 border-l-4 border-l-green-400" : ""
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0 bg-green-500" />
+                      <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0 bg-green-400" />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-800 text-sm mb-1 truncate">{settlement.title}</h3>
-                        <p className="text-gray-600 text-xs mb-2 line-clamp-2">{settlement.description}</p>
+                        <h3 className="font-semibold text-gray-800 text-sm mb-1 truncate font-jua">{settlement.title}</h3>
+                        <p className="text-gray-600 text-xs mb-2 line-clamp-2 font-gowun">{settlement.description}</p>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600">{getParticipantCount(settlement)}명 참여</span>
-                          <span className="text-gray-600">{settlement.dueDate}</span>
+                          <span className="text-gray-600 font-gowun">{getParticipantCount(settlement)}명 참여</span>
+                          <span className="text-gray-600 font-gowun">{settlement.dueDate}</span>
                         </div>
                         <div className="mt-2">
-                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold font-jua">
                             {getPerPerson(settlement).toLocaleString()}원/인
                           </span>
                         </div>
@@ -281,13 +281,13 @@ export default function SettlementPage({
                 {/* 헤더 */}
                 <div className="mb-8">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-gray-800">
+                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-gray-800 font-gowun">
                       💰 정산
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
                         selectedSettlementData.status === "pending"
-                          ? "bg-gradient-to-r from-green-400 to-green-600 text-white"
+                          ? "bg-gradient-to-r from-green-300 to-green-500 text-white"
                           : "bg-orange-100 text-orange-600"
                       }`}
                     >
@@ -295,40 +295,40 @@ export default function SettlementPage({
                     </span>
                   </div>
 
-                  <h1 className="text-3xl font-bold text-gray-800 mb-3">{selectedSettlementData.title}</h1>
-                  <p className="text-gray-600 text-lg mb-6">{selectedSettlementData.description}</p>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-3 font-jua">{selectedSettlementData.title}</h1>
+                  <p className="text-gray-600 text-lg mb-6 font-gowun">{selectedSettlementData.description}</p>
 
                   {/* 정산 정보 카드 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg mb-8">
                     <div className="grid grid-cols-3 gap-6">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600 mb-1">
+                        <div className="text-2xl font-bold text-green-500 mb-1 font-jua">
                           {selectedSettlementData.totalAmount.toLocaleString()}원
                         </div>
-                        <div className="text-sm text-gray-600">총 금액</div>
+                        <div className="text-sm text-gray-600 font-gowun">총 금액</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-800 mb-1">
+                        <div className="text-2xl font-bold text-gray-800 mb-1 font-jua">
                           {getPerPerson(selectedSettlementData).toLocaleString()}원
                         </div>
-                        <div className="text-sm text-gray-600">1인당</div>
+                        <div className="text-sm text-gray-600 font-gowun">1인당</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-orange-600 mb-1">
+                        <div className="text-2xl font-bold text-orange-600 mb-1 font-jua">
                           {getParticipantCount(selectedSettlementData)}명
                         </div>
-                        <div className="text-sm text-gray-600">참여자</div>
+                        <div className="text-sm text-gray-600 font-gowun">참여자</div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">정산 정보</h2>
+                  <h2 className="text-xl font-bold text-gray-800 mb-4 font-jua">정산 정보</h2>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white rounded-xl p-6 border border-orange-200 text-center shadow-lg">
-                      <h3 className="font-semibold text-gray-800 text-lg mb-4">영수증</h3>
+                      <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">영수증</h3>
                       <div className="flex justify-center mb-4">
                         {selectedSettlementData.receiptImage ? (
                           <img
@@ -339,12 +339,12 @@ export default function SettlementPage({
                         ) : (
                           <div className="w-60 h-80 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50">
                             <div className="text-4xl text-gray-400 mb-3">📄</div>
-                            <p className="text-gray-500 font-medium">영수증 없음</p>
-                            <p className="text-gray-400 text-sm mt-1">업로드된 영수증이 없습니다</p>
+                            <p className="text-gray-500 font-medium font-jua">영수증 없음</p>
+                            <p className="text-gray-400 text-sm mt-1 font-gowun">업로드된 영수증이 없습니다</p>
                           </div>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 font-gowun">
                         {selectedSettlementData.receiptImage
                           ? "정산 관련 영수증입니다"
                           : "영수증이 업로드되지 않았습니다"}
@@ -353,7 +353,7 @@ export default function SettlementPage({
 
                     {isPaymentRequired ? (
                       <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                        <h3 className="font-semibold text-gray-800 text-lg mb-4">정산 정보</h3>
+                        <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">정산 정보</h3>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-3">
@@ -361,15 +361,15 @@ export default function SettlementPage({
                                 {selectedSettlementData.accountHolder.charAt(0)}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-800">받는 사람</p>
-                                <p className="text-sm text-gray-600">{selectedSettlementData.accountHolder}</p>
+                                <p className="font-medium text-gray-800 font-jua">받는 사람</p>
+                                <p className="text-sm text-gray-600 font-gowun">{selectedSettlementData.accountHolder}</p>
                               </div>
                             </div>
                           </div>
 
                           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                            <p className="text-sm text-gray-600 mb-1">보낼 금액</p>
-                            <p className="text-2xl font-bold text-green-600">
+                            <p className="text-sm text-gray-600 mb-1 font-gowun">보낼 금액</p>
+                            <p className="text-2xl font-bold text-green-500 font-jua">
                               {getPerPerson(selectedSettlementData).toLocaleString()}원
                             </p>
                           </div>
@@ -377,8 +377,8 @@ export default function SettlementPage({
                           <button
                             onClick={() => !isCurrentUserPaid && handlePayment(selectedSettlementData.id)}
                             disabled={isCurrentUserPaid}
-                            className={`w-full py-4 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2
-                              ${isCurrentUserPaid ? "opacity-60 cursor-not-allowed" : "hover:from-green-500 hover:to-green-700 hover:scale-105 shadow-lg hover:shadow-xl"}`}
+                            className={`w-full py-4 bg-gradient-to-r from-green-300 to-green-500 text-white rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 font-jua
+                              ${isCurrentUserPaid ? "opacity-60 cursor-not-allowed" : "hover:from-green-400 hover:to-green-600 hover:scale-105 shadow-lg hover:shadow-xl"}`}
                           >
                             <span>💳</span>
                             <span>{isCurrentUserPaid ? "정산 완료" : "정산하기"}</span>
@@ -387,7 +387,7 @@ export default function SettlementPage({
                       </div>
                     ) : (
                       <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                        <h3 className="font-semibold text-gray-800 text-lg mb-4">참여자 결제 현황</h3>
+                        <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">참여자 결제 현황</h3>
                         <div className="space-y-3 max-h-80 overflow-y-auto">
                           {selectedSettlementData.participantsList.map((participant) => (
                             <div
@@ -398,15 +398,15 @@ export default function SettlementPage({
                                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                                   {participant.name.charAt(0)}
                                 </div>
-                                <span className="font-medium text-gray-800">{participant.name}</span>
+                                <span className="font-medium text-gray-800 font-jua">{participant.name}</span>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 font-gowun">
                                   {getPerPerson(selectedSettlementData).toLocaleString()}원
                                 </span>
                                 <span
-                                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                    participant.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                  className={`px-3 py-1 rounded-full text-sm font-semibold font-gowun ${
+                                    participant.isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                                   }`}
                                   aria-readonly="true"
                                 >
@@ -419,15 +419,15 @@ export default function SettlementPage({
 
                         <div className="mt-4 pt-4 border-t border-gray-200">
                           <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-600">결제 완료</span>
-                            <span className="font-semibold text-green-600">
+                            <span className="text-gray-600 font-gowun">결제 완료</span>
+                            <span className="font-semibold text-green-500 font-jua">
                               {selectedSettlementData.participantsList.filter((p) => p.isPaid).length} /{" "}
                               {selectedSettlementData.participantsList.length}명
                             </span>
                           </div>
                           <div className="flex justify-between items-center text-sm mt-1">
-                            <span className="text-gray-600">수금 완료</span>
-                            <span className="font-semibold text-green-600">
+                            <span className="text-gray-600 font-gowun">수금 완료</span>
+                            <span className="font-semibold text-green-500 font-jua">
                               {(
                                   selectedSettlementData.participantsList.filter((p) => p.isPaid).length *
                                   getPerPerson(selectedSettlementData)
@@ -446,7 +446,7 @@ export default function SettlementPage({
                       {selectedSettlementData.status === "pending" && (
                         <button
                           onClick={() => handleEndSettlement(selectedSettlementData.id)}
-                          className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center gap-2"
+                          className="px-6 py-3 bg-green-400 hover:bg-green-500 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center gap-2 font-jua"
                         >
                           <span>🔒</span>
                           <span>정산 종료</span>
@@ -454,7 +454,7 @@ export default function SettlementPage({
                       )}
                       <button
                         onClick={() => handleDeleteSettlement(selectedSettlementData.id)}
-                        className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center gap-2"
+                        className="px-6 py-3 bg-red-400 hover:bg-red-500 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center gap-2 font-jua"
                       >
                         <span>🗑️</span>
                         <span>정산 삭제</span>
@@ -467,8 +467,8 @@ export default function SettlementPage({
                 {/* 정산 정보 */}
                 <div className="mt-8 pt-6 border-t border-orange-200">
                   <div className="flex justify-between items-center text-sm text-gray-600">
-                    <span>생성자: {selectedSettlementData.createdBy}</span>
-                    <span>생성일: {selectedSettlementData.createdAt}</span>
+                    <span className="font-gowun">생성자: {selectedSettlementData.createdBy}</span>
+                    <span className="font-gowun">생성일: {selectedSettlementData.createdAt}</span>
                   </div>
                 </div>
               </div>
@@ -476,8 +476,8 @@ export default function SettlementPage({
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="text-6xl mb-4">💰</div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">정산을 선택해주세요</h2>
-                  <p className="text-gray-600">왼쪽 목록에서 정산을 선택하면 상세 내용을 확인할 수 있습니다.</p>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2 font-jua">정산을 선택해주세요</h2>
+                  <p className="text-gray-600 font-gowun">왼쪽 목록에서 정산을 선택하면 상세 내용을 확인할 수 있습니다.</p>
                 </div>
               </div>
             )}

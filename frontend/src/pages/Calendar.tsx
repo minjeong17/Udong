@@ -294,8 +294,8 @@ const Calendar: React.FC<CalendarProps> = ({
           before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${color.left}
           bg-white/70 border-gray-200/60 hover:bg-white`}
       >
-        <span className="font-medium text-gray-900 truncate">{ev.title}</span>
-        <span className="ml-1 text-gray-500">{ev.allDay ? "종일" : ev.time ?? ""}</span>
+        <span className="font-medium text-gray-900 truncate font-gowun">{ev.title}</span>
+        <span className="ml-1 text-gray-500 font-gowun">{ev.allDay ? "종일" : ev.time ?? ""}</span>
       </button>
     );
   };
@@ -327,8 +327,8 @@ const Calendar: React.FC<CalendarProps> = ({
         <main className="flex-1 px-8 py-6 bg-gradient-to-br from-orange-50 via-white to-orange-100">
         {/* 헤더 */}
         <div className="mb-5">
-          <h1 className="text-2xl font-extrabold text-gray-900">일정 관리</h1>
-          <p className="text-sm text-gray-600 mt-1">동아리 모임과 일정을 체계적으로 관리하세요</p>
+          <h1 className="text-2xl font-extrabold text-gray-900 font-jua">일정 관리</h1>
+          <p className="text-sm text-gray-600 mt-1 font-gowun">동아리 모임과 일정을 체계적으로 관리하세요</p>
         </div>
 
         {/* 좌/우 2칸 */}
@@ -343,7 +343,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 </button>
                 <button
                   onClick={onHeaderClick}
-                  className="px-2 py-1 rounded-lg text-lg font-bold tracking-tight text-gray-900 hover:bg-gray-100"
+                  className="px-2 py-1 rounded-lg text-lg font-bold tracking-tight text-gray-900 hover:bg-gray-100 font-jua"
                   title="클릭: 월 ↔ 연 ↔ 십년"
                 >
                   {headerLabel()}
@@ -351,22 +351,35 @@ const Calendar: React.FC<CalendarProps> = ({
                 <button onClick={goNext} aria-label="다음" className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">
                   <ChevronRight className="w-5 h-5 text-gray-600"/>
                 </button>
-                <span className="ml-3 text-xs text-gray-500">단축키: 월 · 연 · 십년 이동( ←/→ ) | 오늘 ( T / Home )</span>
+                <span className="ml-3 text-xs text-gray-500 font-gowun">단축키: 월 · 연 · 십년 이동( ←/→ ) | 오늘 ( T / Home )</span>
               </div>
 
-              <button
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-semibold shadow"
-                onClick={() => { setCreateOpen(true); setEventModalOpen(false); setDayModalOpen(false); }}
-              >
-                <span>＋</span>
-                <span>일정 등록</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  className="flex items-center gap-2 bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold shadow font-jua"
+                  onClick={() => {
+                    setCursor(startOfMonth(new Date()));
+                    setView("month");
+                    setSelected(new Date());
+                  }}
+                >
+                  <span>📅</span>
+                  <span>오늘로 이동</span>
+                </button>
+                <button
+                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-semibold shadow font-jua"
+                  onClick={() => { setCreateOpen(true); setEventModalOpen(false); setDayModalOpen(false); }}
+                >
+                  <span>＋</span>
+                  <span>일정 등록</span>
+                </button>
+              </div>
             </div>
 
             {/* 캘린더 바디 */}
             {view === "month" && (
               <>
-                <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-6 pt-4">
+                <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-6 pt-4 font-gowun">
                   {korWeek.map((w) => <div key={w} className="py-2 font-medium">{w}</div>)}
                 </div>
                 <div className="px-4 pb-5">
@@ -389,13 +402,13 @@ const Calendar: React.FC<CalendarProps> = ({
                             ${weekend && inMonth ? "bg-orange-50/70" : ""}
                             ${sel ? "ring-2 ring-blue-400" : "hover:shadow-sm"}`}
                         >
-                          <div className="absolute top-2 left-2 text-[13px] font-semibold text-gray-700">{d.getDate()}</div>
+                          <div className="absolute top-2 left-2 text-[13px] font-semibold text-gray-700 font-jua">{d.getDate()}</div>
                           <div className="absolute left-2 right-2 top-8 space-y-1.5">
                             {preview.map((ev) => renderCellPreview(ev))}
                             {more > 0 && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); openDayModal(d); }}
-                                className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left underline underline-offset-2"
+                                className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left underline underline-offset-2 font-gowun"
                               >
                                 +{more}개 더 보기
                               </button>
@@ -417,7 +430,7 @@ const Calendar: React.FC<CalendarProps> = ({
                     <button
                       key={m}
                       onClick={() => { setCursor(new Date(cursor.getFullYear(), i, 1)); setView("month"); }}
-                      className="h-16 rounded-xl border border-gray-200 bg-white hover:bg-orange-50 text-gray-800 font-semibold"
+                      className="h-16 rounded-xl border border-gray-200 bg-white hover:bg-orange-50 text-gray-800 font-semibold font-jua"
                     >
                       {m}
                     </button>
@@ -440,7 +453,7 @@ const Calendar: React.FC<CalendarProps> = ({
                       <button
                         key={y}
                         onClick={() => { setCursor(new Date(y, cursor.getMonth(), 1)); setView("year"); }}
-                        className={`h-16 rounded-xl border font-semibold
+                        className={`h-16 rounded-xl border font-semibold font-jua
                           ${inRange ? "border-gray-200 bg-white text-gray-800 hover:bg-orange-50"
                                     : "border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-50"}`}
                         title={`${y}년`}
@@ -457,8 +470,8 @@ const Calendar: React.FC<CalendarProps> = ({
           {/* Right: list (전체 높이) */}
           <aside className="bg-white/80 backdrop-blur rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden min-h-[calc(100vh-220px)] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b">
-              <div className="text-base font-semibold text-gray-900">이번 달 일정</div>
-              <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">{monthEvents.length}개</div>
+              <div className="text-base font-semibold text-gray-900 font-jua">이번 달 일정</div>
+              <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-gowun">{monthEvents.length}개</div>
             </div>
 
             <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
@@ -475,19 +488,19 @@ const Calendar: React.FC<CalendarProps> = ({
                       ${isSel ? "border-rose-300 bg-rose-50" : "border-gray-200 bg-white"} hover:shadow-sm`}
                   >
                     <div className="w-12 text-center">
-                      <div className="text-[11px] text-gray-500">{d.getMonth() + 1}월</div>
-                      <div className="text-lg font-bold text-gray-800">{d.getDate()}</div>
+                      <div className="text-[11px] text-gray-500 font-gowun">{d.getMonth() + 1}월</div>
+                      <div className="text-lg font-bold text-gray-800 font-jua">{d.getDate()}</div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ring-1 ${color.bg} ${color.text} ${color.ring}`}>{ev.category}</span>
-                        <div className="truncate font-semibold text-gray-900">{ev.title}</div>
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ring-1 ${color.bg} ${color.text} ${color.ring} font-gowun`}>{ev.category}</span>
+                        <div className="truncate font-semibold text-gray-900 font-jua">{ev.title}</div>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
-                        <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5"/>{ev.allDay ? "종일" : ev.time ?? "시간 미정"}{ev.endTime ? ` - ${ev.endTime}` : ""}</span>
-                        {ev.location && <span className="inline-flex items-center gap-1"><Pin className="w-3.5 h-3.5"/>{ev.location}</span>}
-                        {typeof ev.attendees === "number" && ev.capacity && <span>{ev.attendees}/{ev.capacity}명</span>}
-                        {ev.note && <span className="text-gray-500">· {ev.note}</span>}
+                        <span className="inline-flex items-center gap-1 font-gowun"><Clock className="w-3.5 h-3.5"/>{ev.allDay ? "종일" : ev.time ?? "시간 미정"}{ev.endTime ? ` - ${ev.endTime}` : ""}</span>
+                        {ev.location && <span className="inline-flex items-center gap-1 font-gowun"><Pin className="w-3.5 h-3.5"/>{ev.location}</span>}
+                        {typeof ev.attendees === "number" && ev.capacity && <span className="font-gowun">{ev.attendees}/{ev.capacity}명</span>}
+                        {ev.note && <span className="text-gray-500 font-gowun">· {ev.note}</span>}
                       </div>
                     </div>
                   </button>
@@ -495,7 +508,7 @@ const Calendar: React.FC<CalendarProps> = ({
               })}
 
               {monthEvents.length === 0 && (
-                <div className="text-center text-gray-500 py-16">이번 달에는 등록된 일정이 없습니다.</div>
+                <div className="text-center text-gray-500 py-16 font-gowun">이번 달에는 등록된 일정이 없습니다.</div>
               )}
             </div>
           </aside>
@@ -507,7 +520,7 @@ const Calendar: React.FC<CalendarProps> = ({
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setDayModalOpen(false)}>
           <div className="w-full max-w-screen-md max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden ring-1 ring-gray-200 flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
-              <div className="text-lg font-bold text-gray-900">
+              <div className="text-lg font-bold text-gray-900 font-jua">
                 {dayModalDate.getFullYear()}년 {dayModalDate.getMonth() + 1}월 {dayModalDate.getDate()}일 일정
               </div>
               <button onClick={() => setDayModalOpen(false)} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
@@ -521,25 +534,25 @@ const Calendar: React.FC<CalendarProps> = ({
                           className={`w-full text-left rounded-xl p-4 border ring-1 ${color.bg} ${color.ring} border-transparent hover:bg-white`}>
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${color.bg} ${color.text} ring-1 ${color.ring}`}>{ev.category}</span>
-                      <div className="font-semibold text-gray-900">{ev.title}</div>
+                      <div className="font-semibold text-gray-900 font-jua">{ev.title}</div>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
-                      <span className="inline-flex items-center gap-1"><Clock className="w-4 h-4"/>{ev.allDay ? "종일" : ev.time ?? "시간 미정"}{ev.endTime ? ` - ${ev.endTime}` : ""}</span>
-                      {ev.location && <span className="inline-flex items-center gap-1"><Pin className="w-4 h-4"/>{ev.location}</span>}
+                      <span className="inline-flex items-center gap-1 font-gowun"><Clock className="w-4 h-4"/>{ev.allDay ? "종일" : ev.time ?? "시간 미정"}{ev.endTime ? ` - ${ev.endTime}` : ""}</span>
+                      {ev.location && <span className="inline-flex items-center gap-1 font-gowun"><Pin className="w-4 h-4"/>{ev.location}</span>}
                       {typeof ev.attendees === "number" && ev.capacity && <span>{ev.attendees}/{ev.capacity}명</span>}
-                      {ev.note && <span className="text-gray-600">· {ev.note}</span>}
+                      {ev.note && <span className="text-gray-600 font-gowun">· {ev.note}</span>}
                     </div>
                   </button>
                 );
               })}
 
               {(byDay.get(ymd(dayModalDate)) ?? []).length === 0 && (
-                <div className="text-center text-gray-500 py-10">등록된 일정이 없습니다.</div>
+                <div className="text-center text-gray-500 py-10 font-gowun">등록된 일정이 없습니다.</div>
               )}
             </div>
 
             <div className="p-4 border-t bg-gray-50 text-right">
-              <button onClick={() => setDayModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100">닫기</button>
+              <button onClick={() => setDayModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 font-gowun">닫기</button>
             </div>
           </div>
         </div>
@@ -550,14 +563,14 @@ const Calendar: React.FC<CalendarProps> = ({
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEventModalOpen(false)}>
           <div className="w-full max-w-screen-lg max-h-[90vh] bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b">
-              <div className="text-lg font-bold text-gray-900">{eventModalItem.title}</div>
+              <div className="text-lg font-bold text-gray-900 font-jua">{eventModalItem.title}</div>
               <button onClick={() => setEventModalOpen(false)} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <dl className="space-y-3">
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                  <dt className="text-sm text-gray-500">카테고리</dt>
+                  <dt className="text-sm text-gray-500 font-gowun">카테고리</dt>
                   <dd>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ring-1 ${catColor[eventModalItem.category].bg} ${catColor[eventModalItem.category].text} ${catColor[eventModalItem.category].ring}`}>
                       {eventModalItem.category}
@@ -566,17 +579,17 @@ const Calendar: React.FC<CalendarProps> = ({
                 </div>
 
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                  <dt className="text-sm text-gray-500">일시</dt>
-                  <dd className="text-sm text-gray-900">{formatWhen(eventModalItem)}</dd>
+                  <dt className="text-sm text-gray-500 font-gowun">일시</dt>
+                  <dd className="text-sm text-gray-900 font-gowun">{formatWhen(eventModalItem)}</dd>
                 </div>
 
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                  <dt className="text-sm text-gray-500">장소</dt>
-                  <dd className="text-sm text-gray-900">{eventModalItem.location ?? "미정"}</dd>
+                  <dt className="text-sm text-gray-500 font-gowun">장소</dt>
+                  <dd className="text-sm text-gray-900 font-gowun">{eventModalItem.location ?? "미정"}</dd>
                 </div>
 
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                  <dt className="text-sm text-gray-500">참가 인원</dt>
+                  <dt className="text-sm text-gray-500 font-gowun">참가 인원</dt>
                   <dd className="text-sm text-gray-900">
                     {typeof eventModalItem.attendees === "number" && eventModalItem.capacity
                       ? `${eventModalItem.attendees}/${eventModalItem.capacity}명`
@@ -629,7 +642,7 @@ const Calendar: React.FC<CalendarProps> = ({
                         : e
                     )
                   );
-                }} className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold text-sm">
+                }} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua">
                   참여신청
                 </button>
               </div>
@@ -824,7 +837,7 @@ function EventFormModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <div className="text-lg font-bold text-gray-900">{title}</div>
+          <div className="text-lg font-bold text-gray-900 font-jua">{title}</div>
           <button onClick={onClose} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
         </div>
 
@@ -832,7 +845,7 @@ function EventFormModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* 카테고리 */}
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">카테고리 *</div>
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">카테고리 *</div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {categoryOptions.map((c) => {
                 const disabled = !!c.adminOnly && !canUseAdminCategory;
@@ -847,10 +860,10 @@ function EventFormModal({
                       ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div className="text-3xl">{c.emoji}</div>
-                    <div className="font-semibold text-gray-900">{c.label}</div>
-                    <div className="text-xs text-gray-500">{c.desc}</div>
+                    <div className="font-semibold text-gray-900 font-jua">{c.label}</div>
+                    <div className="text-xs text-gray-500 font-gowun">{c.desc}</div>
                     {c.adminOnly && (
-                      <span className="absolute right-2 top-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                      <span className="absolute right-2 top-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-gowun">
                         관리자 전용
                       </span>
                     )}
@@ -862,44 +875,44 @@ function EventFormModal({
 
           {/* 제목 */}
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">모임 제목 *</div>
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">모임 제목 *</div>
             <input
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               placeholder="모임 제목을 입력하세요"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
             />
           </div>
 
           {/* 상세 내용 */}
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">상세 내용</div>
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">상세 내용</div>
             <textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="모임에 대한 상세한 설명을 입력하세요"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white min-h-[110px]"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white min-h-[110px] font-gowun"
             />
           </div>
 
           {/* 날짜/시간 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">시작 날짜 *</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">시작 날짜 *</div>
               <input type="date" value={form.startDate}
                      onChange={(e)=>setForm((f)=>({...f, startDate: e.target.value}))}
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">종료 날짜 *</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">종료 날짜 *</div>
               <input type="date" value={form.endDate}
                      onChange={(e)=>setForm((f)=>({...f, endDate: e.target.value}))}
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun" />
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="inline-flex items-center gap-2 text-sm">
+            <label className="inline-flex items-center gap-2 text-sm font-gowun">
               <input
                 type="checkbox"
                 checked={form.allDay}
@@ -911,59 +924,59 @@ function EventFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">시작 시간 (선택사항)</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">시작 시간 (선택사항)</div>
               <input type="time" value={form.startTime} disabled={form.allDay}
                      onChange={(e)=>setForm((f)=>({...f, startTime: e.target.value}))}
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">종료 시간 (선택사항)</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">종료 시간 (선택사항)</div>
               <input type="time" value={form.endTime} disabled={form.allDay}
                      onChange={(e)=>setForm((f)=>({...f, endTime: e.target.value}))}
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun" />
             </div>
           </div>
 
           {/* 기타 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">장소</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">장소</div>
               <input value={form.location}
                      onChange={(e)=>setForm((f)=>({...f, location: e.target.value}))}
                      placeholder="장소"
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">정원(명)</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">정원(명)</div>
               <input type="number" min={0} value={form.capacity}
                      onChange={(e)=>setForm((f)=>({...f, capacity: e.target.value}))}
                      placeholder="예: 20"
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">준비물</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">준비물</div>
               <input value={form.materials}
                      onChange={(e)=>setForm((f)=>({...f, materials: e.target.value}))}
                      placeholder="예: 교재, 노트"
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2">메모</div>
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">메모</div>
               <input value={form.note}
                      onChange={(e)=>setForm((f)=>({...f, note: e.target.value}))}
                      placeholder="추가 메모"
-                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white" />
+                     className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun" />
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-gray-50">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm">취소</button>
-          <button onClick={submit} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm">등록</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun">취소</button>
+          <button onClick={submit} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua">등록</button>
         </div>
       </div>
     </div>

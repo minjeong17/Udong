@@ -90,6 +90,7 @@ export default function VotingPage({
 
   const useExtraVote = (pollId: number) => {
     if (inventory.extraVoteTickets <= 0) return
+
     setPolls(prev =>
       prev.map(p =>
         p.id !== pollId
@@ -104,6 +105,9 @@ export default function VotingPage({
       )
     )
     setInventory(i => ({ ...i, extraVoteTickets: i.extraVoteTickets - 1 }))
+
+    // 드래프트는 현재 상태를 유지 (추가 용량만 반영)
+    // 별도 초기화 불필요 - getUserVoteCapacity가 업데이트된 bonusVotesByUser를 참조함
   }
 
   /** 더미 데이터 */
@@ -426,10 +430,10 @@ export default function VotingPage({
           <div className="w-80 bg-white border-r border-orange-200 shadow-lg">
             <div className="p-6 border-b border-orange-200 bg-white">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">투표 목록</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">투표 목록</h2>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg"
+                  className="bg-green-400 hover:bg-green-500 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg font-jua"
                 >
                   <span className="text-white font-bold">➕</span>
                   <span className="text-white font-semibold">생성</span>
@@ -441,9 +445,9 @@ export default function VotingPage({
                 <button
                   type="button"
                   onClick={() => setShowClosed(false)}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-jua ${
                     !showClosed
-                      ? "bg-green-500 text-white shadow-sm"
+                      ? "bg-green-400 text-white shadow-sm"
                       : "text-orange-700 hover:bg-orange-200 bg-transparent"
                   }`}
                   aria-pressed={!showClosed}
@@ -453,9 +457,9 @@ export default function VotingPage({
                 <button
                   type="button"
                   onClick={() => setShowClosed(true)}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-jua ${
                     showClosed
-                      ? "bg-green-500 text-white shadow-sm"
+                      ? "bg-green-400 text-white shadow-sm"
                       : "text-orange-700 hover:bg-orange-200 bg-transparent"
                   }`}
                   aria-pressed={showClosed}
@@ -470,10 +474,10 @@ export default function VotingPage({
               {visiblePolls.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center px-4">
                   <div className="text-4xl mb-3">🗳️</div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2 font-jua">
                     {showClosed ? "완료된 투표 없음" : "현재 진행중인 투표 없음"}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 font-gowun">
                     {showClosed ? "완료된 투표가 여기 표시됩니다." : "새로운 투표를 생성해보세요!"}
                   </p>
                 </div>
@@ -486,23 +490,23 @@ export default function VotingPage({
                       key={p.id}
                       onClick={() => setSelectedPollId(p.id)}
                       className={`p-4 border-b border-orange-200 cursor-pointer transition-colors hover:bg-orange-50 ${
-                        selectedPollId === p.id ? "bg-orange-100 border-l-4 border-l-green-500" : ""
+                        selectedPollId === p.id ? "bg-orange-100 border-l-4 border-l-green-400" : ""
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         <div
                           className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
-                            isClosed(p) ? "bg-orange-400" : "bg-green-500"
+                            isClosed(p) ? "bg-orange-400" : "bg-green-400"
                           }`}
                         />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-800 text-sm mb-1 truncate">{p.title}</h3>
-                          <p className="text-gray-600 text-xs mb-2 line-clamp-2">{p.description}</p>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-600">
+                          <h3 className="font-semibold text-gray-800 text-sm mb-1 truncate font-jua">{p.title}</h3>
+                          <p className="text-gray-600 text-xs mb-2 line-clamp-2 font-gowun">{p.description}</p>
+                          <div className="text-xs space-y-1">
+                            <div className="text-gray-600 font-gowun">
                               {p.allowMultiple ? "다중선택" : "단일선택"} · 참여 {voters}명 · 총 {total}표
-                            </span>
-                            <span className="text-gray-600">마감 {p.deadline}</span>
+                            </div>
+                            <div className="text-gray-600 font-gowun">마감 {p.deadline}</div>
                           </div>
                         </div>
                       </div>
@@ -520,9 +524,9 @@ export default function VotingPage({
                 {/* 헤더 */}
                 <div className="mb-8">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-gray-800">🗳️ 투표</span>
+                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-gray-800 font-jua">🗳️ 투표</span>
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      className={`px-3 py-1 rounded-full text-sm font-semibold font-jua ${
                         isClosed(selectedPoll)
                           ? "bg-orange-100 text-orange-600"
                           : "bg-gradient-to-r from-green-400 to-green-600 text-white"
@@ -530,14 +534,14 @@ export default function VotingPage({
                     >
                       {isClosed(selectedPoll) ? "완료" : "진행중"}
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs bg-orange-50 text-orange-700 border border-orange-200">
+                    <span className="px-3 py-1 rounded-full text-xs bg-orange-50 text-orange-700 border border-orange-200 font-gowun">
                       {selectedPoll.allowMultiple ? "다중 선택" :
                         getUserVoteCapacity(selectedPoll) > 1 ? "단일 선택 (추가 표로 분산 가능)" : "단일 선택"}
                     </span>
                   </div>
 
-                  <h1 className="text-3xl font-bold text-gray-800 mb-3">{selectedPoll.title}</h1>
-                  <p className="text-gray-600 text-lg mb-6">{selectedPoll.description}</p>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-3 font-jua">{selectedPoll.title}</h1>
+                  <p className="text-gray-600 text-lg mb-6 font-gowun">{selectedPoll.description}</p>
 
                   {/* 요약 카드 (상단) */}  
                   {/* <div className="bg-white rounded-xl p-5 border border-orange-200 shadow-[0_6px_20px_rgba(255,149,0,0.08)]">
@@ -585,8 +589,8 @@ export default function VotingPage({
                     <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       {/* 좌측: 제목 + 추가 투표권 수 */}
                       <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-gray-800 text-lg">투표 선택지</h3>
-                        <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
+                        <h3 className="font-semibold text-gray-800 text-lg font-jua">투표 선택지</h3>
+                        <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold font-jua">
                           추가 투표권 : {selectedPoll ? (selectedPoll.bonusVotesByUser?.[currentUserId] ?? 0) : 0}
                         </span>
                       </div>
@@ -595,17 +599,17 @@ export default function VotingPage({
                       <button
                         onClick={() => {
                           if (!selectedPoll) return
-                          if (isClosed(selectedPoll) || inventory.extraVoteTickets <= 0) return
+                          if (isClosed(selectedPoll) || locked[selectedPoll.id] || inventory.extraVoteTickets <= 0) return
                           const ok = window.confirm("추가 투표권을 사용하시겠습니까?\n사용 후 취소할 수 없습니다.")
                           if (ok) useExtraVote(selectedPoll.id)
                         }}
-                        disabled={!selectedPoll || isClosed(selectedPoll) || inventory.extraVoteTickets <= 0}
+                        disabled={!selectedPoll || isClosed(selectedPoll) || locked[selectedPoll.id] || inventory.extraVoteTickets <= 0}
                         className={`px-3 py-2 rounded-lg font-semibold
-                          ${!selectedPoll || isClosed(selectedPoll) || inventory.extraVoteTickets <= 0
+                          ${!selectedPoll || isClosed(selectedPoll) || locked[selectedPoll.id] || inventory.extraVoteTickets <= 0
                             ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                             : "bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700"}`}
                       >
-                        추가 투표권 사용 ({inventory.extraVoteTickets})
+                        <span className="font-jua">추가 투표권 사용 ({inventory.extraVoteTickets})</span>
                       </button>
                     </div>
 
@@ -633,9 +637,9 @@ export default function VotingPage({
                           <div key={opt.id} className="rounded-xl border border-orange-200 p-4 shadow-sm bg-white">
                             {/* 상단 헤더: 라벨 / 현재표수(%) / 내 증감 컨트롤 */}
                             <div className="flex items-center justify-between mb-2">
-                              <div className="font-semibold text-gray-800">{opt.label}</div>
+                              <div className="font-semibold text-gray-800 font-jua">{opt.label}</div>
                               <div className="flex items-center gap-3">
-                                <span className="text-sm text-gray-600">{total}표 ({pct}%)</span>
+                                <span className="text-sm text-gray-600 font-gowun">{total}표 ({pct}%)</span>
 
                                 <div className="flex items-center gap-1">
                                   <button
@@ -646,7 +650,7 @@ export default function VotingPage({
                                     aria-label="decrease"
                                   >−</button>
 
-                                  <div className="min-w-[2rem] text-center font-semibold text-gray-800">{myCount}</div>
+                                  <div className="min-w-[2rem] text-center font-semibold text-gray-800 font-jua">{myCount}</div>
 
                                   <button
                                     onClick={() => incDraft(selectedPoll, opt.id)}
@@ -676,14 +680,14 @@ export default function VotingPage({
                       <button
                         onClick={() => selectedPoll && handleSubmitVotes(selectedPoll)}
                         disabled={!selectedPoll || !!locked[selectedPoll.id] || submitting[selectedPoll.id] || !hasChanges}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-200 shadow-lg"
+                        className="w-full px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-200 shadow-lg font-jua"
                       >
                         {submitting[selectedPoll.id] ? "제출 중..." : "투표 확정"}
                       </button>
                     </div>
 
                     {!iCanVote && (
-                      <div className="mt-4 p-3 bg-orange-50 text-orange-700 rounded-lg border border-orange-200 text-sm">
+                      <div className="mt-4 p-3 bg-orange-50 text-orange-700 rounded-lg border border-orange-200 text-sm font-gowun">
                         마감되었거나 종료된 투표입니다.
                       </div>
                     )}
@@ -731,21 +735,21 @@ export default function VotingPage({
 
                     {/* 소유자 액션 / 메타 */}
                     <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg lg:col-span-3">
-                    <h3 className="font-semibold text-gray-800 text-lg mb-4">투표 정보</h3>
+                    <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">투표 정보</h3>
 
                     <div className="space-y-3 text-sm text-gray-700">
                         {/* 마감일 */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">마감일</span>
-                        <span className="font-extrabold text-green-600">{selectedPoll.deadline}</span>
+                        <span className="text-gray-600 font-gowun">마감일</span>
+                        <span className="font-extrabold text-green-500 font-jua">{selectedPoll.deadline}</span>
                         </div>
 
                         {/* 상태 */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">상태</span>
+                        <span className="text-gray-600 font-gowun">상태</span>
                         <span
-                            className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                            isClosed(selectedPoll) ? "bg-orange-100 text-orange-700" : "bg-green-600 text-white"
+                            className={`px-2 py-1 rounded-md text-xs font-semibold font-jua ${
+                            isClosed(selectedPoll) ? "bg-orange-100 text-orange-700" : "bg-green-400 text-white"
                             }`}
                         >
                             {isClosed(selectedPoll) ? "완료" : "진행중"}
@@ -754,31 +758,31 @@ export default function VotingPage({
 
                         {/* 선택 방식 */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">선택 방식</span>
-                        <span className="font-medium">
+                        <span className="text-gray-600 font-gowun">선택 방식</span>
+                        <span className="font-medium font-gowun">
                             {selectedPoll.allowMultiple ? "다중 선택" : "단일 선택"}
                         </span>
                         </div>
 
                         {/* 전체 인원 */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">전체 인원</span>
-                        <span className="font-medium">
+                        <span className="text-gray-600 font-gowun">전체 인원</span>
+                        <span className="font-medium font-jua">
                             {selectedPoll.eligibleCount ?? getUniqueVotersCount(selectedPoll)}명
                         </span>
                         </div>
 
                         {/* 참여 인원 */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">참여 인원</span>
-                        <span className="font-medium">{getParticipantsCount(selectedPoll)}명</span>
+                        <span className="text-gray-600 font-gowun">참여 인원</span>
+                        <span className="font-medium font-jua">{getParticipantsCount(selectedPoll)}명</span>
                         </div>
 
                         {/* 참여율 + 막대 */}
                         <div className="p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                            <span>참여율</span>
-                            <span className="text-orange-600 font-semibold">
+                            <span className="font-gowun">참여율</span>
+                            <span className="text-orange-600 font-semibold font-jua">
                             {getParticipationRate(selectedPoll)}%
                             </span>
                         </div>
@@ -792,20 +796,20 @@ export default function VotingPage({
 
                         {/* 총 투표수 */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">총 투표수</span>
-                        <span className="font-extrabold text-orange-600">
+                        <span className="text-gray-600 font-gowun">총 투표수</span>
+                        <span className="font-extrabold text-orange-600 font-jua">
                             {getTotalVotes(selectedPoll)} <span className="text-sm font-semibold">표</span>
                         </span>
                         </div>
 
                         {/* 생성자 / 생성일 */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">생성자</span>
-                        <span className="font-medium">{selectedPoll.createdBy}</span>
+                        <span className="text-gray-600 font-gowun">생성자</span>
+                        <span className="font-medium font-gowun">{selectedPoll.createdBy}</span>
                         </div>
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-600">생성일</span>
-                        <span className="font-medium">{selectedPoll.createdAt}</span>
+                        <span className="text-gray-600 font-gowun">생성일</span>
+                        <span className="font-medium font-gowun">{selectedPoll.createdAt}</span>
                         </div>
                     </div>
 
@@ -815,14 +819,14 @@ export default function VotingPage({
                         {!isClosed(selectedPoll) && (
                             <button
                             onClick={() => handleClosePoll(selectedPoll.id)}
-                            className="flex-1 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg"
+                            className="flex-1 px-6 py-3 bg-green-400 hover:bg-green-500 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg font-jua text-sm"
                             >
                             투표 종료
                             </button>
                         )}
                         <button
                             onClick={() => handleDeletePoll(selectedPoll.id)}
-                            className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg"
+                            className="flex-1 px-6 py-3 bg-red-400 hover:bg-red-500 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg font-jua text-sm"
                         >
                             투표 삭제
                         </button>
@@ -835,8 +839,8 @@ export default function VotingPage({
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="text-6xl mb-4">🗳️</div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">투표를 선택해주세요</h2>
-                  <p className="text-gray-600">왼쪽 목록에서 투표를 선택하면 상세 내용을 확인할 수 있습니다.</p>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2 font-jua">투표를 선택해주세요</h2>
+                  <p className="text-gray-600 font-gowun">왼쪽 목록에서 투표를 선택하면 상세 내용을 확인할 수 있습니다.</p>
                 </div>
               </div>
             )}
@@ -866,8 +870,8 @@ export default function VotingPage({
                     <span className="text-white text-xl">🗳️</span>
                 </div>
                 <div>
-                    <h3 id="createPollTitle" className="text-3xl font-bold text-gray-800">새 투표 생성</h3>
-                    <p className="text-gray-600 text-sm mt-1">모임 의사결정을 빠르고 투명하게!</p>
+                    <h3 id="createPollTitle" className="text-3xl font-bold text-gray-800 font-jua">새 투표 생성</h3>
+                    <p className="text-gray-600 text-sm mt-1 font-gowun">모임 의사결정을 빠르고 투명하게!</p>
                 </div>
                 </div>
                 <button
@@ -883,7 +887,7 @@ export default function VotingPage({
                 <div className="space-y-6">
                 {/* 제목 */}
                 <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">제목 *</label>
+                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">제목 *</label>
                     <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -895,7 +899,7 @@ export default function VotingPage({
 
                 {/* 설명 */}
                 <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">설명</label>
+                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">설명</label>
                     <textarea
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
@@ -908,7 +912,7 @@ export default function VotingPage({
                 {/* 마감/다중선택 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">마감일 *</label>
+                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">마감일 *</label>
                     <input
                         value={deadline}
                         onChange={(e) => setDeadline(e.target.value)}
@@ -924,14 +928,14 @@ export default function VotingPage({
                         onChange={(e) => setAllowMultiple(e.target.checked)}
                         className="w-5 h-5"
                         />
-                        <span className="font-medium text-gray-800">다중 선택 허용</span>
+                        <span className="font-medium text-gray-800 font-gowun">다중 선택 허용</span>
                     </label>
                     </div>
                 </div>
 
                 {/* 선택지 */}
                 <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">선택지 *</label>
+                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">선택지 *</label>
                     <div className="space-y-3">
                     {optionInputs.map((op, idx) => (
                         <div key={idx} className="flex gap-2">
@@ -959,7 +963,7 @@ export default function VotingPage({
                         className="w-full py-3 border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl text-gray-600 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
                     >
                         <span className="text-lg">+</span>
-                        선택지 추가
+                        <span className="font-gowun">선택지 추가</span>
                     </button>
                     </div>
                 </div>
@@ -969,7 +973,7 @@ export default function VotingPage({
             {/* 푸터 */}
             <div className="shrink-0 flex justify-end gap-4 px-6 md:px-8 py-4 border-t border-orange-200">
                 <button
-                className="px-8 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-2xl font-semibold transition-all duration-200 border border-orange-200"
+                className="px-8 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-2xl font-semibold transition-all duration-200 border border-orange-200 font-jua"
                 onClick={() => setShowCreateModal(false)}
                 >
                 취소
@@ -977,7 +981,7 @@ export default function VotingPage({
                 <button
                 onClick={handleCreate}
                 disabled={!title.trim() || !deadline || optionInputs.map((x) => x.trim()).filter(Boolean).length < 2}
-                className="px-8 py-3 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-200"
+                className="px-8 py-3 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-200 font-jua"
                 >
                 생성
                 </button>

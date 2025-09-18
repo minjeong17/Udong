@@ -88,7 +88,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             <img src="/images/button/Chat.png" alt="채팅방" className="w-14 h-14" />
           </button>
 
-          {/* 9. MT내용추천 */}
+          {/* 9. 상점 */}
+          <button
+            onClick={() => navigate('shop')}
+            className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="상점">
+            <img src="/images/button/Shop.png" alt="상점" className="w-14 h-14" />
+          </button>
+
+          {/* 10. MT내용추천 */}
           <button
             onClick={() => navigate('mt-planner')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="MT추천">
