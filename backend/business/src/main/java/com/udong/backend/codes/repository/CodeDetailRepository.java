@@ -16,4 +16,6 @@ public interface CodeDetailRepository extends JpaRepository<CodeDetail, String> 
 
     // [단건 조회: 그룹 + 코드명]
     Optional<CodeDetail> findByCodeGroup_GroupNameAndCodeName(String groupName, String codeName);
+
+    Optional<CodeDetail> findByCodeGroup_GroupNameAndCodeNameAndIsUseTrue(String groupName, String codeName);
 }
