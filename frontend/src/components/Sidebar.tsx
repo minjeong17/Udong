@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRouter } from '../hooks/useRouter';
+import { useLogout } from '../hooks/useLogout';
 
 interface SidebarProps {
   onNavigateToOnboarding: () => void; // 로그아웃은 특별히 처리
@@ -11,12 +12,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   onShowNotification
 }) => {
   const { navigate } = useRouter();
+
+  // 로그아웃 커스텀 훅 사용
+  const { handleLogout } = useLogout();
   return (
     <div className="w-20 bg-white shadow-lg min-h-screen">
       <div className="flex flex-col items-center py-4 space-y-4">
         {/* Logout Button */}
         <button
-          onClick={onNavigateToOnboarding}
+          onClick={() => handleLogout(onNavigateToOnboarding)}
           className="w-14 h-14 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-2 border-red-200 hover:border-red-300 rounded-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl cursor-pointer group"
           title="로그아웃"
         >

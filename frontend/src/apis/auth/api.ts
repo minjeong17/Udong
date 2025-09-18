@@ -14,15 +14,16 @@ export const AuthApi = {
   },
 
   /* 로그인 요청 */
-  signIn: async (payload: SignInRequest): Promise<void> => {
+  signIn: async (payload: SignInRequest): Promise<number> => {
     const url = `${BASE_URL}${API_PREFIX}/auth/login`;
-    await fetchClient(url, {
+    const response = await fetchClient<{success: boolean, data: number, status: number}>(url, {
       method: "POST",
       body: JSON.stringify(payload),
       auth: false, // 로그인은 토큰 불필요
     });
     // 성공하면 access token이 자동으로 저장됨 (fetchClient에서 처리)
     // refresh token은 HttpOnly 쿠키로 자동 설정됨
+    return response.data; // userId 반환
   },
 
   /* 로그아웃 요청 */

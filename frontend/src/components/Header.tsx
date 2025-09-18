@@ -1,4 +1,6 @@
 import React from 'react';
+import { useAuthStore } from '../stores/authStore';
+import { useLogout } from '../hooks/useLogout';
 
 interface HeaderProps {
   onNavigateToOnboarding: () => void;
@@ -17,6 +19,12 @@ const Header: React.FC<HeaderProps> = ({
   showBackButton = false,
   currentRoute
 }) => {
+  // Zustand store에서 로그인 상태 가져오기
+  const { isAuthenticated } = useAuthStore();
+
+  // 로그아웃 커스텀 훅 사용
+  const { handleLogout } = useLogout();
+
   // 온보딩 페이지가 아닌 모든 페이지에서 뒤로가기 버튼 표시
   const shouldShowBackButton = showBackButton || (currentRoute && currentRoute !== 'onboarding');
   if (variant === 'onboarding') {
@@ -77,13 +85,23 @@ const Header: React.FC<HeaderProps> = ({
             우동 - 우리들의 동아리
           </button>
         </div>
-        <button
-          onClick={onNavigateToOnboarding}
-          className="text-2xl hover:text-orange-500 transition-colors cursor-pointer p-2 rounded-lg hover:bg-orange-100 active:scale-95"
-          title="홈으로 가기"
-        >
-          🏠
-        </button>
+        {isAuthenticated ? (
+          <button
+            onClick={() => handleLogout(onNavigateToOnboarding)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-2xl font-medium font-jua transition-colors text-sm shadow-sm hover:shadow-md"
+            title="로그아웃"
+          >
+            로그아웃
+          </button>
+        ) : (
+          <button
+            onClick={onNavigateToOnboarding}
+            className="text-2xl hover:text-orange-500 transition-colors cursor-pointer p-2 rounded-lg hover:bg-orange-100 active:scale-95"
+            title="홈으로 가기"
+          >
+            🏠
+          </button>
+        )}
       </div>
     </header>
   );
