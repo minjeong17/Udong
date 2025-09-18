@@ -1,12 +1,14 @@
 spring:
   config:
+    # ...env 파일 또는 환경 변수에서 값을 가져오도록 설정
     import: "optional:file:./.env[.properties]"
   application:
     name: backend
   datasource:
-    url: jdbc:mysql://ssafy-mysql-db.mysql.database.azure.com:3306/S13P21A310?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8
-    username: S13P21A310
-    password: 1234
+    # ...env 파일에서 데이터베이스 정보를 읽어옵니다.
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     open-in-view: false
@@ -16,7 +18,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
 
 server:
   servlet:
@@ -27,12 +29,13 @@ server:
 
 jwt:
   secret:
-    key: 6vYp9dR2xL8fTzQ1wE7hK3nB5mU4aJ2oC6rZ8tQ0yX9dL3kF1pS7uW5vE3hY9tM2
+    # ...env 파일에서 JWT 비밀 키를 읽어옵니다.
+    key: ${JWT_SECRET_KEY}
 
 app:
   crypto:
-    # 32바이트 키(Base64) — 환경변수 APP_AES_KEY_B64 로 주입 권장
-    aes256_key_b64: ${APP_AES_KEY_B64:UBrwY6Zk70SmfGKKz+HX7gsjF2MoPRx7YVbRI/UxiNE=}
+    # ...env 파일에서 AES256 키를 읽어옵니다.
+    aes256_key_b64: ${APP_AES_KEY_B64}
     key_version: 1
 
 logging:
@@ -42,4 +45,5 @@ logging:
 
 cloud:
   aws:
+    # 이 값도 민감하다면 .env로 옮길 수 있습니다.
     region: ap-southeast-2

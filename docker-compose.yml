@@ -15,7 +15,6 @@ services:
     depends_on:
       - frontend
       - business-api
-      - chat-api
     environment:
       - TZ=Asia/Seoul
     restart: always
@@ -23,7 +22,9 @@ services:
       - app-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: frontend
     environment:
       - TZ=Asia/Seoul
@@ -32,8 +33,12 @@ services:
       - app-network
 
   business-api:
-    build: ./backend/business
+    build:
+      context: ./backend/business
+      dockerfile: Dockerfile
     container_name: business-api
+    env_file:
+      - ./backend/business/.env
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8080
@@ -42,15 +47,6 @@ services:
     networks:
       - app-network
 
-  chat-api:
-    build: ./backend/chatting
-    container_name: chat-api
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - SERVER_PORT=8081
-    restart: always
-    networks:
-      - app-network
 
   jenkins:
     image: jenkins/jenkins:lts

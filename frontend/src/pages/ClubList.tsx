@@ -4,6 +4,7 @@ import Header from '../components/Header';
 interface ClubListProps {
   onNavigateToOnboarding: () => void;
   onNavigateToClubDashboard?: () => void;
+  onNavigateToClubSelection?: () => void;
   currentRoute?: string;
 }
 
@@ -19,7 +20,7 @@ interface Club {
   image?: string;
 }
 
-const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateToClubDashboard, currentRoute }) => {
+const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateToClubDashboard, onNavigateToClubSelection, currentRoute }) => {
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [inviteCode, setInviteCode] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -131,6 +132,7 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
 
       <Header
         onNavigateToOnboarding={onNavigateToOnboarding}
+        onBackClick={onNavigateToClubSelection}
         currentRoute={currentRoute}
       />
 

@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react"
+import Sidebar from '../components/Sidebar';
+import Notification from './Notification';
 // 참여자(결제 현황) 타입: id는 number, isPaid 필수
 export type ParticipantPayment = {
   id: number;
@@ -27,9 +29,16 @@ export type Settlement = {
 };
 
 
-export default function SettlementPage() {
+interface SettlementProps {
+  onNavigateToOnboarding: () => void;
+}
+
+export default function SettlementPage({
+  onNavigateToOnboarding,
+}: SettlementProps) {
   const [selectedSettlement, setSelectedSettlement] = useState<number | null>(1)
   const [paymentCompleted, setPaymentCompleted] = useState(false)
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
   const currentUser = "김민수" // 실제로는 로그인된 사용자 정보를 가져와야 함
   const currentUserId = 1; // 더미용 (실서비스: 로그인 사용자 id)
   const [settlements, setSettlements] = useState<Settlement[]>([
@@ -183,38 +192,11 @@ export default function SettlementPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="flex">
-        <div className="w-20 bg-white border-r border-orange-200 shadow-lg">
-          <div className="p-4">
-            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white text-xl font-bold">🐻</span>
-            </div>
-          </div>
-          <nav className="space-y-2 px-2">
-            {[
-              { icon: "🏠", active: false },
-              { icon: "👥", active: false },
-              { icon: "📅", active: false },
-              { icon: "🛒", active: false },
-              { icon: "💬", active: false },
-              { icon: "🗳️", active: false },
-              { icon: "💰", active: true },
-              { icon: "⚙️", active: false },
-            ].map((item, index) => (
-              <div
-                key={index}
-                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
-                  item.active
-                    ? "bg-orange-500 text-white shadow-md"
-                    : "bg-orange-100 hover:bg-orange-200 text-orange-700 hover:text-orange-800"
-                }`}
-              >
-                <span className={`text-lg font-bold ${item.active ? "text-white" : "text-orange-700"}`}>
-                  {item.icon}
-                </span>
-              </div>
-            ))}
-          </nav>
-        </div>
+        {/* Left Sidebar */}
+        <Sidebar
+          onNavigateToOnboarding={onNavigateToOnboarding}
+          onShowNotification={() => setShowNotificationModal(true)}
+        />
 
         <div className="flex-1 flex">
           {/* 정산 리스트 사이드바 */}
@@ -502,6 +484,28 @@ export default function SettlementPage() {
           </div>
         </div>
       </div>
+
+      {/* Notification Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-700 font-jua">알림</h2>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-0">
+              <Notification onNavigateToOnboarding={onNavigateToOnboarding} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

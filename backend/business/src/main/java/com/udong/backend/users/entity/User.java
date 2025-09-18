@@ -1,6 +1,7 @@
 package com.udong.backend.users.entity;
 
-import com.udong.backend.global.config.AccountNumberConverter;
+import com.udong.backend.auth.entity.RefreshToken;
+import com.udong.backend.events.entity.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,9 +46,11 @@ public class User {
     @Column(name = "phone", length = 13)
     private String phone;
 
-    @Column(name = "account_hash", length = 255)
-    @Convert(converter = AccountNumberConverter.class)
-    private String accountHash;
+    @Column(name = "account_cipher", length = 512)
+    private String accountCipher;
+
+    @Column(name = "account_key_ver", nullable = false)
+    private short accountKeyVer;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", nullable = false, length = 50) // "M" / "F"
@@ -71,6 +74,9 @@ public class User {
     @Builder.Default
     private List<UserAvailability> availabilities = new ArrayList<>();
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private RefreshToken refreshToken;
+
     // 양방향 편의 메서드
     public void addAvailability(UserAvailability availability) {
         availabilities.add(availability);
@@ -81,6 +87,22 @@ public class User {
         availabilities.remove(availability);
         availability.setUser(null);
     }
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Event> createdEvents = new ArrayList<>();
+
+    // 편의 메서드
+    public void addCreatedEvent(Event event) {
+        createdEvents.add(event);
+        event.setCreatedBy(this);
+    }
+
+    public void removeCreatedEvent(Event event) {
+        createdEvents.remove(event);
+        event.setCreatedBy(null);
+    }
+
 
     public enum Gender { M, F }
 

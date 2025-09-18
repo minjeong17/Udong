@@ -1,10 +1,11 @@
 package com.udong.backend.users.service;
 
+import com.udong.backend.clubs.entity.Club;
+import com.udong.backend.global.config.AccountCrypto;
 import com.udong.backend.users.dto.SignUpRequest;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.entity.UserAvailability;
 import com.udong.backend.users.repository.UserRepository;
-import com.udong.backend.global.util.AesUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.SecureRandom;
 import java.time.LocalTime;
 
 @RequiredArgsConstructor
@@ -20,13 +22,22 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AesUtil aesUtil;
+    private final AccountCrypto accountCrypto;
+    private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final SecureRandom RND = new SecureRandom();
 
     @Transactional
     public void signUp(SignUpRequest req) {
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
         }
+
+        // 계좌 정규화 + 최소 길이 검증
+        String normalized = accountCrypto.normalize(req.getAccount());
+        if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다");
+
+        String code = generateCode();
+        String cipher = accountCrypto.encrypt(normalized);
 
         User user = User.builder()
                 .email(req.getEmail())
@@ -37,7 +48,8 @@ public class UserService {
                 .residence(req.getResidence())
                 .phone(req.getPhone())
                 .gender(User.Gender.valueOf(req.getGender())) // "M"/"F"만 허용
-                .accountHash(aesUtil.encrypt(req.getAccount()))
+                .accountCipher(cipher)
+                .accountKeyVer((short) accountCrypto.keyVersion())
                 .build();
 
         // 가능 시간 같이 들어오면 추가
@@ -54,5 +66,20 @@ public class UserService {
 
         User saved = userRepository.save(user);
 //        return new SignUpResponse(saved.getId(), saved.getEmail(), saved.getName());
+    }
+
+    @Transactional
+    public void deleteAccount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found"));
+
+        // JPA cascade/orphanRemoval이 먹도록 '엔티티 삭제'로 처리
+        userRepository.delete(user);
+    }
+
+    private String generateCode() {
+        StringBuilder sb = new StringBuilder(8);
+        for (int i = 0; i < 8; i++) sb.append(CODE_CHARS.charAt(RND.nextInt(CODE_CHARS.length())));
+        return sb.toString();
     }
 }

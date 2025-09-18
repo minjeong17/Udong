@@ -1,6 +1,6 @@
 package com.udong.backend.clubs.service;
 
-import com.udong.backend.clubs.crypto.AccountCrypto;
+import com.udong.backend.global.config.AccountCrypto;
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.clubs.repository.ClubRepository;
 import lombok.RequiredArgsConstructor;
