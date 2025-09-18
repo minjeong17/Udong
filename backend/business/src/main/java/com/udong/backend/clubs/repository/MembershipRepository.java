@@ -1,7 +1,6 @@
 package com.udong.backend.clubs.repository;
 
 import com.udong.backend.clubs.entity.Membership;
-import com.udong.backend.codes.entity.CodeDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,4 +17,6 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
            where m.userId = :userId
            """)
     List<Membership> findByUserIdFetchClub(@Param("userId") Integer userId);
+
+    boolean existsByClub_IdAndUserId(Integer clubId, Integer userId);
 }

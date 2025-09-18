@@ -43,4 +43,15 @@ public class CodeService {
                 .map(DetailResponse::new)
                 .toList();
     }
+
+    // com.udong.backend.codes.service.CodeService
+    @Transactional(readOnly = true)
+    public CodeDetail getActiveDetailOrThrow(String groupName, String codeName) {
+        String g = groupName.toLowerCase(Locale.ROOT);
+        String c = codeName.toUpperCase(Locale.ROOT);
+        return codeDetailRepository.findByCodeGroup_GroupNameAndCodeNameAndIsUseTrue(g, c)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "유효하지 않은 코드입니다. group=" + g + ", code=" + c));
+    }
+
 }
