@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ChatRoomService {
 
-    private static final String CODE_GROUP = "chat_room_type"; // code_group.group_name
+    private static final String CODE_GROUP = "chats"; // code_group.group_name
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
