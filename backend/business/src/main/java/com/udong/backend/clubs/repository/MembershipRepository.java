@@ -18,6 +18,15 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
            """)
     List<Membership> findByUserIdFetchClub(@Param("userId") Integer userId);
 
+    @Query("""
+           select m
+           from Membership m
+           join fetch m.club c
+           left join fetch c.activeMascot mas
+           where m.userId = :userId
+           """)
+    List<Membership> findByUserIdFetchClubAndMascot(@Param("userId") Integer userId);
+
     boolean existsByClub_IdAndUserId(Integer clubId, Integer userId);
 
 
