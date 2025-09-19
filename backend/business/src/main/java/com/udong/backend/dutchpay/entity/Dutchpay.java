@@ -1,6 +1,6 @@
 package com.udong.backend.dutchpay.entity;
 
-import com.udong.backend.events.entity.Event;
+import com.udong.backend.calendar.entity.Event;
 import com.udong.backend.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
