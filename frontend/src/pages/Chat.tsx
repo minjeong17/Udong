@@ -2,6 +2,8 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
+import type { ChatRoomApi, ChatRoomListResponse, Channel } from "../types/chat";
+import { ChatApi } from "../apis/chat";
 
 interface ChatProps {
   onNavigateToOnboarding: () => void;
@@ -10,7 +12,8 @@ interface ChatProps {
 export default function ChatPage({
   onNavigateToOnboarding,
 }: ChatProps) {
-  const [selectedChannel, setSelectedChannel] = useState("general")
+  // const [selectedChannel, setSelectedChannel] = useState("general")
+  const [selectedChannel, setSelectedChannel] = useState<number | null>(null);
   const [message, setMessage] = useState("")
   const [showVoteModal, setShowVoteModal] = useState(false)
   const [showSettlementModal, setShowSettlementModal] = useState(false)
@@ -30,13 +33,6 @@ export default function ChatPage({
   const [options, setOptions] = useState(["", ""])
   const [isRoomOwner] = useState(true) // 현재 사용자가 방장인지 확인
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  const channels = [
-    { id: "general", name: "일반", description: "일반적인 대화", unread: 3 },
-    { id: "announcements", name: "공지사항", description: "중요한 공지", unread: 1 },
-    { id: "events", name: "이벤트", description: "모임 및 이벤트", unread: 0 },
-    { id: "random", name: "자유", description: "자유로운 대화", unread: 5 },
-  ]
 
   const chatMembers = [
     { id: "1", name: "김민수", avatar: "KM" },
@@ -156,6 +152,22 @@ export default function ChatPage({
     setSettlementParticipants(chatMembers.map((member) => member.id))
   }, [])
 
+  // 1. 상태 정의
+  const [channels, setChannels] = useState<Channel[]>([])
+
+  // 2. 목록 API 호출
+  useEffect(() => {
+    (async () => {
+      try {
+        const rooms = await ChatApi.getRoomsByClub(4);  // clubId = 4
+        console.log("채팅방 목록:", rooms);
+        setChannels(rooms); // rooms는 Channel[] 타입
+      } catch (err) {
+        console.error("채팅방 목록 불러오기 실패:", err);
+      }
+    })();
+  }, []);
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
     if (message.trim()) {
@@ -221,7 +233,7 @@ export default function ChatPage({
           <div className="w-80 bg-white border-r border-orange-200 shadow-lg">
             <div className="p-6 border-b border-orange-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-800 font-jua">채널</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">채팅</h2>
               </div>
             </div>
             <div className="p-4 space-y-2">
@@ -238,11 +250,7 @@ export default function ChatPage({
                   <div className="flex justify-between items-center">
                     <div>
                       <div className="font-semibold font-jua"># {channel.name}</div>
-                      <div
-                        className={`text-sm font-gowun ${selectedChannel === channel.id ? "text-orange-100" : "text-gray-500"}`}
-                      >
-                        {channel.description}
-                      </div>
+                      <div className="font-semibold font-jua">인원 :  {channel.memberCount}</div>
                     </div>
                   </div>
                 </div>
@@ -315,7 +323,7 @@ export default function ChatPage({
                   <h1 className="text-2xl font-bold text-gray-800 font-jua">
                     # {channels.find((c) => c.id === selectedChannel)?.name}
                   </h1>
-                  <p className="text-gray-600 font-gowun">{channels.find((c) => c.id === selectedChannel)?.description}</p>
+                  {/* <p className="text-gray-600 font-gowun">{channels.find((c) => c.id === selectedChannel)?.description}</p> */}
                 </div>
                 <div className="flex gap-2">
                   <button
