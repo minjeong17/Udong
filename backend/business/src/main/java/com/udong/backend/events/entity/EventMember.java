@@ -47,6 +47,7 @@ public class EventMember {
     private Event event;
 
     /** 참여여부 (TINYINT(1) -> boolean) */
+    @Builder.Default
     @Column(name = "is_participated", nullable = false)
     private boolean isParticipated = true;
 }

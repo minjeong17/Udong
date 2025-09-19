@@ -1,5 +1,6 @@
 package com.udong.backend.chat.controller;
 
+import com.udong.backend.chat.dto.ChatRoomListItem;
 import com.udong.backend.chat.dto.CreateRoomRequest;
 import com.udong.backend.chat.service.ChatRoomService;
 import com.udong.backend.global.dto.response.ApiResponse;
@@ -8,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/chat/rooms")
@@ -36,5 +39,13 @@ public class ChatRoomController {
 
         chatRoomService.addMember(typeCode, targetId, userId);
         return ResponseEntity.ok(ApiResponse.ok("채팅방 멤버 추가 완료"));
+    }
+
+    /** 유저별 + clubId 필터 채팅방 목록 */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ChatRoomListItem>>> myRoomsByClub(@RequestParam Integer clubId) {
+        Integer userId = securityUtils.currentUserId();
+        List<ChatRoomListItem> items = chatRoomService.listMyRoomsByClub(userId, clubId);
+        return ResponseEntity.ok(ApiResponse.ok(items));
     }
 }
