@@ -1,9 +1,7 @@
-package com.udong.backend.events.repository;
+package com.udong.backend.calendar.repository;
 
-import com.udong.backend.events.entity.EventMember;
+import com.udong.backend.calendar.entity.EventMember;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.Optional;
 
 public interface EventMemberRepository extends JpaRepository<EventMember, Integer> {
 

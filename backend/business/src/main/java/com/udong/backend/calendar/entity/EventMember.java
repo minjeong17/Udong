@@ -1,5 +1,6 @@
-package com.udong.backend.events.entity;
+package com.udong.backend.calendar.entity;
 
+import com.udong.backend.events.entity.Event;
 import com.udong.backend.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
