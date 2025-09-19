@@ -17,6 +17,6 @@ public class EventRes {
     private LocalDateTime startAt;
     private LocalDateTime endAt;
     private String type;
-    private Long createdBy; // User.id는 Long 유지
+    private Integer createdBy;
 }
 

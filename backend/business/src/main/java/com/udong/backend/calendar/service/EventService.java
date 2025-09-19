@@ -36,12 +36,12 @@ public class EventService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
 
-    private Long currentUserId() {
+    private Integer currentUserId() {
         return securityUtils.currentUserId();
     }
 
     /** 조회 전 공통 가드: 해당 클럽 '회원'만 통과 */
-    private void requireClubMember(Long rawClubId, Long userId) {
+    private void requireClubMember(Long rawClubId, Integer userId) {
         if (!authz.canView(rawClubId, userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 동아리 회원만 조회할 수 있습니다.");
         }
@@ -62,7 +62,7 @@ public class EventService {
     }
 
     public EventRes create(Long rawClubId, EventCreateReq req) {
-        Long userId = currentUserId();
+        Integer userId = currentUserId();
 
         // 1) 타입 검증 (공통코드)
         codes.findByCodeGroup_GroupNameAndCodeNameAndIsUseTrue("events", req.getType())
@@ -122,7 +122,7 @@ public class EventService {
     public EventRes update(Long rawClubId, Long rawEventId, EventUpdateReq req) {
         Integer clubId = Math.toIntExact(rawClubId);
         Integer eventId = Math.toIntExact(rawEventId);
-        Long userId = currentUserId();
+        Integer userId = currentUserId();
 
         Event e = events.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -152,7 +152,7 @@ public class EventService {
     public void delete(Long rawClubId, Long rawEventId) {
         Integer clubId = Math.toIntExact(rawClubId);
         Integer eventId = Math.toIntExact(rawEventId);
-        Long userId = currentUserId();
+        Integer userId = currentUserId();
 
         Event e = events.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
