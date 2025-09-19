@@ -1,11 +1,13 @@
 package com.udong.backend.clubs.repository;
 
 import com.udong.backend.clubs.entity.Membership;
+import com.udong.backend.codes.entity.CodeDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MembershipRepository extends JpaRepository<Membership, Integer> {
     boolean existsByUserIdAndClub_Id(Integer userId, Integer clubId);
@@ -29,5 +31,6 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
 
     boolean existsByClub_IdAndUserId(Integer clubId, Integer userId);
 
+    Optional<Membership> findByClub_IdAndUserId(Integer clubId, Integer userId);
 
 }

@@ -9,8 +9,7 @@ import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.clubs.repository.MembershipRepository;
 import com.udong.backend.codes.entity.CodeDetail;
 import com.udong.backend.codes.service.CodeService;
-import com.udong.backend.events.repository.EventMemberRepository;
-import com.udong.backend.events.repository.EventRepository;
+import com.udong.backend.calendar.repository.EventMemberRepository;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -85,7 +84,7 @@ public class ChatRoomService {
         // 2) 타입별 도메인 유효성
         if ("GLOBAL".equals(normalized)) {
             // memberships: (club_id, user_id) 존재 여부
-            boolean ok = membershipRepository.existsByClub_IdAndUserId(targetId, userId);
+            boolean ok = membershipRepository.existsByUserIdAndClub_Id(userId, targetId);
             if (!ok) {
                 throw new IllegalArgumentException("동아리 가입된 사용자만 참여할 수 있습니다.");
             }

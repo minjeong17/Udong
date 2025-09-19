@@ -1,11 +1,11 @@
 package com.udong.backend.dutchpay.service;
 
+import com.udong.backend.calendar.entity.Event;
 import com.udong.backend.dutchpay.dto.*;
 import com.udong.backend.dutchpay.entity.Dutchpay;
 import com.udong.backend.dutchpay.entity.DutchpayParticipant;
 import com.udong.backend.dutchpay.repository.DutchpayParticipantRepository;
 import com.udong.backend.dutchpay.repository.DutchpayRepository;
-import com.udong.backend.events.entity.Event;
 import com.udong.backend.fin.client.FinApiClient;
 import com.udong.backend.fin.dto.FinHeader;
 import com.udong.backend.fin.util.FinHeaderFactory;

@@ -1,4 +1,4 @@
-package com.udong.backend.events.entity;
+package com.udong.backend.calendar.entity;
 
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.users.entity.User;
@@ -67,10 +67,4 @@ public class Event {
     // LIGHTNING, REGULAR, MT (문자열로 저장)
     @Column(length = 50, nullable = false)
     private String type;
-
-    // 필요 시 enum 사용 원하시면 아래 주석처럼 대체 가능
-    // public enum EventType { LIGHTNING, REGULAR, MT }
-    // @Enumerated(EnumType.STRING)
-    // @Column(length = 50, nullable = false)
-    // private EventType type;
 }
