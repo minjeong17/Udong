@@ -13,7 +13,7 @@ public class EventAuthz {
     private final MembershipRepository memberships;
     private final ClubRepository clubs;
 
-    public boolean canCreate(Long rawClubId, Long userId, String eventType) {
+    public boolean canCreate(Long rawClubId, Integer userId, String eventType) {
         Integer clubId = Math.toIntExact(rawClubId);
         Integer userIdInt = Math.toIntExact(userId);
 
@@ -36,13 +36,13 @@ public class EventAuthz {
         return isOwner || isLeader;
     }
 
-    public boolean canEdit(Event e, Long userId) {
+    public boolean canEdit(Event e, Integer userId) {
         return e.getCreatedBy() != null
                 && userId != null
                 && userId.equals(e.getCreatedBy().getId());
     }
 
-    public boolean canView(Long rawClubId, Long userId) {
+    public boolean canView(Long rawClubId, Integer userId) {
         Integer clubId = Math.toIntExact(rawClubId);
         Integer userIdInt = Math.toIntExact(userId);
         return memberships.existsByUserIdAndClub_Id(userIdInt, clubId);
