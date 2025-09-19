@@ -1,27 +1,20 @@
 package com.udong.backend.users.service;
 
-import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.global.config.AccountCrypto;
-import com.udong.backend.global.util.FinApiClient;
+import com.udong.backend.fin.client.FinApiClient;
 import com.udong.backend.users.dto.SignUpRequest;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.entity.UserAvailability;
 import com.udong.backend.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalTime;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Service

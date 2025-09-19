@@ -31,13 +31,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String[] WHITELIST = {
             "/api/v1/users/signup",
             "/api/v1/auth/login",
-            "/api/v1/auth/refresh"
+            "/api/v1/auth/refresh",
+            // Swagger/OpenAPI
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/api-docs/**",
+            "/swagger-resources/**",
+            "/webjars/**"
     };
 
     // 공개 엔드포인트는 필터링 건너뛰기
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        String ctx = request.getContextPath();              // "/api"
         String path = request.getRequestURI();
+        if (ctx != null && !ctx.isEmpty() && path.startsWith(ctx)) {
+            path = path.substring(ctx.length());            // "/swagger-ui.html" 처럼 변환
+        }
         for (String pattern : WHITELIST) {
             if (pathMatcher.match(pattern, path)) return true;
         }

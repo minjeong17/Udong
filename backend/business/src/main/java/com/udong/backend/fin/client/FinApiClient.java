@@ -1,4 +1,4 @@
-package com.udong.backend.global.util;
+package com.udong.backend.fin.client;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -44,5 +44,18 @@ public class FinApiClient {
         Object uk = (res == null) ? null : res.get("userKey"); // 응답 키 이름 문서대로
         if (uk == null) throw new IllegalStateException("userKey 응답이 없습니다.");
         return String.valueOf(uk);
+    }
+
+    /** 공통 POST 호출 */
+    public <T> T post(String path, Object body, Class<T> responseType) {
+        return client().post()
+                .uri(path)
+                .bodyValue(body)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, r ->
+                        r.bodyToMono(String.class).map(msg ->
+                                new RuntimeException("Fin API " + r.statusCode() + " - " + msg)))
+                .bodyToMono(responseType)
+                .block();
     }
 }

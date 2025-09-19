@@ -1,6 +1,7 @@
 package com.udong.backend.auth.controller;
 
 import com.udong.backend.auth.dto.AccessTokenResponse;
+import com.udong.backend.auth.dto.TokenPairDto;
 import com.udong.backend.auth.service.AuthService;
 import com.udong.backend.auth.dto.LoginRequest;
 import com.udong.backend.auth.dto.TokenPair;
@@ -25,7 +26,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
 
-        TokenPair tokens = authService.login(req);
+        TokenPairDto tokenPairDto = authService.login(req);
+        TokenPair tokens = tokenPairDto.getTokenPair();
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken());
@@ -42,7 +44,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(ApiResponse.ok("로그인 성공"));
+                .body(ApiResponse.ok(tokenPairDto.getUserId()));
     }
 
     /** 액세스 토큰 만료 시 재발급 */
