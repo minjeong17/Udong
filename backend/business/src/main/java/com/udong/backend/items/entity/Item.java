@@ -1,16 +1,8 @@
 package com.udong.backend.items.entity;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
-
-import com.udong.backend.clubs.entity.Club;
-import com.udong.backend.dutchpay.entity.Dutchpay;
-import com.udong.backend.dutchpay.entity.DutchpayParticipant;
-import com.udong.backend.events.entity.Event;
-import com.udong.backend.users.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +25,8 @@ import lombok.Setter;
 public class Item {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    
+    private String name;
     
     private String description;
     

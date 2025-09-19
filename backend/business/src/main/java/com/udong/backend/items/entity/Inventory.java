@@ -1,16 +1,10 @@
 package com.udong.backend.items.entity;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
-
-import com.udong.backend.clubs.entity.Club;
-import com.udong.backend.dutchpay.entity.Dutchpay;
-import com.udong.backend.dutchpay.entity.DutchpayParticipant;
-import com.udong.backend.events.entity.Event;
-import com.udong.backend.users.entity.User;
+import org.hibernate.annotations.DynamicInsert;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,6 +22,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@DynamicInsert
 @Entity 
 @Table(name = "inventories")
 public class Inventory {
@@ -39,6 +34,10 @@ public class Inventory {
     
     @Column(name = "user_id", nullable = false)
     private Integer userId;
+    
+    @Column(nullable = false)
+    @ColumnDefault("'0'")
+    private Integer qty;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
