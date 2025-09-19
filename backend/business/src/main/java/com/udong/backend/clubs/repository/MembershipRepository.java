@@ -19,4 +19,6 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
     List<Membership> findByUserIdFetchClub(@Param("userId") Integer userId);
 
     boolean existsByClub_IdAndUserId(Integer clubId, Integer userId);
+
+
 }
