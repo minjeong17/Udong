@@ -188,9 +188,6 @@ public class DutchpayService {
         String depositAccount = accountCrypto.decrypt(depositUser.getAccountCipher());
         String userKey = accountCrypto.decrypt(withdrawalUser.getUserKeyCipher());
 
-
-        System.out.println("userKeyyyyyyyyyyyyyyyyyyyyyy " + userKey);
-
         if (req.getAmount() <= 0) throw new IllegalArgumentException("금액은 0보다 커야 합니다.");
 
         // 4) FinHeaderFactory 이용해서 헤더 생성
