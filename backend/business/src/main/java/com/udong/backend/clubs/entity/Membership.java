@@ -6,7 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+
 
 @Entity @Table(name="memberships",
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id","club_id"}))

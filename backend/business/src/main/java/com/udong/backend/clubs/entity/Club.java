@@ -1,11 +1,9 @@
 package com.udong.backend.clubs.entity;
 
 
-import com.udong.backend.events.entity.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
-import java.util.*;
 
 
 @Entity @Table(name = "clubs")
@@ -56,20 +54,4 @@ public class Club {
     void prePersist() {
         if (createdAt == null) createdAt = Instant.now();
     }
-
-    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Event> events = new ArrayList<>();
-
-    // 편의 메서드
-    public void addEvent(Event event) {
-        events.add(event);
-        event.setClub(this);
-    }
-
-    public void removeEvent(Event event) {
-        events.remove(event);
-        event.setClub(null);
-    }
-
 }
