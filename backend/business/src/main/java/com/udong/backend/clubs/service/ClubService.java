@@ -2,6 +2,7 @@ package com.udong.backend.clubs.service;
 
 import com.udong.backend.chat.dto.CreateRoomRequest;
 import com.udong.backend.chat.service.ChatRoomService;
+import com.udong.backend.clubs.dto.ClubDtos;
 import com.udong.backend.clubs.dto.MascotCreateReq;
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.clubs.entity.Membership;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
@@ -150,6 +150,31 @@ public class ClubService {
         List<Membership> memberships = membershipRepository.findByUserIdFetchClub(userId);
         return memberships.stream()
                 .map(Membership::getClub)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClubDtos.ClubListRes> getClubsWithMascotByUserId(Integer userId) {
+        List<Membership> memberships = membershipRepository.findByUserIdFetchClubAndMascot(userId);
+        return memberships.stream()
+                .map(membership -> {
+                    Club club = membership.getClub();
+                    String masUrl = null;
+                    if (club.getActiveMascot() != null) {
+                        masUrl = club.getActiveMascot().getImageUrl();
+                    }
+                    return new ClubDtos.ClubListRes(
+                            club.getId(),
+                            club.getName(),
+                            club.getCategory(),
+                            club.getDescription(),
+                            club.getCodeUrl(),
+                            club.getActiveMascot() == null ? null : club.getActiveMascot().getId(),
+                            masUrl,
+                            toIsoKST(membership.getCreatedAt()),
+                            membership.getRoleCode()
+                    );
+                })
                 .toList();
     }
 
