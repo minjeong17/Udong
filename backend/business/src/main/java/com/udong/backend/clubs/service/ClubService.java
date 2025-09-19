@@ -1,5 +1,8 @@
 package com.udong.backend.clubs.service;
 
+import com.udong.backend.chat.dto.CreateRoomRequest;
+import com.udong.backend.chat.service.ChatRoomService;
+import com.udong.backend.clubs.dto.MascotCreateReq;
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.clubs.entity.Membership;
 import com.udong.backend.clubs.repository.ClubRepository;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
@@ -24,6 +28,11 @@ public class ClubService {
 
     private final CodeDetailRepository codeDetails;
     private final MembershipRepository membershipRepository;
+    private final MascotService mascotService;
+    private final ChatRoomService chatRoomService;
+
+    private final String GLOBAL_CODE = "GLOBAL";
+    private final String GLOBAL_CHATROOM_NAME = "전체 채팅방";
 
     @Transactional
     public Club create(String name, String category, String description,
@@ -58,6 +67,10 @@ public class ClubService {
                         .roleCode("LEADER")   // 문자열 코드 저장
                         .build()
         );
+
+        mascotService.reroll(saved.getId(),new MascotCreateReq(saved.getCategory(), null));
+
+        chatRoomService.create(saved.getLeaderUserId(),new CreateRoomRequest(GLOBAL_CODE,saved.getId(),GLOBAL_CHATROOM_NAME));
 
         return saved;
     }

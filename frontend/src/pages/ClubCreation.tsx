@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
+import { ClubApi } from '../apis/clubs';
+import type { ClubCreateRequest } from '../apis/clubs';
 
 interface ClubCreationProps {
   onNavigateToOnboarding: () => void;
@@ -12,6 +14,7 @@ interface ClubData {
   name: string;
   description: string;
   category: string;
+  accountNumber: string;
 }
 
 const ClubCreation: React.FC<ClubCreationProps> = ({
@@ -23,19 +26,56 @@ const ClubCreation: React.FC<ClubCreationProps> = ({
   const [formData, setFormData] = useState<ClubData>({
     name: '',
     description: '',
-    category: ''
+    category: '',
+    accountNumber: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Club creation attempt:', formData);
-    if (onCreateClub) {
-      onCreateClub(formData);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const clubData: ClubCreateRequest = {
+        name: formData.name,
+        category: formData.category,
+        description: formData.description,
+        accountNumber: formData.accountNumber
+      };
+
+      const createdClub = await ClubApi.create(clubData);
+
+      alert('동아리가 성공적으로 생성되었습니다! 🎉');
+      console.log('Club created:', createdClub);
+
+      if (onCreateClub) {
+        onCreateClub(formData);
+      }
+
+    } catch (error) {
+      console.error('Club creation failed:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('이미 존재')) {
+          setError('동일한 이름의 동아리가 이미 존재합니다.');
+        } else if (error.message.includes('계좌번호')) {
+          setError('계좌번호 형식이 올바르지 않습니다.');
+        } else if (error.message.includes('UNAUTHORIZED')) {
+          setError('로그인이 필요합니다.');
+        } else {
+          setError('동아리 생성에 실패했습니다. 다시 시도해주세요.');
+        }
+      } else {
+        setError('동아리 생성에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -169,6 +209,30 @@ const ClubCreation: React.FC<ClubCreationProps> = ({
               </div>
             </div>
 
+            {/* Club Account Number */}
+            <div>
+              <label className="block text-gray-700 text-sm mb-3 font-gowun font-medium">동아리 공용 계좌번호</label>
+              <input
+                type="text"
+                name="accountNumber"
+                value={formData.accountNumber}
+                onChange={handleInputChange}
+                className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl text-gray-600 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-base"
+                placeholder="계좌번호를 입력해주세요 (숫자만 입력)"
+                required
+              />
+              <p className="mt-2 text-xs text-gray-500 font-gowun">
+                동아리 회비 관리를 위한 공용 계좌번호를 입력해주세요
+              </p>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p className="text-red-600 text-sm font-gowun">{error}</p>
+              </div>
+            )}
+
             {/* Buttons */}
             <div className="flex gap-4 pt-6">
               <button
@@ -180,9 +244,10 @@ const ClubCreation: React.FC<ClubCreationProps> = ({
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-6 rounded-xl transition-colors border border-orange-400 font-gowun text-base"
+                disabled={isLoading}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-xl transition-colors border border-orange-400 font-gowun text-base"
               >
-                동아리 생성하기
+                {isLoading ? '생성 중...' : '동아리 생성하기'}
               </button>
             </div>
           </form>
