@@ -28,8 +28,9 @@ public class MascotImageService {
     @Value("${app.gms.enabled:true}")
     private boolean gmsEnabled;
 
-    @Value("${app.mascot.prompt-template:Create an ultra-cute baby character in a Pixar-inspired 3D style that represents a {{club category}} club.\n" +
-            "Make the character charming and friendly with big expressive eyes and soft rounded shapes.\n" +
+    @Value("${app.mascot.prompt-template:Create an ultra-cute baby animal mascot in a Pixar-inspired 3D style that represents a {{club category}} club.\n" +
+            "Make the character friendly and expressive with big sparkling eyes, soft rounded body, and playful details.\n" +
+            "The animal should be designed as a charming companion, not realistic but stylized, emphasizing warmth and approachability. \n" +
             "Full-body, centered composition, soft studio lighting, high detail, clean silhouette. Plain light (or transparent) background.\n" +
             "No extra text or watermarks anywhere in the image. Generate exactly ONE character.}")
     private String tpl;
@@ -51,36 +52,53 @@ public class MascotImageService {
     public Result reroll(String clubCategory, Integer clubId /* null이면 general로 저장 */) {
         String prompt = tpl.replace("{{club category}}", clubCategory == null ? "" : clubCategory);
 
-        // 1) GMS에서 이미지 URL 생성
-        String genUrl = null;
-        if (gmsEnabled) {
-            var urlOpt = gms.generateUrl(prompt);
-            if (urlOpt.isPresent()) {
-                genUrl = urlOpt.get();
-            } else if (failOnError) {
-                throw new IllegalStateException("GMS 이미지 생성 실패");
-            } else {
-                // gms disabled or failed → 아래서 prompt만 반환
-            }
-        }
-        if (genUrl == null) {
+        if (!gmsEnabled) {
             return new Result(null, null, prompt);
         }
 
-        // 2) 원격 URL → 바이트 다운로드
-        byte[] png = download(genUrl);
+        byte[] png = null;
 
-        // 3) S3 키 생성: clubs/{clubId or general}/mascots/{ULID}.png
+        // 1) Imagen 경로: Base64 → bytes (IMAGEN_ENDPOINT 설정되어 있고 generateBytes가 동작하면 여기서 끝)
+        try {
+            var bytesOpt = gms.generateBytes(prompt);
+            if (bytesOpt.isPresent()) {
+                png = bytesOpt.get();
+            }
+        } catch (Exception e) {
+            log.warn("[MascotImageService] Imagen generateBytes failed: {}", e.toString());
+        }
+
+        // 2) 폴백: DALL·E 경로 (URL 받아서 다운로드 → bytes)
+        if (png == null) {
+            try {
+                var urlOpt = gms.generateUrl(prompt);
+                if (urlOpt.isPresent()) {
+                    String genUrl = urlOpt.get();
+                    png = download(genUrl);
+                }
+            } catch (Exception e) {
+                log.warn("[MascotImageService] DALL·E generateUrl failed: {}", e.toString());
+            }
+        }
+
+        // 3) 최종 실패 처리
+        if (png == null) {
+            if (failOnError) throw new IllegalStateException("GMS 이미지 생성 실패");
+            return new Result(null, null, prompt);
+        }
+
+        // 4) S3 키 생성: clubs/{clubId or general}/mascots/{ULID}.png
         String ulid = com.github.f4b6a3.ulid.UlidCreator.getMonotonicUlid().toString().toLowerCase();
         String clubPart = (clubId == null) ? "general" : String.valueOf(clubId);
         String key = String.format("%s/%s/mascots/%s.png", keyPrefix, clubPart, ulid);
 
-        // 4) 업로드 (버킷 공개/CloudFront 설정은 인프라/정책에서)
+        // 5) 업로드 (putPng는 bytes만 받으면 됨)
         String publicUrl = s3Uploader.putPng(png, key);
 
-        // 5) S3(or CDN) URL + s3Key + prompt 반환
+        // 6) 리턴
         return new Result(publicUrl, key, prompt);
     }
+
 
     private byte[] download(String url) {
         try (var res = http.newCall(new Request.Builder().url(url).build()).execute()) {
