@@ -71,7 +71,8 @@ public class SecurityConfig {
         conf.setAllowedOrigins(List.of(
                 "https://j13a310.p.ssafy.io",
                 "https://udong.shop",
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "http://localhost:8080"
         ));
         conf.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         conf.setAllowedHeaders(List.of("*"));
