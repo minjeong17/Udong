@@ -30,6 +30,9 @@ public class FundQueryDtos {
         private boolean isWithdrawal;        // type == "2"
         private boolean hasReceipt;          // 우리 DB에 영수증 존재
         private Integer receiptId;           // 존재하면 id
+
+        private String receiptUrl; // = imageUrl (영수증이 있을 때만 세팅)
+        private String s3Key;      // = S3 오브젝트 키 (있을 때만 세팅)
     }
 
     @Data @Builder

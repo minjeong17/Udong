@@ -1,10 +1,14 @@
 // com.udong.backend.clubfund.controller.ClubFundQueryController.java
 package com.udong.backend.clubfund.controller;
 
-import com.udong.backend.clubfund.dto.FundQueryDtos.*;
+import com.udong.backend.clubfund.dto.FundQueryDtos.AttachReceiptResponse;
+import com.udong.backend.clubfund.dto.FundQueryDtos.QueryRequest;
+import com.udong.backend.clubfund.dto.FundQueryDtos.QueryResponse;
 import com.udong.backend.clubfund.service.ClubFundQueryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/v1/clubs/{clubId}/funds")
@@ -22,13 +26,17 @@ public class ClubFundQueryController {
         );
     }
 
-    /** 출금 거래 영수증 첨부(한 거래당 1개, idempotent) */
-    @PostMapping("/transactions/{transactionId}/receipt")
-    public AttachReceiptResponse attachReceipt(@PathVariable Integer clubId,
-                                               @PathVariable Integer transactionId,
-                                               @RequestBody AttachReceiptRequest req) {
-        return service.attachReceipt(
-                clubId, transactionId, req.getMemo(), req.getImageUrl(), req.getS3Key()
-        );
+    /** 멀티파트로 영수증 업로드 + DB 연결 */
+    @PostMapping(
+            value = "/transactions/{transactionId}/receipt",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public AttachReceiptResponse attachReceipt(
+            @PathVariable Integer clubId,
+            @PathVariable Integer transactionId,
+            @RequestPart("receipt") MultipartFile receipt,    // 파일 파트 이름 = "receipt"
+            @RequestPart(value = "memo", required = false) String memo
+    ) {
+        return service.attachReceiptWithImage(clubId, transactionId, memo, receipt);
     }
 }
