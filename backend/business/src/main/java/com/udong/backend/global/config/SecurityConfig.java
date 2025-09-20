@@ -33,7 +33,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())                 // 개발 편의용: CSRF 비활성화
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/ws/**"))                 // 개발 편의용: CSRF 비활성화
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -49,7 +49,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+
+                                "/ws/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/clubs/join-by-code").authenticated()
                         .anyRequest().authenticated()
@@ -71,7 +73,8 @@ public class SecurityConfig {
         conf.setAllowedOrigins(List.of(
                 "https://j13a310.p.ssafy.io",
                 "https://udong.shop",
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "http://127.0.0.1:5173"
         ));
         conf.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         conf.setAllowedHeaders(List.of("*"));

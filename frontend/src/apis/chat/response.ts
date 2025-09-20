@@ -16,7 +16,7 @@ export interface ChatRoomApi {
 
 // 메시지 응답
 export interface ChatMessageApi {
-  id: number;
+  messageId: number;
   chatId: number;
   senderUserId: number;
   senderName: string;
@@ -26,7 +26,7 @@ export interface ChatMessageApi {
 
 // 프론트에서 사용하기 좋은 채널 모델
 export interface Channel {
-  id: number;          // = roomId
+  id: number; // = roomId
   name: string;
   typeCode: "GLOBAL" | "EVENT";
   targetId: number;

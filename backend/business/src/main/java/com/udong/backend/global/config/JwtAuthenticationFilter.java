@@ -38,7 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/v3/api-docs/**",
             "/api-docs/**",
             "/swagger-resources/**",
-            "/webjars/**"
+            "/webjars/**",
+            "/ws/**"
     };
 
     // 공개 엔드포인트는 필터링 건너뛰기
@@ -62,7 +63,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain chain
     ) throws ServletException, IOException {
 
+        // ★ 웹소켓 핸드셰이크는 바로 통과
+        String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/ws/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         try {
+
             String bearer = request.getHeader("Authorization");
             if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
                 String token = bearer.substring(7);
