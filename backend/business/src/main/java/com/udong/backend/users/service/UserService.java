@@ -42,8 +42,6 @@ public class UserService {
         // 2) 외부 API로 userKey 가져오기 → 검증 → 암호화
         String plainUserKey = finApiClient.fetchUserKeyByEmail(req.getEmail());         // ★ 아래 private 메서드
 
-        System.out.println("plainUserKeyyyyyyyyyyyyyyyy " + plainUserKey);
-
         String userKeyCipher = accountCrypto.encrypt(plainUserKey);        // 계좌와 동일한 암호화기/키버전
 
         // 3) 엔티티 생성/저장

@@ -1,6 +1,6 @@
 package com.udong.backend.clubs.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
 
 public class ClubDtos {
     public record CreateReq(
@@ -18,5 +18,8 @@ public class ClubDtos {
 
     public record InviteCodeRes(String codeUrl) {}
     public record JoinByCodeReq(@NotBlank String code) {}
+
+    public record ClubListRes(Integer id, String name, String category, String description,
+                              String codeUrl, Integer activeMascotId, String masUrl, String joinedAt, String myRole) {}
 }
 

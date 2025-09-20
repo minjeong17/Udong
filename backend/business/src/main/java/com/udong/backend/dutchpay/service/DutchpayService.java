@@ -1,11 +1,11 @@
 package com.udong.backend.dutchpay.service;
 
+import com.udong.backend.calendar.entity.Event;
 import com.udong.backend.dutchpay.dto.*;
 import com.udong.backend.dutchpay.entity.Dutchpay;
 import com.udong.backend.dutchpay.entity.DutchpayParticipant;
 import com.udong.backend.dutchpay.repository.DutchpayParticipantRepository;
 import com.udong.backend.dutchpay.repository.DutchpayRepository;
-import com.udong.backend.events.entity.Event;
 import com.udong.backend.fin.client.FinApiClient;
 import com.udong.backend.fin.dto.FinHeader;
 import com.udong.backend.fin.util.FinHeaderFactory;
@@ -187,9 +187,6 @@ public class DutchpayService {
         String withdrawalAccount = accountCrypto.decrypt(withdrawalUser.getAccountCipher());
         String depositAccount = accountCrypto.decrypt(depositUser.getAccountCipher());
         String userKey = accountCrypto.decrypt(withdrawalUser.getUserKeyCipher());
-
-
-        System.out.println("userKeyyyyyyyyyyyyyyyyyyyyyy " + userKey);
 
         if (req.getAmount() <= 0) throw new IllegalArgumentException("금액은 0보다 커야 합니다.");
 

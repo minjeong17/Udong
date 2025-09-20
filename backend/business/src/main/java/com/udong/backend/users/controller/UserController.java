@@ -1,23 +1,17 @@
 package com.udong.backend.users.controller;
 
-import com.udong.backend.auth.service.AuthService;
 import com.udong.backend.clubs.dto.ClubDtos;
-import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.clubs.service.ClubService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
-import com.udong.backend.users.service.UserService;
 import com.udong.backend.users.dto.SignUpRequest;
+import com.udong.backend.users.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -60,22 +54,10 @@ public class UserController {
 
     /** 내가 속한 모든 동아리 조회 */
     @GetMapping("/me/clubs")
-    public ResponseEntity<ApiResponse<List<ClubDtos.Res>>> myClubs() {
+    public ResponseEntity<ApiResponse<List<ClubDtos.ClubListRes>>> myClubs() {
         Integer userId = securityUtils.currentUserId();
 
-        List<Club> clubs = clubService.getClubsByUserId(userId.intValue());
-
-        List<ClubDtos.Res> resList = clubs.stream()
-                .map(c -> new ClubDtos.Res(
-                        c.getId(),
-                        c.getName(),
-                        c.getCategory(),
-                        c.getDescription(),
-                        c.getCodeUrl(),
-                        c.getActiveMascot() == null ? null : c.getActiveMascot().getId(),
-                        clubService.getMaskedAccount(c.getId())
-                ))
-                .toList();
+        List<ClubDtos.ClubListRes> resList = clubService.getClubsWithMascotByUserId(userId);
 
         return ResponseEntity.ok(ApiResponse.ok(resList));
     }

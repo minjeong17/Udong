@@ -53,6 +53,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'  // WebClient 포함됨
 
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'// swagger
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
 }
 

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
+import { ClubApi } from '../apis/clubs';
 
 interface ClubListProps {
   onNavigateToOnboarding: () => void;
@@ -13,11 +14,11 @@ interface Club {
   name: string;
   description: string;
   category: string;
-  memberCount: number;
-  participationPeriod: string;
-  totalPoints: number;
-  myPoints: number;
-  image?: string;
+  codeUrl: string;
+  activeMascotId: number | null;
+  masUrl: string | null;
+  joinedAt: string;
+  myRole: string;
 }
 
 const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateToClubDashboard, onNavigateToClubSelection, currentRoute }) => {
@@ -25,52 +26,45 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
   const [inviteCode, setInviteCode] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [clubsOrder, setClubsOrder] = useState<Club[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // 샘플 동아리 데이터 - 빈 상태 테스트를 위해 임시로 빈 배열로 설정
-  // const clubs: Club[] = [];
+  // 가입일수 계산 함수
+  const calculateDaysSinceJoined = (joinedAt: string): number => {
+    const joinedDate = new Date(joinedAt);
+    const currentDate = new Date();
+    const timeDiff = currentDate.getTime() - joinedDate.getTime();
+    return Math.floor(timeDiff / (1000 * 3600 * 24));
+  };
 
-  // 기본 동아리 데이터
-  const defaultClubs: Club[] = [
-    {
-      id: 1,
-      name: '코딩하는척 하고 노는 동아리',
-      description: '코딩을 사랑하는 사람들이 모인 동아리입니다. 매주 스터디를 진행하고 프로젝트를 함께 만들어가고 있어요.',
-      category: '학술/교육',
-      memberCount: 24,
-      participationPeriod: '3개월',
-      totalPoints: 12450,
-      myPoints: 850,
-      image: '/images/mas_1.png'
-    },
-    {
-      id: 2,
-      name: '책책책 책을 읽읍시다',
-      description: '다양한 책을 읽고 토론하는 독서 동아리입니다. 매월 한 권의 책을 선정하여 깊이 있는 토론을 진행해요.',
-      category: '문화/예술',
-      memberCount: 18,
-      participationPeriod: '2개월',
-      totalPoints: 8200,
-      myPoints: 420,
-      image: '/images/mas_2.png'
-    },
-    {
-      id: 3,
-      name: '운동을 하면 되잖아',
-      description: '건강한 몸과 마음을 위한 운동 동아리입니다. 다양한 스포츠 활동을 통해 체력을 기르고 있어요.',
-      category: '운동/스포츠',
-      memberCount: 32,
-      participationPeriod: '5개월',
-      totalPoints: 15800,
-      myPoints: 1200,
-      image: '/images/mas_3.png'
+  // 역할 한국어 변환
+  const getRoleInKorean = (role: string): string => {
+    switch (role) {
+      case 'LEADER': return '리더';
+      case 'MANAGER': return '임원';
+      case 'MEMBER': return '멤버';
+      default: return role;
     }
-  ];
+  };
 
-  // 초기화 useEffect
-  React.useEffect(() => {
-    if (clubsOrder.length === 0) {
-      setClubsOrder(defaultClubs);
+  // 내가 가입한 동아리 목록 불러오기
+  const fetchMyClubs = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const clubs = await ClubApi.getMyClubs();
+      setClubsOrder(clubs);
+    } catch (error) {
+      console.error('Failed to fetch my clubs:', error);
+      setError('동아리 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // 컴포넌트 마운트시 내 동아리 목록 불러오기
+  useEffect(() => {
+    fetchMyClubs();
   }, []);
 
   // 드래그 앤 드롭 핸들러
@@ -106,10 +100,23 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
   
 
 
-  const handleJoinWithCode = () => {
-    if (inviteCode.trim()) {
+  const handleJoinWithCode = async () => {
+    if (!inviteCode.trim()) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      // TODO: 초대코드로 동아리 가입 API 호출
       console.log('Joining club with invite code:', inviteCode);
-      // 실제로는 API 호출
+      setInviteCode('');
+      // 가입 성공 후 목록 새로고침
+      await fetchMyClubs();
+      alert('동아리에 성공적으로 가입했습니다! 🎉');
+    } catch (error) {
+      console.error('Failed to join club:', error);
+      setError('동아리 가입에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -151,12 +158,14 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
                     onChange={(e) => setInviteCode(e.target.value)}
                     placeholder="초대코드를 입력하세요"
                     className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg text-gray-600 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
+                    disabled={isLoading}
                   />
                   <button
                     onClick={handleJoinWithCode}
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors border border-orange-400 font-gowun text-sm"
+                    disabled={isLoading || !inviteCode.trim()}
+                    className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors border border-orange-400 font-gowun text-sm"
                   >
-                    참가하기
+                    {isLoading ? '참가 중...' : '참가하기'}
                   </button>
                 </div>
               </div>
@@ -166,10 +175,22 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
                   <h2 className="text-xl font-semibold text-gray-700 mb-2 font-jua">참가 중인 동아리</h2>
                   <p className="text-sm text-gray-500 font-gowun">{clubsOrder.length}개의 동아리에 참가 중</p>
                 </div>
+                {error && (
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-red-600 text-sm font-gowun">{error}</p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
-                {clubsOrder.length > 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <span className="text-gray-400 text-2xl">⏳</span>
+                    </div>
+                    <p className="text-gray-500 font-gowun">동아리 목록을 불러오는 중...</p>
+                  </div>
+                ) : clubsOrder.length > 0 ? (
                   clubsOrder.map((club, index) => (
                     <div
                       key={club.id}
@@ -191,9 +212,9 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                          {club.image ? (
+                          {club.masUrl ? (
                             <img
-                              src={club.image}
+                              src={club.masUrl}
                               alt={`${club.name} 마스코트`}
                               className="w-full h-full object-cover"
                             />
@@ -207,7 +228,7 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-700 font-jua truncate">{club.name}</h3>
-                          <p className="text-sm text-gray-500 font-gowun">{club.memberCount}명</p>
+                          <p className="text-sm text-gray-500 font-gowun">{getRoleInKorean(club.myRole)} • {calculateDaysSinceJoined(club.joinedAt)}일</p>
                         </div>
                         <div className="text-gray-400 hover:text-orange-500 transition-colors">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,8 +266,12 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
                         </div>
                         <div className="flex items-center gap-4 text-gray-500 font-gowun">
                           <span className="flex items-center gap-1">
-                            <span>👥</span>
-                            {selectedClub.memberCount}명
+                            <span>👑</span>
+                            {getRoleInKorean(selectedClub.myRole)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span>📅</span>
+                            가입 {calculateDaysSinceJoined(selectedClub.joinedAt)}일차
                           </span>
                         </div>
                       </div>
@@ -254,41 +279,43 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
 
                     {/* Club Mascot - Center */}
                     <div className="flex justify-center mb-8">
-                      {selectedClub.image && (
+                      {selectedClub.masUrl ? (
                         <div className="relative">
                           <img
-                            src={selectedClub.image}
+                            src={selectedClub.masUrl}
                             alt={`${selectedClub.name} 마스코트`}
                             className="w-64 h-64 object-contain animate-mascot-wiggle"
                           />
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <div className="w-64 h-64 bg-gradient-to-br from-orange-200 to-orange-300 rounded-3xl flex items-center justify-center">
+                            <span className="text-6xl font-bold text-orange-600">
+                              {selectedClub.name.charAt(0)}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
                       <div className="bg-gray-50 rounded-xl p-4 text-center">
                         <div className="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                          <span className="text-orange-500">⏱️</span>
+                          <span className="text-orange-500">📅</span>
                         </div>
-                        <div className="text-lg font-semibold text-gray-700 font-jua">{selectedClub.participationPeriod}</div>
-                        <div className="text-sm text-gray-500 font-gowun">참여 기간</div>
+                        <div className="text-lg font-semibold text-gray-700 font-jua">{calculateDaysSinceJoined(selectedClub.joinedAt)}일</div>
+                        <div className="text-sm text-gray-500 font-gowun">가입 일수</div>
                       </div>
 
                       <div className="bg-gray-50 rounded-xl p-4 text-center">
                         <div className="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                          <span className="text-orange-500">🏆</span>
+                          <span className="text-orange-500">👑</span>
                         </div>
-                        <div className="text-lg font-semibold text-gray-700 font-jua">{selectedClub.totalPoints.toLocaleString()}점</div>
-                        <div className="text-sm text-gray-500 font-gowun">동아리 누적 포인트</div>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-xl p-4 text-center">
-                        <div className="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                          <span className="text-orange-500">⭐</span>
+                        <div className="text-lg font-semibold text-gray-700 font-jua">
+                          {getRoleInKorean(selectedClub.myRole)}
                         </div>
-                        <div className="text-lg font-semibold text-gray-700 font-jua">{selectedClub.myPoints}점</div>
-                        <div className="text-sm text-gray-500 font-gowun">내 포인트</div>
+                        <div className="text-sm text-gray-500 font-gowun">내 직책</div>
                       </div>
                     </div>
 

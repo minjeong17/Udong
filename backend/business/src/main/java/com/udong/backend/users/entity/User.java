@@ -1,7 +1,8 @@
 package com.udong.backend.users.entity;
 
 import com.udong.backend.auth.entity.RefreshToken;
-import com.udong.backend.events.entity.Event;
+
+import com.udong.backend.calendar.entity.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
