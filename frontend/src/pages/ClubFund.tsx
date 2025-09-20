@@ -62,14 +62,30 @@ const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant
   return <button className={clsx(base, sizes[size], variants[variant], className)} {...props} />
 };
 
-const Badge: React.FC<{ tone?: "gray"|"blue"|"green"|"red" }>= ({tone="gray", children}) => (
-  <span className={clsx("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium", {
-    gray: "bg-gray-100 text-gray-700",
-    blue: "bg-blue-100 text-blue-700",
-    green: "bg-emerald-100 text-emerald-700",
-    red: "bg-rose-100 text-rose-700",
-  }[tone])}>{children}</span>
+// ✅ Badge 타입 안전하게 재구성
+type BadgeTone = "gray" | "blue" | "green" | "red";
+
+const BADGE_TONES: Record<BadgeTone, string> = {
+  gray: "bg-gray-100 text-gray-700",
+  blue: "bg-blue-100 text-blue-700",
+  green: "bg-emerald-100 text-emerald-700",
+  red: "bg-rose-100 text-rose-700",
+} as const;
+
+const Badge: React.FC<React.PropsWithChildren<{ tone?: BadgeTone }>> = ({
+  tone = "gray",
+  children,
+}) => (
+  <span
+    className={clsx(
+      "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+      BADGE_TONES[tone]
+    )}
+  >
+    {children}
+  </span>
 );
+
 
 // 모달(업그레이드)
 type ModalProps = { open: boolean; title?: string; onClose: () => void; children?: React.ReactNode };
