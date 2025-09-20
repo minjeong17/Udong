@@ -8,7 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @OpenAPIDefinition(
 		servers = {
 				@Server(url = "https://udong.shop/api", description = "Production (udong.shop)"),
-				@Server(url = "https://j13a310.p.ssafy.io/api", description = "Production (SSAFY)")
+				@Server(url = "https://j13a310.p.ssafy.io/api", description = "Production (SSAFY)"),
+				@Server(url = "http://localhost:8080/api", description = "Local"),
 		}
 )
 @SpringBootApplication
