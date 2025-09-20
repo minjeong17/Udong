@@ -33,7 +33,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/ws/**"))                 // 개발 편의용: CSRF 비활성화
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(
+                                "/ws/**",
+                                "/v1/auth/**",       // ✅ 로그인/리프레시/로그아웃
+                                "/v1/users/signup"   // ✅ 회원가입
+                        ))             
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
