@@ -33,7 +33,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())                 // 개발 편의용: CSRF 비활성화
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/ws/**"))                 // 개발 편의용: CSRF 비활성화
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -49,7 +49,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+
+                                "/ws/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/clubs/join-by-code").authenticated()
                         .anyRequest().authenticated()
