@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import RoleChangeModal from '../components/RoleChangeModal';
+import NotificationModal from '../components/NotificationModal';
+import { useRouter } from '../hooks/useRouter';
 
 interface MemberManagementProps {
   onNavigateToOnboarding: () => void;
@@ -25,10 +27,12 @@ interface Member {
 const MemberManagement: React.FC<MemberManagementProps> = ({
   onNavigateToOnboarding
 }) => {
+  const { navigate } = useRouter();
   const [activeTab, setActiveTab] = useState<'status' | 'payment'>('status');
   const [searchTerm, setSearchTerm] = useState('');
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   // 샘플 데이터
   const initialMembers: Member[] = [
@@ -164,15 +168,14 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
     <div className="min-h-screen bg-[#fcf9f5] flex">
       <Sidebar
         onNavigateToOnboarding={onNavigateToOnboarding}
+        onShowNotification={() => setShowNotificationModal(true)}
       />
 
       <div className="flex-1 p-8">
         {/* 페이지 헤더 */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2 font-jua">동아리원 현황</h1>
-          </div>
-          <div>
+        <div className="mb-8">
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-gray-800 font-jua">동아리원 현황</h1>
             <p className="text-gray-600 font-gowun">동아리 회원들의 정보를 관리하고 현황을 확인할 수 있습니다.</p>
           </div>
         </div>
@@ -191,12 +194,8 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
               동아리원 현황
             </button>
             <button
-              onClick={() => setActiveTab('payment')}
-              className={`px-6 py-3 rounded-xl font-medium transition-colors font-gowun ${
-                activeTab === 'payment'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'
-              }`}
+              onClick={() => navigate('payment-management')}
+              className="bg-white text-gray-600 border border-gray-200 hover:border-orange-300 px-6 py-3 rounded-xl font-medium transition-colors font-gowun"
             >
               동아리원 회비 관리
             </button>
@@ -310,6 +309,13 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
             birthDate: selectedMember.birthDate
           } : null}
           onRoleChange={handleRoleChange}
+        />
+
+        {/* 알림 모달 */}
+        <NotificationModal
+          isOpen={showNotificationModal}
+          onClose={() => setShowNotificationModal(false)}
+          onNavigateToOnboarding={onNavigateToOnboarding}
         />
       </div>
     </div>
