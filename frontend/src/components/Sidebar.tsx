@@ -17,7 +17,24 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { handleLogout } = useLogout();
   return (
     <div className="w-20 bg-white shadow-lg min-h-screen">
-      <div className="flex flex-col items-center py-4 space-y-4">
+      <div className="flex flex-col items-center py-4 space-y-4 h-screen overflow-y-auto sidebar-scrollbar">
+        {/* Current Club Info */}
+        <div
+          className="w-16 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-2xl p-2 mb-2"
+          title="코스모스 - 현재 동아리"
+        >
+          <div className="w-12 h-12 bg-orange-200 rounded-xl flex items-center justify-center mb-1">
+            <img
+              src="/images/mas_1.png"
+              alt="현재 동아리"
+              className="w-8 h-8 object-contain"
+            />
+          </div>
+          <div className="text-center">
+            <p className="text-xs font-bold text-orange-700 font-jua truncate">코스모스</p>
+            <p className="text-[10px] text-orange-600 font-gowun leading-tight">현재<br/>동아리</p>
+          </div>
+        </div>
         {/* Logout Button */}
         <button
           onClick={() => handleLogout(onNavigateToOnboarding)}
@@ -64,42 +81,49 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </button>
 
-          {/* 5. 캘린더 */}
+          {/* 5. 공금 사용 내역 */}
+          <button
+            onClick={() => navigate('club-fund')}
+            className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="공금 사용 내역">
+            <img src="/images/button/MoneyList.png" alt="공금 사용 내역" className="w-14 h-14" />
+          </button>
+
+          {/* 6. 캘린더 */}
           <button
             onClick={() => navigate('calendar')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="캘린더">
             <img src="/images/button/Calender.png" alt="캘린더" className="w-14 h-14" />
           </button>
 
-          {/* 6. 정산 */}
+          {/* 7. 정산 */}
           <button
             onClick={() => navigate('settlement')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="정산">
             <img src="/images/button/nbbang.png" alt="정산" className="w-14 h-14" />
           </button>
 
-          {/* 7. 투표 */}
+          {/* 8. 투표 */}
           <button
             onClick={() => navigate('vote')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="투표">
             <img src="/images/button/Vote.png" alt="투표" className="w-14 h-14" />
           </button>
 
-          {/* 8. 채팅방 */}
+          {/* 9. 채팅방 */}
           <button
             onClick={() => navigate('chat')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="채팅방">
             <img src="/images/button/Chat.png" alt="채팅방" className="w-14 h-14" />
           </button>
 
-          {/* 9. 상점 */}
+          {/* 10. 상점 */}
           <button
             onClick={() => navigate('shop')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="상점">
             <img src="/images/button/Shop.png" alt="상점" className="w-14 h-14" />
           </button>
 
-          {/* 10. MT내용추천 */}
+          {/* 11. MT내용추천 */}
           <button
             onClick={() => navigate('mt-planner')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="MT추천">

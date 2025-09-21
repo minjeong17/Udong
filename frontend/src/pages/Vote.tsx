@@ -522,7 +522,7 @@ export default function VotingPage({
             {selectedPoll ? (
               <div className="p-8">
                 {/* 헤더 */}
-                <div className="mb-8">
+                <div className="mb-4">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-gray-800 font-jua">🗳️ 투표</span>
                     <span
@@ -540,8 +540,10 @@ export default function VotingPage({
                     </span>
                   </div>
 
-                  <h1 className="text-3xl font-bold text-gray-800 mb-3 font-jua">{selectedPoll.title}</h1>
-                  <p className="text-gray-600 text-lg mb-6 font-gowun">{selectedPoll.description}</p>
+                  <div className="flex items-center gap-4 mb-4">
+                    <h1 className="text-2xl font-bold text-gray-800 font-jua">{selectedPoll.title}</h1>
+                    <p className="text-gray-600 text-sm font-gowun">{selectedPoll.description}</p>
+                  </div>
 
                   {/* 요약 카드 (상단) */}  
                   {/* <div className="bg-white rounded-xl p-5 border border-orange-200 shadow-[0_6px_20px_rgba(255,149,0,0.08)]">
@@ -583,7 +585,7 @@ export default function VotingPage({
                 </div>
 
                 {/* 본문 */}
-                <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
                   {/* 옵션/투표 영역 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg lg:col-span-7">
                     <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -734,18 +736,18 @@ export default function VotingPage({
                   </div> */}
 
                     {/* 소유자 액션 / 메타 */}
-                    <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg lg:col-span-3">
-                    <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">투표 정보</h3>
+                    <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-lg lg:col-span-3">
+                    <h3 className="font-semibold text-gray-800 text-base mb-3 font-jua">투표 정보</h3>
 
-                    <div className="space-y-3 text-sm text-gray-700">
+                    <div className="space-y-2 text-sm text-gray-700 max-h-80 overflow-y-auto calendar-scrollbar">
                         {/* 마감일 */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">마감일</span>
-                        <span className="font-extrabold text-green-500 font-jua">{selectedPoll.deadline}</span>
+                        <span className="font-extrabold text-green-500 font-jua text-sm">{selectedPoll.deadline}</span>
                         </div>
 
                         {/* 상태 */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">상태</span>
                         <span
                             className={`px-2 py-1 rounded-md text-xs font-semibold font-jua ${
@@ -757,30 +759,30 @@ export default function VotingPage({
                         </div>
 
                         {/* 선택 방식 */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">선택 방식</span>
-                        <span className="font-medium font-gowun">
+                        <span className="font-medium font-gowun text-sm">
                             {selectedPoll.allowMultiple ? "다중 선택" : "단일 선택"}
                         </span>
                         </div>
 
                         {/* 전체 인원 */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">전체 인원</span>
-                        <span className="font-medium font-jua">
+                        <span className="font-medium font-jua text-sm">
                             {selectedPoll.eligibleCount ?? getUniqueVotersCount(selectedPoll)}명
                         </span>
                         </div>
 
                         {/* 참여 인원 */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">참여 인원</span>
-                        <span className="font-medium font-jua">{getParticipantsCount(selectedPoll)}명</span>
+                        <span className="font-medium font-jua text-sm">{getParticipantsCount(selectedPoll)}명</span>
                         </div>
 
                         {/* 참여율 + 막대 */}
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
                             <span className="font-gowun">참여율</span>
                             <span className="text-orange-600 font-semibold font-jua">
                             {getParticipationRate(selectedPoll)}%
@@ -795,21 +797,21 @@ export default function VotingPage({
                         </div>
 
                         {/* 총 투표수 */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">총 투표수</span>
-                        <span className="font-extrabold text-orange-600 font-jua">
-                            {getTotalVotes(selectedPoll)} <span className="text-sm font-semibold">표</span>
+                        <span className="font-extrabold text-orange-600 font-jua text-sm">
+                            {getTotalVotes(selectedPoll)} <span className="text-xs font-semibold">표</span>
                         </span>
                         </div>
 
                         {/* 생성자 / 생성일 */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">생성자</span>
-                        <span className="font-medium font-gowun">{selectedPoll.createdBy}</span>
+                        <span className="font-medium font-gowun text-sm">{selectedPoll.createdBy}</span>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">생성일</span>
-                        <span className="font-medium font-gowun">{selectedPoll.createdAt}</span>
+                        <span className="font-medium font-gowun text-sm">{selectedPoll.createdAt}</span>
                         </div>
                     </div>
 

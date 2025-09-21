@@ -298,31 +298,33 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
                       )}
                     </div>
 
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="bg-gray-50 rounded-xl p-4 text-center">
-                        <div className="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                          <span className="text-orange-500">📅</span>
+                    {/* Stats Cards - Smaller */}
+                    <div className="flex justify-center gap-6 mb-6">
+                      <div className="bg-gray-50 rounded-lg p-3 text-center min-w-[120px]">
+                        <div className="w-6 h-6 bg-orange-100 rounded-lg mx-auto mb-1 flex items-center justify-center">
+                          <span className="text-orange-500 text-sm">📅</span>
                         </div>
-                        <div className="text-lg font-semibold text-gray-700 font-jua">{calculateDaysSinceJoined(selectedClub.joinedAt)}일</div>
-                        <div className="text-sm text-gray-500 font-gowun">가입 일수</div>
+                        <div className="text-base font-semibold text-gray-700 font-jua">{calculateDaysSinceJoined(selectedClub.joinedAt)}일</div>
+                        <div className="text-xs text-gray-500 font-gowun">가입 일수</div>
                       </div>
 
-                      <div className="bg-gray-50 rounded-xl p-4 text-center">
-                        <div className="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                          <span className="text-orange-500">👑</span>
+                      <div className="bg-gray-50 rounded-lg p-3 text-center min-w-[120px]">
+                        <div className="w-6 h-6 bg-orange-100 rounded-lg mx-auto mb-1 flex items-center justify-center">
+                          <span className="text-orange-500 text-sm">👑</span>
                         </div>
-                        <div className="text-lg font-semibold text-gray-700 font-jua">
+                        <div className="text-base font-semibold text-gray-700 font-jua">
                           {getRoleInKorean(selectedClub.myRole)}
                         </div>
-                        <div className="text-sm text-gray-500 font-gowun">내 직책</div>
+                        <div className="text-xs text-gray-500 font-gowun">내 직책</div>
                       </div>
                     </div>
 
-                    {/* Description */}
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-700 mb-3 font-jua">동아리 설명</h3>
-                      <p className="text-gray-600 leading-relaxed font-gowun">{selectedClub.description}</p>
+                    {/* Club Description */}
+                    <div className="mb-6 text-center">
+                      <p className="text-gray-600 font-gowun text-lg">
+                        <span className="font-semibold text-gray-700">동아리 설명: </span>
+                        {selectedClub.description}
+                      </p>
                     </div>
 
                     {/* Enter Club Button */}

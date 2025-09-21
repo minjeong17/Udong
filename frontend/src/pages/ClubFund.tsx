@@ -1,9 +1,11 @@
 import React, { useMemo, useRef, useState } from "react";
+import Sidebar from '../components/Sidebar';
+import NotificationModal from '../components/NotificationModal';
 
-// =============================
-// ClubFund (Original-look Replica)
-// Vite + React + Tailwind + TypeScript — Single file
-// =============================
+interface ClubFundProps {
+  onNavigateToOnboarding: () => void;
+  currentRoute?: string;
+}
 
 type TxType = "입금" | "출금";
 
@@ -44,20 +46,15 @@ function downloadCSV(filename: string, rows: Transaction[]) {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-// ============== Tiny primitives
-const IconBtn: React.FC<{label?: string; active?: boolean; onClick?: () => void; children: React.ReactNode}> = ({label, active, onClick, children}) => (
-  <button onClick={onClick} title={label}
-    className={clsx("grid h-12 w-12 place-items-center rounded-2xl transition", active?"bg-gray-900 text-white shadow-sm":"text-gray-600 hover:bg-gray-100")}>{children}</button>
-);
 
 const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary"|"secondary"|"ghost"; size?: "sm"|"md"|"lg"; }>
 = ({ className, variant = "primary", size = "md", ...props }) => {
-  const base = "inline-flex items-center justify-center rounded-2xl font-medium transition active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed";
+  const base = "inline-flex items-center justify-center rounded-2xl font-medium transition active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed font-jua";
   const sizes = { sm:"h-8 px-3 text-sm", md:"h-10 px-4 text-sm", lg:"h-12 px-5 text-base" };
   const variants = {
-    primary: "bg-gray-900 text-white hover:bg-gray-800",
-    secondary: "bg-white text-gray-900 border border-gray-300 hover:border-gray-400",
-    ghost: "text-gray-700 hover:bg-gray-100",
+    primary: "bg-orange-500 text-white hover:bg-orange-600",
+    secondary: "bg-white text-orange-600 border border-orange-300 hover:border-orange-400",
+    ghost: "text-orange-700 hover:bg-orange-100",
   } as const;
   return <button className={clsx(base, sizes[size], variants[variant], className)} {...props} />
 };
@@ -68,8 +65,8 @@ type BadgeTone = "gray" | "blue" | "green" | "red";
 const BADGE_TONES: Record<BadgeTone, string> = {
   gray: "bg-gray-100 text-gray-700",
   blue: "bg-blue-100 text-blue-700",
-  green: "bg-emerald-100 text-emerald-700",
-  red: "bg-rose-100 text-rose-700",
+  green: "bg-green-100 text-green-700",
+  red: "bg-red-100 text-red-700",
 } as const;
 
 const Badge: React.FC<React.PropsWithChildren<{ tone?: BadgeTone }>> = ({
@@ -78,7 +75,7 @@ const Badge: React.FC<React.PropsWithChildren<{ tone?: BadgeTone }>> = ({
 }) => (
   <span
     className={clsx(
-      "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+      "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium font-gowun",
       BADGE_TONES[tone]
     )}
   >
@@ -109,10 +106,8 @@ const Modal: React.FC<ModalProps> = ({ open, title, onClose, children }) => {
 };
 
 // ============== Main
-export default function ClubFund() {
-  // Data
-  const [balance, setBalance] = useState<number>(2_695_000);
-  const [txs, setTxs] = useState<Transaction[]>([]); // 초기엔 비어 있음
+const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   // 데모 데이터 (실서비스는 API 응답으로 대체)
   const demoTxs: Transaction[] = [
@@ -123,9 +118,16 @@ export default function ClubFund() {
     { id: "5", date: "2024-01-11", description: "장비 구매 - 카메라", type: "출금", amount: 150_000, balance: 2_345_000, receiptUrl: "/camera-equipment-purchase-receipt.jpg" },
   ];
 
+  // Data
+  const [balance, setBalance] = useState<number>(2_695_000);
+  const [txs, setTxs] = useState<Transaction[]>(() => {
+    // 초기 로드 시 최신순으로 정렬된 거래내역 표시
+    return [...demoTxs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  });
+
   // UI States
   const [isLoading, setIsLoading] = useState(false);
-  const [hasQueried, setHasQueried] = useState(false);
+  const [hasQueried, setHasQueried] = useState(true); // 초기 로드 시 이미 조회된 상태
   const [from, setFrom] = useState("2024-01-01");
   const [to, setTo] = useState("2024-12-31");
   const [selected, setSelected] = useState<Transaction | null>(null);
@@ -147,7 +149,18 @@ export default function ClubFund() {
   const queryTransactions = async () => {
     setIsLoading(true);
     await new Promise((r) => setTimeout(r, 900));
-    setTxs(demoTxs);
+
+    // 날짜 범위 필터링
+    const filteredTxs = demoTxs.filter(tx => {
+      const txDate = new Date(tx.date);
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      return txDate >= fromDate && txDate <= toDate;
+    });
+
+    // 날짜 기준 역순 정렬 (최신순)
+    const sortedTxs = filteredTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setTxs(sortedTxs);
     setHasQueried(true);
     setIsLoading(false);
   };
@@ -173,50 +186,27 @@ export default function ClubFund() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-white text-gray-900">
-      {/* Sidebar */}
-      <aside className="sticky top-0 flex h-screen w-20 flex-col items-center border-r border-gray-200 bg-white">
-        <div className="p-4">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-500 text-xl shadow">🐻</div>
-        </div>
-        <nav className="flex-1 space-y-3 px-4">
-          <IconBtn label="대시보드">🏠</IconBtn>
-          <IconBtn label="캘린더">📅</IconBtn>
-          <IconBtn label="채팅">💬</IconBtn>
-          <IconBtn label="회비 관리" active>💳</IconBtn>
-          <IconBtn label="정산">🧾</IconBtn>
-          <IconBtn label="상점">🛍️</IconBtn>
-          <IconBtn label="투표">🗳️</IconBtn>
-          <IconBtn label="클럽 선택">👥</IconBtn>
-        </nav>
-        <div className="mt-auto w-full px-4 pb-4">
-          <div className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-gray-100 text-gray-700">⚙️</div>
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gray-900 text-white">🙂</div>
-        </div>
-      </aside>
+    <div className="min-h-screen bg-[#fcf9f5] flex">
+      <Sidebar
+        onNavigateToOnboarding={onNavigateToOnboarding}
+        onShowNotification={() => setShowNotificationModal(true)}
+      />
 
       {/* Main inset */}
       <div className="flex-1">
-        <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-            <div>
-              <h1 className="text-lg font-semibold">회비 관리</h1>
-              <p className="text-xs text-gray-500">원본 레이아웃 느낌으로 재현</p>
-            </div>
-            <div className="flex items-center gap-2"></div>
-          </div>
-        </header>
 
-        <main className="mx-auto max-w-6xl px-6 py-6">
+        <main className="flex-1 p-8">
           {/* Page Title */}
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold tracking-tight">공금 관리</h2>
-            <p className="mt-1 text-sm text-gray-600">동아리 계좌 내역 및 잔액을 관리하세요</p>
+          <div className="mb-8">
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold text-gray-800 font-jua">공금 사용 내역</h1>
+              <p className="text-gray-600 font-gowun">동아리 계좌 내역 및 잔액을 관리하세요</p>
+            </div>
           </div>
 
           {/* Hero */}
           <div className="mb-6">
-            <div className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-amber-50 via-yellow-50 to-emerald-50 p-6 shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 via-orange-50 to-orange-100 p-6 shadow-lg">
               <div className="absolute right-4 top-4">
                 {/* 잔액 조회(=잔액+내역 동시) */}
                 <Button
@@ -233,24 +223,24 @@ export default function ClubFund() {
               <div className="flex items-start gap-4">
                 <div className="grid h-14 w-14 flex-none place-items-center rounded-2xl bg-orange-500 text-2xl text-white shadow-lg">💰</div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-gray-900">현재 잔액</div>
-                  <div className="mt-1 text-4xl font-extrabold tracking-tight md:text-5xl">{krw(balance)}</div>
-                  <div className="mt-1 text-xs text-gray-500">마지막 업데이트: {new Date().toLocaleString("ko-KR")}</div>
+                  <div className="text-sm font-semibold text-gray-900 font-gowun">현재 잔액</div>
+                  <div className="mt-1 text-4xl font-extrabold tracking-tight md:text-5xl font-jua">{krw(balance)}</div>
+                  <div className="mt-1 text-xs text-gray-500 font-gowun">마지막 업데이트: {new Date().toLocaleString("ko-KR")}</div>
                 </div>
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border bg-white/70 p-4 backdrop-blur-sm">
-                  <div className="text-xs text-gray-500">이번 달 입금</div>
-                  <div className="mt-1 text-xl font-semibold text-emerald-700">+ {krw(income)}</div>
+                <div className="rounded-2xl border border-orange-200 bg-white/70 p-4 backdrop-blur-sm">
+                  <div className="text-xs text-gray-500 font-gowun">이번 달 입금</div>
+                  <div className="mt-1 text-xl font-semibold text-green-600 font-jua">+ {krw(income)}</div>
                 </div>
-                <div className="rounded-2xl border bg-white/70 p-4 backdrop-blur-sm">
-                  <div className="text-xs text-gray-500">이번 달 출금</div>
-                  <div className="mt-1 text-xl font-semibold text-rose-700">- {krw(expense)}</div>
+                <div className="rounded-2xl border border-orange-200 bg-white/70 p-4 backdrop-blur-sm">
+                  <div className="text-xs text-gray-500 font-gowun">이번 달 출금</div>
+                  <div className="mt-1 text-xl font-semibold text-red-600 font-jua">- {krw(expense)}</div>
                 </div>
-                <div className={clsx("rounded-2xl border bg-white/70 p-4 backdrop-blur-sm")}>
-                  <div className="text-xs text-gray-500">순 증감</div>
-                  <div className={clsx("mt-1 text-xl font-semibold", net>=0?"text-emerald-700":"text-rose-700")}>
+                <div className={clsx("rounded-2xl border border-orange-200 bg-white/70 p-4 backdrop-blur-sm")}>
+                  <div className="text-xs text-gray-500 font-gowun">순 증감</div>
+                  <div className={clsx("mt-1 text-xl font-semibold font-jua", net>=0?"text-green-600":"text-red-600")}>
                     {net>=0?"+":"-"} {krw(Math.abs(net))}
                   </div>
                 </div>
@@ -261,12 +251,12 @@ export default function ClubFund() {
           {/* Query row */}
           <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-600">조회 시작일</label>
-              <input type="date" value={from} onChange={e=>setFrom(e.target.value)} className="h-10 rounded-2xl border border-gray-300 px-3 text-sm shadow-sm focus:border-black focus:outline-none" />
+              <label className="text-sm text-gray-600 font-gowun">조회 시작일</label>
+              <input type="date" value={from} onChange={e=>setFrom(e.target.value)} className="h-10 rounded-2xl border border-orange-300 px-3 text-sm shadow-sm focus:border-orange-500 focus:outline-none font-gowun" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-600">조회 종료일</label>
-              <input type="date" value={to} onChange={e=>setTo(e.target.value)} className="h-10 rounded-2xl border border-gray-300 px-3 text-sm shadow-sm focus:border-black focus:outline-none" />
+              <label className="text-sm text-gray-600 font-gowun">조회 종료일</label>
+              <input type="date" value={to} onChange={e=>setTo(e.target.value)} className="h-10 rounded-2xl border border-orange-300 px-3 text-sm shadow-sm focus:border-orange-500 focus:outline-none font-gowun" />
             </div>
             <div className="flex items-end gap-2">
               {/* 한 줄 배치: 거래 내역 조회 → CSV 내보내기 */}
@@ -280,46 +270,46 @@ export default function ClubFund() {
           </div>
 
           {/* Table */}
-          <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
-            <div className="flex items-center gap-2 border-b px-5 py-3">
+          <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-lg">
+            <div className="flex items-center gap-2 border-b border-orange-100 px-5 py-3">
               <span>📑</span>
-              <h3 className="text-base font-semibold">거래 내역</h3>
+              <h3 className="text-base font-semibold font-jua">거래 내역</h3>
             </div>
             <div className="max-h-[60vh] overflow-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 bg-amber-50/80 backdrop-blur text-left text-gray-600 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.05)]">
+                <thead className="sticky top-0 z-10 bg-orange-50/80 backdrop-blur text-left text-gray-600 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.05)]">
                   <tr>
-                    <th className="px-5 py-3 font-medium">날짜</th>
-                    <th className="px-5 py-3 font-medium">내역</th>
-                    <th className="px-5 py-3 font-medium">구분</th>
-                    <th className="px-5 py-3 font-medium text-right">금액</th>
-                    <th className="px-5 py-3 font-medium text-right">잔액</th>
-                    <th className="px-5 py-3 font-medium text-center">영수증</th>
+                    <th className="px-5 py-3 font-medium font-gowun">날짜</th>
+                    <th className="px-5 py-3 font-medium font-gowun">내역</th>
+                    <th className="px-5 py-3 font-medium font-gowun">구분</th>
+                    <th className="px-5 py-3 font-medium text-right font-gowun">금액</th>
+                    <th className="px-5 py-3 font-medium text-right font-gowun">잔액</th>
+                    <th className="px-5 py-3 font-medium text-center font-gowun">영수증</th>
                   </tr>
                 </thead>
                 <tbody>
                   {!hasQueried ? (
                     <tr>
-                      <td colSpan={6} className="px-5 py-16 text-center text-sm text-gray-500">
+                      <td colSpan={6} className="px-5 py-16 text-center text-sm text-gray-500 font-gowun">
                         아직 조회되지 않았습니다. 위의 <strong>거래 내역 조회</strong> 버튼을 눌러 주세요.
                       </td>
                     </tr>
                   ) : txs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-5 py-16 text-center text-sm text-gray-500">조회 결과가 없습니다.</td>
+                      <td colSpan={6} className="px-5 py-16 text-center text-sm text-gray-500 font-gowun">조회 결과가 없습니다.</td>
                     </tr>
                   ) : (
                     txs.map((t) => (
-                      <tr key={t.id} className="border-t hover:bg-gray-50">
-                        <td className="px-5 py-4 whitespace-nowrap">{t.date}</td>
-                        <td className="px-5 py-4 min-w-[16rem]">{t.description}</td>
+                      <tr key={t.id} className="border-t hover:bg-orange-50">
+                        <td className="px-5 py-4 whitespace-nowrap font-gowun">{t.date}</td>
+                        <td className="px-5 py-4 min-w-[16rem] font-gowun">{t.description}</td>
                         <td className="px-5 py-4">
                           <Badge tone={t.type === "입금" ? "green" : "red"}>{t.type}</Badge>
                         </td>
-                        <td className={clsx("px-5 py-4 text-right tabular-nums", t.type === "입금" ? "text-emerald-700" : "text-rose-700")}>
+                        <td className={clsx("px-5 py-4 text-right tabular-nums font-jua", t.type === "입금" ? "text-green-600" : "text-red-600")}>
                           {t.type === "입금" ? "+" : "-"}{krw(t.amount)}
                         </td>
-                        <td className="px-5 py-4 text-right tabular-nums">{krw(t.balance)}</td>
+                        <td className="px-5 py-4 text-right tabular-nums font-jua">{krw(t.balance)}</td>
                         <td className="px-5 py-4 text-center">
                           {t.type === "출금" ? (
                             <Button size="sm" variant="secondary" className="rounded-full px-3" onClick={() => { setSelected(t); setPreview(t.receiptUrl ?? null); }}>
@@ -336,13 +326,20 @@ export default function ClubFund() {
               </table>
             </div>
 
-            <div className="flex items-center justify-between border-t px-5 py-3 text-sm text-gray-600">
-              <div>표시: {txs.length}건</div>
-              <div className="flex items-center gap-2">{hasQueried ? <span>최근 조회 반영</span> : <span className="text-gray-400">상단에서 '거래 내역 조회'</span>}</div>
+            <div className="flex items-center justify-between border-t border-orange-100 px-5 py-3 text-sm text-gray-600">
+              <div className="font-gowun">표시: {txs.length}건</div>
+              <div className="flex items-center gap-2 font-gowun">{hasQueried ? <span>최근 조회 반영</span> : <span className="text-gray-400">상단에서 '거래 내역 조회'</span>}</div>
             </div>
           </div>
         </main>
       </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onNavigateToOnboarding={onNavigateToOnboarding}
+      />
 
       {/* Receipt Modal */}
       <Modal open={!!selected} onClose={()=>{ setSelected(null); setPreview(null); }} title="영수증 첨부/수정">
@@ -425,4 +422,6 @@ export default function ClubFund() {
 
     </div>
   );
-}
+};
+
+export default ClubFund;
