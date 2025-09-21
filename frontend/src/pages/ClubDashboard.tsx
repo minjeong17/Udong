@@ -106,7 +106,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 />
               </div>
               <h2 className="text-lg font-semibold text-gray-700 font-jua mb-2 pt-14">코스모스</h2>
-              <div className="text-2xl font-bold text-orange-500 font-jua mb-3">2,450점</div>
+              <div className="text-2xl font-bold text-orange-500 font-jua mb-3">2450p</div>
               <div className="w-20 h-2 bg-orange-200 rounded-full">
                 <div className="w-16 h-2 bg-orange-500 rounded-full"></div>
               </div>
