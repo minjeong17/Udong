@@ -1,15 +1,20 @@
 package com.udong.backend.items.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.udong.backend.items.entity.Inventory;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
-	Optional<Inventory> findByUserId(Integer userId);
+	@Query("SELECT i FROM Inventory i JOIN FETCH i.item WHERE i.userId = :userId")
+	List<Inventory> findByUserId(@Param("userId")Integer userId);
 
-	Optional<Inventory> findByUserIdAndItemId(Integer userId, Integer itemId);
+	@Query("SELECT i FROM Inventory i JOIN FETCH i.item WHERE i.userId = :userId AND i.item.id = :itemId")
+	Optional<Inventory> findByUserIdAndItemId(@Param("userId") Integer userId, @Param("itemId") Integer itemId);
 
 }

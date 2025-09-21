@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
+import com.udong.backend.items.dto.InventoryResponse;
+import com.udong.backend.items.dto.ItemResponse;
 import com.udong.backend.items.entity.Inventory;
 import com.udong.backend.items.entity.Item;
+import com.udong.backend.items.service.InventoryService;
 import com.udong.backend.items.service.ItemService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,13 +27,14 @@ public class ItemController {
 
 	private final SecurityUtils securityUtils;
     private final ItemService itemService;
+    private final InventoryService inventoryService;
 
     /**
      * 전체 아이템 조회
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Item>>> getAllItems() {
-        List<Item> items = itemService.getAllItems(); // 서비스에서 findAll 구현 필요
+    public ResponseEntity<ApiResponse<List<ItemResponse>>> getAllItems() {
+        List<ItemResponse> items = itemService.getAllItems();
         return ResponseEntity.ok(ApiResponse.ok(items));
     }
 
@@ -38,18 +42,39 @@ public class ItemController {
      * 단일 아이템 조회
      */
     @GetMapping("/{itemId}")
-    public ResponseEntity<ApiResponse<Item>> getItem(@PathVariable Integer itemId) {
-        Item item = itemService.getItem(itemId);
+    public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable Integer itemId) {
+        ItemResponse item = itemService.getItem(itemId);
         return ResponseEntity.ok(ApiResponse.ok(item));
+    }
+    
+    /**
+     * 인벤토리 조회
+     */
+    @GetMapping("/inv")
+    public ResponseEntity<ApiResponse<List<InventoryResponse>>> getInventory() {
+        Integer userId = securityUtils.currentUserId();
+        List<InventoryResponse> inventories = inventoryService.getUserInventories(userId);
+        return ResponseEntity.ok(ApiResponse.ok(inventories));
     }
 
     /**
-     * 아이템 수량 증가
+     * 인벤토리 아이템 수량 증가
      */
     @PostMapping("/purchase/{itemId}")
-    public ResponseEntity<ApiResponse<Inventory>> purchase(@PathVariable Integer itemId) {
+    public ResponseEntity<ApiResponse<InventoryResponse>> purchase(@PathVariable Integer itemId) {
         Integer userId = securityUtils.currentUserId();
-        Inventory inventory = itemService.addItem(userId, itemId);
+        InventoryResponse inventory = inventoryService.addItem(userId, itemId);
         return ResponseEntity.ok(ApiResponse.ok(inventory));
     }
+    
+    /**
+     * 인벤토리 아이템 수량 감소
+     */
+    @PostMapping("/use/{itemId}")
+    public ResponseEntity<ApiResponse<InventoryResponse>> use(@PathVariable Integer itemId) {
+        Integer userId = securityUtils.currentUserId();
+        InventoryResponse inventory = inventoryService.useItem(userId, itemId);
+        return ResponseEntity.ok(ApiResponse.ok(inventory));
+    }
+    
 }

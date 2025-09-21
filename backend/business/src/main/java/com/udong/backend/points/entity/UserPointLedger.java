@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,13 @@ import lombok.Setter;
 @AllArgsConstructor
 @DynamicInsert
 @Entity 
-@Table(name = "user_points_ledger")
+@Table(
+    name = "user_points_ledger",
+    indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_club_id", columnList = "club_id")
+    }
+)
 public class UserPointLedger {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
@@ -45,11 +52,13 @@ public class UserPointLedger {
 	private String codeName;
 	
 	@Column(name = "curr_point", nullable = false)
-	@ColumnDefault("'0'")
+	@ColumnDefault("0")
 	private Integer currPoint;
 	
+	@Column(nullable = false)
 	private String memo;
 	
+	@Column(nullable = false)
 	private Integer delta;
 	    
 	@CreationTimestamp
