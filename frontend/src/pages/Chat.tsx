@@ -311,15 +311,16 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
-      <div className="flex">
+    // <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="h-dvh overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
+      <div className="flex h-full">
         {/* Left Sidebar */}
         <Sidebar onNavigateToOnboarding={onNavigateToOnboarding} onShowNotification={() => setShowNotificationModal(true)} />
 
         {/* 메인 콘텐츠 */}
-        <div className="flex-1 flex">
+        <div className="flex-1 h-full flex min-h-0">
           {/* 채널 사이드바 */}
-          <div className="w-80 bg-white border-r border-orange-200 shadow-lg">
+          <div className="w-80 h-full bg-white border-r border-orange-200 shadow-lg overflow-y-auto">
             <div className="p-6 border-b border-orange-200">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-800 font-jua">채팅</h2>
@@ -397,9 +398,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
           </div>
 
           {/* 채팅 메인 */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             {/* 헤더 */}
-            <div className="p-6 bg-white border-b border-orange-200 shadow-sm">
+            <div className="shrink-0 p-6 bg-white border-b border-orange-200 shadow-sm">
               <div className="flex justify-between items-center">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800 font-jua">{selectedChannel ? `# ${channels.find((c) => c.id === selectedChannel)?.name}` : "채팅"}</h1>
@@ -433,7 +434,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             ) : (
               <>
                 {/* ▼ 기존 메시지 영역 그대로 */}
-                <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-orange-50 to-white">
+                <div className="flex-1 min-h-0 overflow-y-auto p-6 bg-gradient-to-b from-orange-50 to-white scroll-smooth">
                   <div className="space-y-4">
                     {chatMessages.map((msg) => (
                       // ① 한 줄 래퍼가 가로폭을 꽉 채우게
@@ -477,7 +478,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                 </div>
 
                 {/* 입력창 */}
-                <div className="p-6 bg-white border-t border-orange-200">
+                <div className="shrink-0 p-6 bg-white border-t border-orange-200">
                   <form onSubmit={handleSendMessage}>
                     <div className="flex gap-3 items-center">
                       <div className="flex-1 relative">
