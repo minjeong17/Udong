@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
+import PaymentCollectionModal from '../components/PaymentCollectionModal';
 import { useRouter } from '../hooks/useRouter';
 
 interface PaymentManagementProps {
@@ -22,6 +23,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
   const { navigate } = useRouter();
   const [activeCollection, setActiveCollection] = useState<'first' | 'second'>('second');
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // 샘플 데이터
   const paymentRecords: PaymentRecord[] = [
@@ -107,6 +109,11 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
   const unpaidCount = paymentRecords.filter(record => record.paymentStatus === '미납').length;
   const totalCount = paymentRecords.length;
 
+  const handlePaymentCollection = (amount: number, targetMembers: number) => {
+    console.log('새로운 회비 수금 시작:', { amount, targetMembers });
+    // TODO: 실제 API 호출 구현
+  };
+
   return (
     <div className="min-h-screen bg-[#fcf9f5] flex">
       <Sidebar
@@ -160,7 +167,10 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
 
           {/* 액션 버튼들 */}
           <div className="flex gap-4 mt-4 justify-end">
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-jua transition-colors flex items-center gap-2 shadow-md">
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-jua transition-colors flex items-center gap-2 shadow-md"
+            >
               <span>📧</span>
               새로운 회비 수금 진행
             </button>
@@ -233,6 +243,13 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
           isOpen={showNotificationModal}
           onClose={() => setShowNotificationModal(false)}
           onNavigateToOnboarding={onNavigateToOnboarding}
+        />
+
+        {/* 회비 수금 모달 */}
+        <PaymentCollectionModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onConfirm={handlePaymentCollection}
         />
       </div>
     </div>
