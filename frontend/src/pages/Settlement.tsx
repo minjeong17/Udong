@@ -277,74 +277,79 @@ export default function SettlementPage({
           {/* 상세 뷰 */}
           <div className="flex-1 bg-gradient-to-br from-orange-50 to-orange-100">
             {selectedSettlementData ? (
-              <div className="p-8">
+              <div className="p-6">
                 {/* 헤더 */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-gray-800 font-gowun">
-                      💰 정산
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        selectedSettlementData.status === "pending"
-                          ? "bg-gradient-to-r from-green-300 to-green-500 text-white"
-                          : "bg-orange-100 text-orange-600"
-                      }`}
-                    >
-                      {selectedSettlementData.status === "pending" ? "진행중" : "완료"}
-                    </span>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-gray-800 font-gowun">
+                        💰 정산
+                      </span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          selectedSettlementData.status === "pending"
+                            ? "bg-gradient-to-r from-green-300 to-green-500 text-white"
+                            : "bg-orange-100 text-orange-600"
+                        }`}
+                      >
+                        {selectedSettlementData.status === "pending" ? "진행중" : "완료"}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600 font-gowun">생성자: {selectedSettlementData.createdBy} | 생성일: {selectedSettlementData.createdAt}</div>
+                    </div>
                   </div>
 
-                  <h1 className="text-3xl font-bold text-gray-800 mb-3 font-jua">{selectedSettlementData.title}</h1>
-                  <p className="text-gray-600 text-lg mb-6 font-gowun">{selectedSettlementData.description}</p>
+                  <div className="flex items-center gap-4 mb-4">
+                    <h1 className="text-2xl font-bold text-gray-800 font-jua">{selectedSettlementData.title}</h1>
+                    <p className="text-gray-600 text-sm font-gowun">{selectedSettlementData.description}</p>
+                  </div>
 
                   {/* 정산 정보 카드 */}
-                  <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg mb-8">
-                    <div className="grid grid-cols-3 gap-6">
+                  <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-lg mb-6">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-green-500 mb-1 font-jua">
+                        <div className="text-lg font-bold text-green-500 mb-1 font-jua">
                           {selectedSettlementData.totalAmount.toLocaleString()}원
                         </div>
-                        <div className="text-sm text-gray-600 font-gowun">총 금액</div>
+                        <div className="text-xs text-gray-600 font-gowun">총 금액</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-800 mb-1 font-jua">
+                        <div className="text-lg font-bold text-gray-800 mb-1 font-jua">
                           {getPerPerson(selectedSettlementData).toLocaleString()}원
                         </div>
-                        <div className="text-sm text-gray-600 font-gowun">1인당</div>
+                        <div className="text-xs text-gray-600 font-gowun">1인당</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-orange-600 mb-1 font-jua">
+                        <div className="text-lg font-bold text-orange-600 mb-1 font-jua">
                           {getParticipantCount(selectedSettlementData)}명
                         </div>
-                        <div className="text-sm text-gray-600 font-gowun">참여자</div>
+                        <div className="text-xs text-gray-600 font-gowun">참여자</div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4 font-jua">정산 정보</h2>
-
+                <div className="space-y-4">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white rounded-xl p-6 border border-orange-200 text-center shadow-lg">
-                      <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">영수증</h3>
-                      <div className="flex justify-center mb-4">
+                    <div className="bg-white rounded-xl p-4 border border-orange-200 text-center shadow-lg">
+                      <h3 className="font-semibold text-gray-800 text-base mb-3 font-jua">영수증</h3>
+                      <div className="flex justify-center mb-3">
                         {selectedSettlementData.receiptImage ? (
                           <img
                             src={selectedSettlementData.receiptImage || "/placeholder.svg"}
                             alt="영수증"
-                            className="w-60 h-80 border border-orange-200 rounded-lg object-cover"
+                            className="w-48 h-60 border border-orange-200 rounded-lg object-cover"
                           />
                         ) : (
-                          <div className="w-60 h-80 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50">
-                            <div className="text-4xl text-gray-400 mb-3">📄</div>
-                            <p className="text-gray-500 font-medium font-jua">영수증 없음</p>
-                            <p className="text-gray-400 text-sm mt-1 font-gowun">업로드된 영수증이 없습니다</p>
+                          <div className="w-48 h-60 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50">
+                            <div className="text-3xl text-gray-400 mb-2">📄</div>
+                            <p className="text-gray-500 font-medium font-jua text-sm">영수증 없음</p>
+                            <p className="text-gray-400 text-xs mt-1 font-gowun">업로드된 영수증이 없습니다</p>
                           </div>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 font-gowun">
+                      <p className="text-xs text-gray-600 font-gowun">
                         {selectedSettlementData.receiptImage
                           ? "정산 관련 영수증입니다"
                           : "영수증이 업로드되지 않았습니다"}
@@ -352,8 +357,8 @@ export default function SettlementPage({
                     </div>
 
                     {isPaymentRequired ? (
-                      <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                        <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">정산 정보</h3>
+                      <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-lg">
+                        <h3 className="font-semibold text-gray-800 text-base mb-3 font-jua">정산 정보</h3>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-3">
@@ -386,13 +391,13 @@ export default function SettlementPage({
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-                        <h3 className="font-semibold text-gray-800 text-lg mb-4 font-jua">참여자 결제 현황</h3>
-                        <div className="space-y-3 max-h-80 overflow-y-auto">
+                      <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-lg">
+                        <h3 className="font-semibold text-gray-800 text-base mb-3 font-jua">참여자 결제 현황</h3>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
                           {selectedSettlementData.participantsList.map((participant) => (
                             <div
                               key={participant.id}
-                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                              className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                             >
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
@@ -464,13 +469,6 @@ export default function SettlementPage({
                 )}
 
 
-                {/* 정산 정보 */}
-                <div className="mt-8 pt-6 border-t border-orange-200">
-                  <div className="flex justify-between items-center text-sm text-gray-600">
-                    <span className="font-gowun">생성자: {selectedSettlementData.createdBy}</span>
-                    <span className="font-gowun">생성일: {selectedSettlementData.createdAt}</span>
-                  </div>
-                </div>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">

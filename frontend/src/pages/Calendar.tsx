@@ -290,7 +290,7 @@ const Calendar: React.FC<CalendarProps> = ({
         key={ev.id}
         onClick={(e) => { e.stopPropagation(); openEventModal(ev); }}
         title={label}
-        className={`relative w-full text-[11px] truncate pl-2 pr-2 py-1 rounded-md border text-left
+        className={`relative w-full text-[10px] truncate pl-2 pr-1 py-0.5 rounded-md border text-left
           before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${color.left}
           bg-white/70 border-gray-200/60 hover:bg-white`}
       >
@@ -327,8 +327,10 @@ const Calendar: React.FC<CalendarProps> = ({
         <main className="flex-1 px-8 py-6 bg-gradient-to-br from-orange-50 via-white to-orange-100">
         {/* 헤더 */}
         <div className="mb-5">
-          <h1 className="text-2xl font-extrabold text-gray-900 font-jua">일정 관리</h1>
-          <p className="text-sm text-gray-600 mt-1 font-gowun">동아리 모임과 일정을 체계적으로 관리하세요</p>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-extrabold text-gray-900 font-jua">일정 관리</h1>
+            <p className="text-sm text-gray-600 font-gowun">동아리 모임과 일정을 체계적으로 관리하세요</p>
+          </div>
         </div>
 
         {/* 좌/우 2칸 */}
@@ -397,13 +399,13 @@ const Calendar: React.FC<CalendarProps> = ({
                         <div
                           key={idx}
                           onClick={() => openDayModal(d)}
-                          className={`relative h-36 rounded-xl border transition cursor-pointer
+                          className={`relative h-24 rounded-xl border transition cursor-pointer
                             ${inMonth ? "bg-white/90 border-gray-200" : "bg-gray-50 border-gray-200/60 text-gray-400"}
                             ${weekend && inMonth ? "bg-orange-50/70" : ""}
                             ${sel ? "ring-2 ring-blue-400" : "hover:shadow-sm"}`}
                         >
-                          <div className="absolute top-2 left-2 text-[13px] font-semibold text-gray-700 font-jua">{d.getDate()}</div>
-                          <div className="absolute left-2 right-2 top-8 space-y-1.5">
+                          <div className="absolute top-1 left-2 text-[12px] font-semibold text-gray-700 font-jua">{d.getDate()}</div>
+                          <div className="absolute left-2 right-2 top-6 space-y-1">
                             {preview.map((ev) => renderCellPreview(ev))}
                             {more > 0 && (
                               <button
@@ -474,7 +476,7 @@ const Calendar: React.FC<CalendarProps> = ({
               <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-gowun">{monthEvents.length}개</div>
             </div>
 
-            <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 max-h-[calc(100vh-300px)] calendar-scrollbar">
               {monthEvents.map((ev) => {
                 const d = parseYMD(ev.date);
                 const isSel = selected && isSameDay(selected, d);

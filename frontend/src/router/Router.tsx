@@ -16,6 +16,7 @@ import MyPage from '../pages/MyPage'
 import Shop from '../pages/Shop'
 import MemberManagement from '../pages/MemberManagement'
 import PaymentManagement from '../pages/PaymentManagement'
+import ClubFund from '../pages/ClubFund'
 import { RouterContext, type Route } from '../hooks/useRouter'
 
 
@@ -38,6 +39,7 @@ const Router = () => {
     if (path === '/shop') return 'shop'
     if (path === '/member-management') return 'member-management'
     if (path === '/payment-management') return 'payment-management'
+    if (path === '/club-fund') return 'club-fund'
     return 'onboarding'
   })
 
@@ -66,6 +68,7 @@ const Router = () => {
       else if (path === '/shop') setCurrentRoute('shop')
       else if (path === '/member-management') setCurrentRoute('member-management')
       else if (path === '/payment-management') setCurrentRoute('payment-management')
+      else if (path === '/club-fund') setCurrentRoute('club-fund')
       else setCurrentRoute('onboarding')
     }
 
@@ -158,6 +161,11 @@ const Router = () => {
       />
     case 'payment-management':
       return <PaymentManagement
+        onNavigateToOnboarding={() => navigate('onboarding')}
+        currentRoute={currentRoute}
+      />
+    case 'club-fund':
+      return <ClubFund
         onNavigateToOnboarding={() => navigate('onboarding')}
         currentRoute={currentRoute}
       />
