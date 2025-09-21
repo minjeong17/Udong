@@ -15,6 +15,7 @@ import Calendar from '../pages/Calendar'
 import MyPage from '../pages/MyPage'
 import Shop from '../pages/Shop'
 import MemberManagement from '../pages/MemberManagement'
+import PaymentManagement from '../pages/PaymentManagement'
 import { RouterContext, type Route } from '../hooks/useRouter'
 
 
@@ -36,6 +37,7 @@ const Router = () => {
     if (path === '/mypage') return 'mypage'
     if (path === '/shop') return 'shop'
     if (path === '/member-management') return 'member-management'
+    if (path === '/payment-management') return 'payment-management'
     return 'onboarding'
   })
 
@@ -63,6 +65,7 @@ const Router = () => {
       else if (path === '/mypage') setCurrentRoute('mypage')
       else if (path === '/shop') setCurrentRoute('shop')
       else if (path === '/member-management') setCurrentRoute('member-management')
+      else if (path === '/payment-management') setCurrentRoute('payment-management')
       else setCurrentRoute('onboarding')
     }
 
@@ -150,6 +153,11 @@ const Router = () => {
       />
     case 'member-management':
       return <MemberManagement
+        onNavigateToOnboarding={() => navigate('onboarding')}
+        currentRoute={currentRoute}
+      />
+    case 'payment-management':
+      return <PaymentManagement
         onNavigateToOnboarding={() => navigate('onboarding')}
         currentRoute={currentRoute}
       />
