@@ -14,6 +14,7 @@ import Vote from '../pages/Vote'
 import Calendar from '../pages/Calendar'
 import MyPage from '../pages/MyPage'
 import Shop from '../pages/Shop'
+import MemberManagement from '../pages/MemberManagement'
 import { RouterContext, type Route } from '../hooks/useRouter'
 
 
@@ -34,6 +35,7 @@ const Router = () => {
     if (path === '/calendar') return 'calendar'
     if (path === '/mypage') return 'mypage'
     if (path === '/shop') return 'shop'
+    if (path === '/member-management') return 'member-management'
     return 'onboarding'
   })
 
@@ -60,6 +62,7 @@ const Router = () => {
       else if (path === '/calendar') setCurrentRoute('calendar')
       else if (path === '/mypage') setCurrentRoute('mypage')
       else if (path === '/shop') setCurrentRoute('shop')
+      else if (path === '/member-management') setCurrentRoute('member-management')
       else setCurrentRoute('onboarding')
     }
 
@@ -144,6 +147,11 @@ const Router = () => {
     case 'shop':
       return <Shop
         onNavigateToOnboarding={() => navigate('onboarding')}
+      />
+    case 'member-management':
+      return <MemberManagement
+        onNavigateToOnboarding={() => navigate('onboarding')}
+        currentRoute={currentRoute}
       />
     default:
       return <Onboarding
