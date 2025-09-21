@@ -5,6 +5,7 @@ import NotificationModal from "../components/NotificationModal";
 import type { Channel, WsChatIn, WsChatOut, UIMsg } from "../types/chat";
 import { ChatApi } from "../apis/chat";
 import { parseJwt } from "../utils/jwt";
+// import { useAuthStore } from "../stores/authStore";
 
 interface ChatProps {
   onNavigateToOnboarding: () => void;
@@ -113,7 +114,20 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   useEffect(() => {
     (async () => {
       try {
-        const rooms = await ChatApi.getRoomsByClub(4); // clubId = 4
+        /*
+          auth-store = {
+            state: {
+              isAuthenticated: true,
+              user: { id: 7, clubId: 4 }   // 나중에 club_id도 여기 들어올 예정
+            },
+            version: 0
+          }
+        */
+        // const auth = useAuthStore.getState();
+        // const clubId = auth?.user?.clubId;
+        const clubId = 4;
+
+        const rooms = await ChatApi.getRoomsByClub(clubId); // clubId = 4
         console.log("채팅방 목록:", rooms);
         setChannels(rooms); // rooms는 Channel[] 타입
       } catch (err) {
