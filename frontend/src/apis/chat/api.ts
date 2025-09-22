@@ -1,10 +1,6 @@
 import fetchClient, { BASE_URL, API_PREFIX } from "../fetchClient";
 import type { ApiResponse, ChatRoomApi, ChatMessageApi, Channel, ChatParticipantsResponse, ParticipantRes } from "./response";
-<<<<<<< HEAD
 import type { ChatParticipants, CreateDutchpayPayload, Participant } from "../../types/chat";
-=======
-import type { ChatParticipants, Participant } from "../../types/chat";
->>>>>>> origin/dev
 
 // mapper: 백 응답(ChatRoomApi) → 프론트 Channel
 const toChannel = (r: ChatRoomApi): Channel => ({
@@ -85,7 +81,6 @@ export const ChatApi = {
   createDutchpayByChat: async (chatId: number, payload: CreateDutchpayPayload): Promise<ApiResponse<string>> => {
     const { amount, note, participantUserIds, receipt } = payload;
 
-    // 간단 유효성
     if (!Array.isArray(participantUserIds) || participantUserIds.length === 0) {
       throw new Error("참가자 목록이 비어 있습니다.");
     }
@@ -109,6 +104,8 @@ export const ChatApi = {
       method: "POST",
       body: form,
       auth: true,
+    });
+  }, // ← 메서드 끝! 쉼표로 다음 메서드와 구분
 
   /** (EVENT 전용) 실제 참여 인원 확정 */
   confirmParticipantsByChatId: async (clubId: number, chatId: number, userIds: number[]): Promise<void> => {
