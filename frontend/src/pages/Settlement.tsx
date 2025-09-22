@@ -212,7 +212,7 @@ export default function SettlementPage({
                 <button
                   type="button"
                   onClick={() => setPaymentCompleted(false)}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-gowun
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-jua
                     ${!paymentCompleted ? "bg-green-400 text-white shadow-sm" : "text-orange-700 hover:bg-orange-200 bg-transparent"}`}
                   aria-pressed={!paymentCompleted}
                 >
@@ -222,7 +222,7 @@ export default function SettlementPage({
                 <button
                   type="button"
                   onClick={() => setPaymentCompleted(true)}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-gowun
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-jua
                     ${paymentCompleted ? "bg-green-400 text-white shadow-sm" : "text-orange-700 hover:bg-orange-200 bg-transparent"}`}
                   aria-pressed={paymentCompleted}
                 >
@@ -286,7 +286,7 @@ export default function SettlementPage({
                         💰 정산
                       </span>
                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        className={`px-3 py-1 rounded-full text-sm font-semibold font-jua ${
                           selectedSettlementData.status === "pending"
                             ? "bg-gradient-to-r from-green-300 to-green-500 text-white"
                             : "bg-orange-100 text-orange-600"
@@ -362,7 +362,7 @@ export default function SettlementPage({
                         <div className="space-y-4">
                           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold font-jua">
                                 {selectedSettlementData.accountHolder.charAt(0)}
                               </div>
                               <div>
@@ -400,7 +400,7 @@ export default function SettlementPage({
                               className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                             >
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold font-jua">
                                   {participant.name.charAt(0)}
                                 </div>
                                 <span className="font-medium text-gray-800 font-jua">{participant.name}</span>

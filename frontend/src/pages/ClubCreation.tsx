@@ -64,6 +64,11 @@ const ClubCreation: React.FC<ClubCreationProps> = ({
       if (onCreateClub) {
         onCreateClub(formData);
       }
+
+      // 동아리 생성 성공 후 club-selection으로 이동
+      if (onNavigateToClubSelection) {
+        onNavigateToClubSelection();
+      }
     } catch (error) {
       console.error("Club creation failed:", error);
       if (error instanceof Error) {

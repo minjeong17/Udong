@@ -24,6 +24,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
   const [activeCollection, setActiveCollection] = useState<'first' | 'second'>('second');
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showOnlyUnpaid, setShowOnlyUnpaid] = useState(false);
 
   // 샘플 데이터
   const paymentRecords: PaymentRecord[] = [
@@ -105,6 +106,11 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
       : 'bg-red-500 text-white';
   };
 
+  // 필터링된 데이터
+  const filteredRecords = showOnlyUnpaid
+    ? paymentRecords.filter(record => record.paymentStatus === '미납')
+    : paymentRecords;
+
   const completedCount = paymentRecords.filter(record => record.paymentStatus === '납부완료').length;
   const unpaidCount = paymentRecords.filter(record => record.paymentStatus === '미납').length;
   const totalCount = paymentRecords.length;
@@ -124,9 +130,24 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
       <div className="flex-1 p-8">
         {/* 페이지 헤더 */}
         <div className="mb-8">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-gray-800 font-jua">동아리원 회비 관리</h1>
-            <p className="text-gray-600 font-gowun">동아리 회원들의 회비 납부 현황을 관리하고 수금을 진행할 수 있습니다.</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold text-gray-800 font-jua">동아리원 회비 관리</h1>
+              <p className="text-gray-600 font-gowun">동아리 회원들의 회비 납부 현황을 관리하고 수금을 진행할 수 있습니다.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600 font-gowun">미납부자만 보기</span>
+              <button
+                onClick={() => setShowOnlyUnpaid(!showOnlyUnpaid)}
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 font-jua ${
+                  showOnlyUnpaid
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+              >
+                {showOnlyUnpaid ? '✅ 미납부자만' : '전체 보기'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -210,11 +231,11 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
 
         {/* 결제 목록 */}
         <div className="bg-white rounded-b-2xl shadow-lg border-l border-r border-b border-orange-100">
-          {paymentRecords.map((record, index) => (
+          {filteredRecords.map((record, index) => (
             <div
               key={record.id}
               className={`p-4 border-b border-gray-100 ${
-                index === paymentRecords.length - 1 ? 'border-b-0' : ''
+                index === filteredRecords.length - 1 ? 'border-b-0' : ''
               } hover:bg-gray-50 transition-colors`}
             >
               <div className="grid gap-4 text-sm font-gowun items-center" style={{gridTemplateColumns: '1fr 1.2fr 1fr 1.2fr'}}>
