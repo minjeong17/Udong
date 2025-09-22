@@ -1,7 +1,6 @@
 // apis/clubfund/api.ts
 import fetchClient, { BASE_URL, API_PREFIX } from '../fetchClient';
 import type {
-  ApiResponse,
   BalanceResponse,
   TransactionsResponse,
   AttachReceiptResponse,
