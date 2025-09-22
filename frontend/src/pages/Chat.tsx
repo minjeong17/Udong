@@ -50,7 +50,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   const [chatMessages, setChatMessages] = useState<UIMsg[]>([]);
 
   // 참여자 모달용 상태
-  const [participants, setParticipants] = useState<Participant[] | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [participantsError, setParticipantsError] = useState<string | null>(
     null
@@ -141,21 +141,10 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   useEffect(() => {
     (async () => {
       try {
-        /*
-          auth-store = {
-            state: {
-              isAuthenticated: true,
-              user: { id: 7, clubId: 4 }   // 나중에 club_id도 여기 들어올 예정
-            },
-            version: 0
-          }
-        */
-
         const auth = useAuthStore.getState();
         const clubId = auth?.user?.clubId;
 
         if (clubId == null) return;
-        // const clubId = 4;
 
         const rooms = await ChatApi.getRoomsByClub(clubId); // clubId = 4
         console.log("채팅방 목록:", rooms);
@@ -276,6 +265,37 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
     };
   }, [selectedChannel]);
 
+  useEffect(() => {
+    setParticipants([]);
+    setSelectedMembers([]);
+    setSettlementParticipants([]);
+    setIsParticipantsConfirmed(false);
+  }, [selectedChannel]);
+
+  const ensureParticipants = async (roomId: number) => {
+    if (participants.length > 0) return participants; // 이미 있으면 재사용
+
+    setParticipantsLoading(true);
+    setParticipantsError(null);
+    try {
+      const resp = await ChatApi.getParticipants(roomId);
+      // resp는 ChatParticipants 타입: { chatId, participants }
+      setParticipants(resp.participants);
+
+      const ids = resp.participants.map((p) => String(p.id));
+      setSelectedMembers(ids);
+      setSettlementParticipants(ids);
+
+      return resp.participants;
+    } catch (e: any) {
+      const msg = e?.message ?? "참여자 정보를 불러오지 못했습니다.";
+      setParticipantsError(msg);
+      return null;
+    } finally {
+      setParticipantsLoading(false);
+    }
+  };
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedChannel || !message.trim()) return;
@@ -297,23 +317,40 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
   const openParticipantsModal = async () => {
     if (!selectedChannel) return;
-    try {
-      setParticipantsLoading(true);
-      setParticipantsError(null);
-
-      // 프론트 DTO(Participant[])으로 반환되도록 ChatApi.getParticipants 구현되어 있어야 합니다
-      const resp = await ChatApi.getParticipants(selectedChannel);
-      console.log(resp);
-      setParticipants(resp.participants);
-      setShowParticipantsModal(true);
-    } catch (e: any) {
-      console.error(e);
-      setParticipantsError(e?.message ?? "참여자 정보를 불러오지 못했습니다.");
-      setShowParticipantsModal(true); // 에러도 모달에서 보여줌
-    } finally {
-      setParticipantsLoading(false);
-    }
+    await ensureParticipants(selectedChannel);
+    setShowParticipantsModal(true);
   };
+
+  const openMemberCheckModal = async () => {
+    if (!selectedChannel) return;
+    const list = await ensureParticipants(selectedChannel);
+    if (list) {
+      const ids = list.map((p) => String(p.id));
+      setSelectedMembers(ids);
+      setSettlementParticipants(ids);
+    }
+    setShowMemberCheckModal(true);
+  };
+
+  // const openParticipantsModal = async () => {
+  //   if (!selectedChannel) return;
+  //   try {
+  //     setParticipantsLoading(true);
+  //     setParticipantsError(null);
+
+  //     // 프론트 DTO(Participant[])으로 반환되도록 ChatApi.getParticipants 구현되어 있어야 합니다
+  //     const resp = await ChatApi.getParticipants(selectedChannel);
+  //     console.log(resp);
+  //     setParticipants(resp.participants);
+  //     setShowParticipantsModal(true);
+  //   } catch (e: any) {
+  //     console.error(e);
+  //     setParticipantsError(e?.message ?? "참여자 정보를 불러오지 못했습니다.");
+  //     setShowParticipantsModal(true); // 에러도 모달에서 보여줌
+  //   } finally {
+  //     setParticipantsLoading(false);
+  //   }
+  // };
 
   const handleMemberToggle = (memberId: string) => {
     setSelectedMembers((prev) =>
@@ -420,7 +457,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               </button>
 
               <button
-                onClick={() => setShowMemberCheckModal(true)}
+                onClick={openMemberCheckModal}
                 className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-3 font-jua ${
                   isParticipantsConfirmed
                     ? "bg-blue-400 hover:bg-blue-500 text-white"
@@ -666,31 +703,55 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               <p className="text-gray-600 mb-4 font-gowun">
                 정산에 참여할 실제 인원을 선택해주세요.
               </p>
-              <div className="space-y-3">
-                {chatMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
-                  >
-                    <input
-                      type="checkbox"
-                      id={`member-${member.id}`}
-                      checked={selectedMembers.includes(member.id)}
-                      onChange={() => handleMemberToggle(member.id)}
-                      className="w-5 h-5 text-blue-500 rounded focus:ring-blue-400"
-                    />
-                    <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                      {member.avatar}
+
+              {participantsLoading && (
+                <div className="text-center text-gray-500 py-4 font-gowun">
+                  불러오는 중…
+                </div>
+              )}
+
+              {participantsError && !participantsLoading && (
+                <div className="p-3 mb-4 bg-red-50 text-red-700 rounded-lg font-gowun">
+                  {participantsError}
+                </div>
+              )}
+
+              {!participantsLoading && (
+                <div className="space-y-3">
+                  {(participants ?? []).map((member) => {
+                    const id = String(member.id);
+                    return (
+                      <div
+                        key={id}
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                      >
+                        <input
+                          type="checkbox"
+                          id={`member-${id}`}
+                          checked={selectedMembers.includes(id)}
+                          onChange={() => handleMemberToggle(id)}
+                          className="w-5 h-5 text-blue-500 rounded focus:ring-blue-400"
+                        />
+                        <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                          {twoLetters(member.name)}
+                        </div>
+                        <label
+                          htmlFor={`member-${id}`}
+                          className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
+                        >
+                          {member.name}
+                        </label>
+                      </div>
+                    );
+                  })}
+                  {participants.length === 0 && (
+                    <div className="text-center text-gray-400 py-6 font-gowun">
+                      참여자가 없습니다.
                     </div>
-                    <label
-                      htmlFor={`member-${member.id}`}
-                      className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
-                    >
-                      {member.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-4 p-3 bg-blue-50 rounded-xl">
                 <p className="text-blue-800 font-semibold font-jua">
                   선택된 인원: {selectedMembers.length}명
@@ -805,33 +866,36 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   정산 참여 인원
                 </label>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {chatMembers
-                    .filter((member) => selectedMembers.includes(member.id))
-                    .map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
-                      >
-                        <input
-                          type="checkbox"
-                          id={`settlement-${member.id}`}
-                          checked={settlementParticipants.includes(member.id)}
-                          onChange={() =>
-                            handleSettlementParticipantToggle(member.id)
-                          }
-                          className="w-5 h-5 text-green-500 rounded focus:ring-green-400"
-                        />
-                        <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                          {member.avatar}
-                        </div>
-                        <label
-                          htmlFor={`settlement-${member.id}`}
-                          className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
+                  {participants
+                    .filter((m) => selectedMembers.includes(String(m.id)))
+                    .map((m) => {
+                      const id = String(m.id);
+                      return (
+                        <div
+                          key={id}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
                         >
-                          {member.name}
-                        </label>
-                      </div>
-                    ))}
+                          <input
+                            type="checkbox"
+                            id={`settlement-${id}`}
+                            checked={settlementParticipants.includes(id)}
+                            onChange={() =>
+                              handleSettlementParticipantToggle(id)
+                            }
+                            className="w-5 h-5 text-green-500 rounded focus:ring-green-400"
+                          />
+                          <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            {twoLetters(m.name)}
+                          </div>
+                          <label
+                            htmlFor={`settlement-${id}`}
+                            className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
+                          >
+                            {m.name}
+                          </label>
+                        </div>
+                      );
+                    })}
                 </div>
                 <div className="mt-2 p-3 bg-green-50 rounded-xl">
                   <p className="text-green-800 font-semibold font-jua">
@@ -963,7 +1027,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
               {!participantsLoading && !participantsError && (
                 <>
-                  <div className="mt-4 text-sm text-gray-600">
+                  <div className="mt-1 mb-3 text-sm text-gray-600">
                     총{" "}
                     <span className="font-semibold font-jua">
                       {participants?.length ?? 0}
@@ -974,14 +1038,19 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   <ul className="divide-y">
                     {(participants ?? []).map((p) => (
                       <li key={p.id} className="flex items-center gap-3 p-3">
+                        {/* 아바타(이니셜) */}
                         <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                          {p.name?.slice(0, 2) ?? "??"}
+                          {twoLetters(p.name)}
                         </div>
+
+                        {/* 이름 */}
                         <div className="flex-1">
                           <div className="font-medium text-gray-800 font-gowun">
                             {p.name}
                           </div>
                         </div>
+
+                        {/* 방장 뱃지 */}
                         {p.isOwner && (
                           <span className="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium">
                             방장
