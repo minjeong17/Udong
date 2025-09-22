@@ -22,7 +22,7 @@ public class ShopService {
      * - 인벤토리에 아이템 추가
      */
     @Transactional
-    public void purchaseItem(Integer userId, Integer itemId) {
+    public void purchaseItem(Integer clubId, Integer userId, Integer itemId) {
 
         // 아이템 정보 조회
         Item item = itemService.getItem(itemId);
@@ -32,7 +32,7 @@ public class ShopService {
 
         // 포인트 차감
         UserPointLedgerRequest pointRequest = UserPointLedgerRequest.builder()
-                .clubId(0) // 필요에 따라 설정
+                .clubId(clubId) // 필요에 따라 설정
                 .CodeName("PURCHASE")
                 .delta(item.getPrice())
                 .memo("아이템 구매: " + item.getName())

@@ -1,15 +1,13 @@
 package com.udong.backend.shop.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
-import com.udong.backend.shop.dto.ItemResponse;
-import com.udong.backend.shop.entity.Item;
 import com.udong.backend.shop.service.ShopService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,10 +23,10 @@ public class ShopController {
 	/**
      * 아이템 구매
      */
-    @GetMapping("/{itemId}")
-    public ResponseEntity<ApiResponse<?>> getItem(@PathVariable Integer itemId) {
+    @PostMapping("/{clubId}/{itemId}")
+    public ResponseEntity<ApiResponse<?>> getItem(@PathVariable Integer clubId, @PathVariable Integer itemId) {
     	Integer userId = securityUtils.currentUserId();
-    	shopService.purchaseItem(userId, itemId);
+    	shopService.purchaseItem(clubId, userId, itemId);
         return ResponseEntity.ok(ApiResponse.ok("구매 완료"));
     }
 }
