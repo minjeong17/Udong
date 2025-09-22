@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Integer> {
 
@@ -43,6 +44,15 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
     Page<Event> findUpcoming(@Param("clubId") Integer clubId,
                              @Param("now") LocalDateTime now,
                              Pageable pageable);
+
+    @Query("""
+        select cr.targetId
+        from ChatRoom cr
+        where cr.id = :chatId
+          and cr.type.codeName = 'EVENT'
+    """)
+    Optional<Integer> findEventIdByChatId(@Param("chatId") Integer chatId);
+
 }
 
 

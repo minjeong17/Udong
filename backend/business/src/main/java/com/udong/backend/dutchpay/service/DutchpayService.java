@@ -1,6 +1,7 @@
 package com.udong.backend.dutchpay.service;
 
 import com.udong.backend.calendar.entity.Event;
+import com.udong.backend.calendar.repository.EventRepository;
 import com.udong.backend.dutchpay.dto.*;
 import com.udong.backend.dutchpay.entity.Dutchpay;
 import com.udong.backend.dutchpay.entity.DutchpayParticipant;
@@ -43,6 +44,7 @@ public class DutchpayService {
     private final DutchpayRepository dutchpayRepository;
     private final UserRepository userRepository;
     private final DutchpayParticipantRepository participantRepository;
+    private final EventRepository eventRepository;
     private final EntityManager em;
     private final S3Uploader s3Uploader;
     private final AccountCrypto accountCrypto;
@@ -62,9 +64,13 @@ public class DutchpayService {
     @Value("${finapi.api-key}")
     private String apiKey;
 
-    public void createWithOptionalImage(CreateDutchpayRequest req,
+    public void createWithOptionalImage(Integer chatId,
+                                        CreateDutchpayRequest req,
                                         int createdByUserId,
                                         @Nullable MultipartFile receipt) {
+
+        Integer eventId = eventRepository.findEventIdByChatId(chatId)
+                .orElseThrow(() -> new IllegalArgumentException("EVENT 타입 채팅방이 아니거나, 매핑되는 이벤트가 없습니다. chatId=" + chatId));
         
 
         var uniqueUserIds = new HashSet<>(req.getParticipantUserIds());
@@ -73,7 +79,7 @@ public class DutchpayService {
         }
 
         User creatorRef = em.getReference(User.class, createdByUserId);
-        Event eventRef   = em.getReference(Event.class, req.getEventId());
+        Event eventRef   = em.getReference(Event.class, eventId);
 
         // --- 영수증 업로드 (있을 때만) ---
         String s3Key = null;
