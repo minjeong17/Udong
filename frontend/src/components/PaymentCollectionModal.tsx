@@ -1,26 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import MemberSelectionModal from './MemberSelectionModal';
+import { ClubApi } from '../apis/clubs';
+import { useAuthStore } from '../stores/authStore';
+import type { MemberResponse } from '../apis/clubs';
 
 interface PaymentCollectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (amount: number, targetMembers: number) => void;
+  onConfirm: (amount: number, selectedUserIds?: number[]) => void;
+  nextDuesNo: number;
+  totalMembers: number;
 }
 
 const PaymentCollectionModal: React.FC<PaymentCollectionModalProps> = ({
   isOpen,
   onClose,
-  onConfirm
+  onConfirm,
+  nextDuesNo,
+  totalMembers
 }) => {
+  const { clubId } = useAuthStore();
   const [amount, setAmount] = useState<number>(25000);
-  const [targetMembers, setTargetMembers] = useState<number>(10);
+  const [showMemberSelection, setShowMemberSelection] = useState(false);
+  const [members, setMembers] = useState<MemberResponse[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [isSelectiveMode, setIsSelectiveMode] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && clubId) {
+      const fetchMembers = async () => {
+        try {
+          const membersData = await ClubApi.getClubMembers(clubId);
+          setMembers(membersData);
+          // 최초 1회만 전체 선택으로 초기화
+          if (!isInitialized) {
+            setSelectedUserIds(membersData.map(member => member.userId));
+            setIsInitialized(true);
+          }
+        } catch (error) {
+          console.error('회원 정보 조회 실패:', error);
+        }
+      };
+      fetchMembers();
+    }
+  }, [isOpen, clubId, isInitialized]);
 
   if (!isOpen) return null;
 
-  const expectedTotal = amount * targetMembers;
+  const activeMembers = isSelectiveMode ? selectedUserIds.length : totalMembers;
+  const expectedTotal = amount * activeMembers;
 
   const handleConfirm = () => {
-    onConfirm(amount, targetMembers);
+    if (isSelectiveMode && selectedUserIds.length > 0) {
+      onConfirm(amount, selectedUserIds);
+    } else {
+      onConfirm(amount);
+    }
     onClose();
+  };
+
+  const handleMemberSelectionConfirm = (selectedIds: number[]) => {
+    setSelectedUserIds(selectedIds);
+    setIsSelectiveMode(true);
+    setShowMemberSelection(false);
+  };
+
+  const handleSelectAllMembers = () => {
+    setSelectedUserIds(members.map(member => member.userId));
+    setIsSelectiveMode(false);
   };
 
   return (
@@ -28,7 +76,7 @@ const PaymentCollectionModal: React.FC<PaymentCollectionModalProps> = ({
       <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 w-[450px] h-[420px] relative">
         {/* 헤더 */}
         <div className="text-center pt-6 pb-4">
-          <h2 className="text-2xl font-bold text-gray-700 font-jua">제 3차 회비를 수금합니다</h2>
+          <h2 className="text-2xl font-bold text-gray-700 font-jua">제 {nextDuesNo}차 회비를 수금합니다</h2>
         </div>
 
         {/* 닫기 버튼 */}
@@ -58,17 +106,25 @@ const PaymentCollectionModal: React.FC<PaymentCollectionModalProps> = ({
               </div>
             </div>
 
-            {/* 적용인원 입력 */}
+            {/* 적용인원 표시 */}
             <div className="flex items-center justify-between">
               <label className="text-gray-600 font-semibold font-gowun text-base">적용인원:</label>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={targetMembers}
-                  onChange={(e) => setTargetMembers(Number(e.target.value))}
-                  className="w-20 px-3 py-2 border border-gray-200 rounded-lg font-gowun text-center focus:outline-none focus:border-orange-300"
-                />
+                <button
+                  onClick={() => setShowMemberSelection(true)}
+                  className="w-20 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg font-gowun text-center text-orange-700 hover:bg-orange-100 transition-colors cursor-pointer"
+                >
+                  {activeMembers}
+                </button>
                 <span className="text-gray-600 font-gowun">명</span>
+                {isSelectiveMode && (
+                  <button
+                    onClick={handleSelectAllMembers}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-gowun underline"
+                  >
+                    전체선택
+                  </button>
+                )}
               </div>
             </div>
 
@@ -77,7 +133,10 @@ const PaymentCollectionModal: React.FC<PaymentCollectionModalProps> = ({
               <div className="flex items-center justify-center gap-4 text-lg font-semibold">
                 <span className="text-gray-700 font-gowun">{amount.toLocaleString()}원</span>
                 <span className="text-gray-500 font-gowun">×</span>
-                <span className="text-gray-700 font-gowun">{targetMembers}명</span>
+                <span className="text-gray-700 font-gowun">{activeMembers}명</span>
+                {isSelectiveMode && (
+                  <span className="text-xs text-blue-600 font-gowun">(선택)</span>
+                )}
               </div>
 
               <div className="text-center">
@@ -108,6 +167,16 @@ const PaymentCollectionModal: React.FC<PaymentCollectionModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 동아리원 선택 모달 */}
+      <MemberSelectionModal
+        isOpen={showMemberSelection}
+        onClose={() => setShowMemberSelection(false)}
+        onConfirm={handleMemberSelectionConfirm}
+        members={members}
+        totalMembers={totalMembers}
+        initialSelectedUserIds={selectedUserIds}
+      />
     </div>
   );
 };
