@@ -1,5 +1,6 @@
 package com.udong.backend.chat.controller;
 
+import com.udong.backend.chat.dto.ChatParticipantsResponse;
 import com.udong.backend.chat.dto.ChatRoomListItem;
 import com.udong.backend.chat.dto.CreateRoomRequest;
 import com.udong.backend.chat.service.ChatRoomService;
@@ -47,5 +48,14 @@ public class ChatRoomController {
         Integer userId = securityUtils.currentUserId();
         List<ChatRoomListItem> items = chatRoomService.listMyRoomsByClub(userId, clubId);
         return ResponseEntity.ok(ApiResponse.ok(items));
+    }
+
+    /** 채팅방 참여자 목록 (방장 포함, owner=true 표시) */
+    @GetMapping("/{chatId}/participants")
+    public ResponseEntity<ApiResponse<ChatParticipantsResponse>> getParticipants(
+            @PathVariable Integer chatId
+    ) {
+        ChatParticipantsResponse resp = chatRoomService.getParticipants(chatId);
+        return ResponseEntity.ok(ApiResponse.ok(resp));
     }
 }

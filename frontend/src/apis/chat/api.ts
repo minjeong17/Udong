@@ -1,5 +1,7 @@
 import fetchClient, { BASE_URL, API_PREFIX } from "../fetchClient";
-import type { ApiEnvelope, ChatRoomApi, ChatMessageApi, Channel } from "./response";
+import type { ApiResponse, ChatRoomApi, ChatMessageApi, Channel, ChatParticipantsResponse,
+  ParticipantRes } from "./response";
+import type { ChatParticipants, Participant } from "../../types/chat";
 
 // mapper: 백 응답(ChatRoomApi) → 프론트 Channel
 const toChannel = (r: ChatRoomApi): Channel => ({
@@ -10,11 +12,26 @@ const toChannel = (r: ChatRoomApi): Channel => ({
   memberCount: r.memberCount,
 });
 
+function mapParticipant(r: ParticipantRes): Participant {
+  return {
+    id: r.userId,
+    name: r.name,
+    isOwner: r.owner,
+  };
+}
+
+function mapChatParticipants(r: ChatParticipantsResponse): ChatParticipants {
+  return {
+    chatId: r.chatId,
+    participants: r.participants.map(mapParticipant),
+  };
+}
+
 export const ChatApi = {
   /** 특정 club의 채팅방 목록 조회 */
   getRoomsByClub: async (clubId: number): Promise<Channel[]> => {
     const url = `${BASE_URL}${API_PREFIX}/chat/rooms?clubId=${encodeURIComponent(clubId)}`;
-    const response = await fetchClient<ApiEnvelope<ChatRoomApi[]>>(url, {
+    const response = await fetchClient<ApiResponse<ChatRoomApi[]>>(url, {
       method: "GET",
       auth: true,
     });
@@ -24,7 +41,7 @@ export const ChatApi = {
   /** 채팅방 메시지 최근 N개 */
   getRecentMessages: async (roomId: number, limit = 50): Promise<ChatMessageApi[]> => {
     const url = `${BASE_URL}${API_PREFIX}/chats/${roomId}/messages?limit=${limit}`;
-    const response = await fetchClient<ApiEnvelope<ChatMessageApi[]>>(url, {
+    const response = await fetchClient<ApiResponse<ChatMessageApi[]>>(url, {
       method: "GET",
       auth: true,
     });
@@ -40,4 +57,25 @@ export const ChatApi = {
       auth: true,
     });
   },
+
+    async getParticipants(chatId: number): Promise<ChatParticipants> {
+    const token = localStorage.getItem("accessToken");
+
+    const res = await fetch(`${BASE_URL}${API_PREFIX}/v1/chat/rooms/${chatId}/participants`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`참여자 조회 실패 (${res.status}) ${text}`);
+    }
+
+    const json = (await res.json()) as ApiResponse<ChatParticipantsResponse>;
+    return mapChatParticipants(json.data);
+  },
+
 };

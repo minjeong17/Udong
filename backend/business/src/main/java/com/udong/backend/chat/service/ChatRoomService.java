@@ -1,5 +1,7 @@
 package com.udong.backend.chat.service;
 
+import com.udong.backend.chat.dto.ChatMemberItem;
+import com.udong.backend.chat.dto.ChatParticipantsResponse;
 import com.udong.backend.chat.dto.ChatRoomListItem;
 import com.udong.backend.chat.dto.CreateRoomRequest;
 import com.udong.backend.chat.entity.ChatMember;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -116,4 +119,39 @@ public class ChatRoomService {
         return chatRoomRepository.findMyRoomsInClub(userId, clubId);
     }
 
+    public ChatParticipantsResponse getParticipants(Integer chatId) {
+        ChatRoom room = chatRoomRepository.findWithCreatorById(chatId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다. (id=" + chatId + ")"));
+
+        // owner
+        User ownerUser = room.getCreatedBy();
+        ChatMemberItem ownerItem = ChatMemberItem.builder()
+                .userId(ownerUser.getId())
+                .name(ownerUser.getName()) // 컬럼명이 다르면 변경 (예: nickname)
+                .owner(true)
+                .build();
+
+        // members (owner=false)
+        List<ChatMemberItem> memberItems = chatRoomMemberRepository.findMemberViewsByChatId(chatId).stream()
+                .map(v -> ChatMemberItem.builder()
+                        .userId(v.getUserId())
+                        .name(v.getName())
+                        .owner(false)
+                        .build())
+                .toList();
+
+        // owner + members 합치되, 중복(방장) 제거
+        List<ChatMemberItem> participants = new ArrayList<>();
+        participants.add(ownerItem);
+        participants.addAll(
+                memberItems.stream()
+                        .filter(m -> !m.getUserId().equals(ownerItem.getUserId()))
+                        .toList()
+        );
+
+        return ChatParticipantsResponse.builder()
+                .chatId(chatId)
+                .participants(participants)
+                .build();
+    }
 }

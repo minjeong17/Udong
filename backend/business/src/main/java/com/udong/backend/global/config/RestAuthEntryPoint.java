@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,10 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest req,
                          HttpServletResponse res,
                          AuthenticationException ex) throws IOException, ServletException {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("[401] " + req.getMethod() + " " + req.getRequestURI()
+                + " principal=" + (auth != null ? auth.getPrincipal() : "null"));
+
         res.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
         res.setContentType("application/json;charset=UTF-8");
         String body = om.writeValueAsString(ApiResponse.error(401, "인증이 필요합니다."));
