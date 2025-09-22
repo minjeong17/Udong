@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { ClubApi } from '../apis/clubs';
+import { useAuthStore } from '../stores/authStore';
 
 interface ClubListProps {
   onNavigateToOnboarding: () => void;
@@ -28,6 +29,8 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
   const [clubsOrder, setClubsOrder] = useState<Club[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const setClubId = useAuthStore((s) => s.setClubId);
 
   // 가입일수 계산 함수
   const calculateDaysSinceJoined = (joinedAt: string): number => {
@@ -121,6 +124,10 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
   };
 
   const handleEnterClub = () => {
+    if (!selectedClub) return;
+
+    setClubId(selectedClub.id);
+    
     if (selectedClub && onNavigateToClubDashboard) {
       console.log('Entering club:', selectedClub.name);
       onNavigateToClubDashboard();
