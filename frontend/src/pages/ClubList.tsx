@@ -30,7 +30,7 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setClubId = useAuthStore((s) => s.setClubId);
+  const setClubInfo = useAuthStore((s) => s.setClubInfo);
 
   // 가입일수 계산 함수
   const calculateDaysSinceJoined = (joinedAt: string): number => {
@@ -135,10 +135,11 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
   const handleEnterClub = () => {
     if (!selectedClub) return;
 
-    setClubId(selectedClub.id);
-    
+    // clubId와 myRole을 함께 저장
+    setClubInfo(selectedClub.id, selectedClub.myRole);
+
     if (selectedClub && onNavigateToClubDashboard) {
-      console.log('Entering club:', selectedClub.name);
+      console.log('Entering club:', selectedClub.name, 'as', selectedClub.myRole);
       onNavigateToClubDashboard();
     }
   };

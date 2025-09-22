@@ -5,19 +5,23 @@ interface RoleChangeModalProps {
   onClose: () => void;
   member: {
     name: string;
-    role: 'LEADER' | 'MANAGER' | 'MEMBER';
-    birthDate: string;
+    role: string;
+    userId?: number;
   } | null;
-  onRoleChange: (newRole: 'LEADER' | 'MANAGER' | 'MEMBER') => void;
+  onRoleChange: (newRole: string) => void;
+  onLeaderTransfer: (userId: number, name: string) => void;
+  currentUserRole?: string;
 }
 
 const RoleChangeModal: React.FC<RoleChangeModalProps> = ({
   isOpen,
   onClose,
   member,
-  onRoleChange
+  onRoleChange,
+  onLeaderTransfer,
+  currentUserRole
 }) => {
-  const [selectedRole, setSelectedRole] = useState<'LEADER' | 'MANAGER' | 'MEMBER'>('MEMBER');
+  const [selectedRole, setSelectedRole] = useState<string>('MEMBER');
 
   if (!isOpen || !member) return null;
 
@@ -30,12 +34,17 @@ const RoleChangeModal: React.FC<RoleChangeModalProps> = ({
     }
   };
 
-  const handleRoleSelect = (role: 'LEADER' | 'MANAGER' | 'MEMBER') => {
+  const handleRoleSelect = (role: string) => {
     setSelectedRole(role);
   };
 
   const handleConfirm = () => {
-    onRoleChange(selectedRole);
+    // 회장으로 변경하려고 하고, 현재 사용자가 회장인 경우 회장 위임 플로우
+    if (selectedRole === 'LEADER' && currentUserRole === 'LEADER' && member.userId) {
+      onLeaderTransfer(member.userId, member.name);
+    } else {
+      onRoleChange(selectedRole);
+    }
     onClose();
   };
 
@@ -55,8 +64,8 @@ const RoleChangeModal: React.FC<RoleChangeModalProps> = ({
               <span className="text-lg font-bold text-gray-800 font-jua">{member.name}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-600 font-semibold font-gowun text-sm">생년월일:</span>
-              <span className="text-sm font-semibold text-gray-700 font-gowun">{member.birthDate}</span>
+              <span className="text-gray-600 font-semibold font-gowun text-sm">현재 직책:</span>
+              <span className="text-sm font-semibold text-gray-700 font-gowun">{getRoleInKorean(member.role)}</span>
             </div>
           </div>
         </div>

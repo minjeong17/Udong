@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
 import MascotChangeModal from '../components/MascotChangeModal';
 import { useRouter } from '../hooks/useRouter';
+import { useAuthStore } from '../stores/authStore';
+import { ClubApi } from '../apis/clubs';
+import type { ClubCreateResponse, MascotResponse } from '../apis/clubs/response';
 
 interface ClubDashboardProps {
   onNavigateToOnboarding: () => void;
@@ -13,9 +16,47 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   onNavigateToOnboarding
 }) => {
   const { navigate } = useRouter();
+  const clubId = useAuthStore((state) => state.clubId);
+  const myRole = useAuthStore((state) => state.myRole);
+
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showMascotModal, setShowMascotModal] = useState(false);
   const [currentMascotId, setCurrentMascotId] = useState(1);
+
+  const [clubInfo, setClubInfo] = useState<ClubCreateResponse | null>(null);
+  const [mascotInfo, setMascotInfo] = useState<MascotResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 동아리 정보와 마스코트 정보 가져오기
+  useEffect(() => {
+    if (!clubId) return;
+
+    const fetchClubData = async () => {
+      try {
+        setIsLoading(true);
+
+        // 동아리 정보와 마스코트 정보를 병렬로 가져오기
+        const [clubData, mascotData] = await Promise.all([
+          ClubApi.getClubDetails(clubId),
+          ClubApi.getActiveMascot(clubId)
+        ]);
+
+        setClubInfo(clubData);
+        setMascotInfo(mascotData);
+
+        // 마스코트 ID 업데이트
+        if (mascotData) {
+          setCurrentMascotId(mascotData.id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch club data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClubData();
+  }, [clubId]);
 
   const handleMascotChange = async (mascotId: number): Promise<void> => {
     try {
@@ -60,54 +101,113 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
         {/* Main Content */}
         <div className="flex-1 p-2">
           {/* Club Info Header */}
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-2 mb-3 border border-orange-200 w-full">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-10 bg-orange-200 rounded-lg flex items-center justify-center">
-                  <img
-                    src={`/images/mas_${currentMascotId}.png`}
-                    alt="동아리 마스코트"
-                    className="w-6 h-6 object-contain"
-                  />
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-semibold text-gray-700 font-jua">코스모스</h1>
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs font-gowun">
-                      스터디
-                    </span>
+          {clubInfo ? (
+            <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-2 mb-3 border border-orange-200 w-full">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-10 bg-orange-200 rounded-lg flex items-center justify-center">
+                    {mascotInfo?.imageUrl ? (
+                      <img
+                        src={mascotInfo.imageUrl}
+                        alt="동아리 마스코트"
+                        className="w-6 h-6 object-contain rounded"
+                      />
+                    ) : (
+                      <span className="text-orange-600 font-bold text-sm">
+                        {clubInfo.name.charAt(0)}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-gray-600 font-jua">
-                    함께 성장하는 개발자들의 모임입니다. 매주 알고리즘 문제를 풀고
-                    프로젝트를 진행하며 서로의 실력을 향상시켜나가고 있어요.
-                  </p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg font-semibold text-gray-700 font-jua">{clubInfo.name}</h1>
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs font-gowun">
+                        {clubInfo.category}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 font-jua">
+                      {clubInfo.description}
+                    </p>
+                  </div>
+                </div>
+                {/* 회장만 동아리원 관리 버튼 표시 */}
+                {myRole === 'LEADER' ? (
+                  <button
+                    onClick={() => navigate('member-management')}
+                    className="bg-slate-400 hover:bg-slate-500 text-gray-800 px-6 py-3 rounded-xl font-jua transition-colors flex items-center gap-2 shadow-md"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    동아리원 관리
+                  </button>
+                ) : (
+                  <div className="bg-gray-200 text-gray-500 px-6 py-3 rounded-xl font-jua flex items-center gap-2 shadow-md cursor-not-allowed">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    회장 전용 기능
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : isLoading ? (
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-2 mb-3 border border-gray-200 w-full">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-10 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
+                    <span className="text-gray-400 text-xs">⏳</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 bg-gray-300 rounded w-24 animate-pulse"></div>
+                      <div className="h-5 bg-gray-200 rounded w-16 animate-pulse"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={() => navigate('member-management')}
-                className="bg-slate-400 hover:bg-slate-500 text-gray-800 px-6 py-3 rounded-xl font-jua transition-colors flex items-center gap-2 shadow-md"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                동아리원 관리
-              </button>
             </div>
-          </div>
+          ) : (
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-2 mb-3 border border-gray-200 w-full">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span className="text-gray-400 text-xs">?</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg font-semibold text-gray-400 font-jua">동아리 정보 없음</h1>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Dashboard Circular Layout */}
           <div className="relative w-full h-[650px] flex items-center justify-center">
             {/* Central Mascot Card - 완전한 원형 */}
             <div className="absolute bg-orange-50 rounded-full shadow-2xl border border-orange-100 w-96 h-96 flex flex-col items-center justify-center z-10 top-52">
               <div className="w-40 h-40 flex items-center justify-center mb-1 pt-8">
-                <img
-                  src={`/images/mas_${currentMascotId}.png`}
-                  alt="마스코트"
-                  className="w-48 h-48 object-contain animate-bounce-slow"
-                />
+                {mascotInfo?.imageUrl ? (
+                  <img
+                    src={mascotInfo.imageUrl}
+                    alt="마스코트"
+                    className="w-48 h-48 object-contain animate-bounce-slow rounded-2xl"
+                  />
+                ) : (
+                  <div className="w-48 h-48 bg-gradient-to-br from-orange-200 to-orange-300 rounded-3xl flex items-center justify-center animate-bounce-slow">
+                    <span className="text-6xl font-bold text-orange-600">
+                      {clubInfo?.name?.charAt(0) || '?'}
+                    </span>
+                  </div>
+                )}
               </div>
-              <h2 className="text-lg font-semibold text-gray-700 font-jua mb-2 pt-14">코스모스</h2>
+              <h2 className="text-lg font-semibold text-gray-700 font-jua mb-2 pt-14">
+                {clubInfo?.name || '동아리'}
+              </h2>
               <div className="text-2xl font-bold text-orange-500 font-jua mb-3">2450p</div>
               <div className="w-20 h-2 bg-orange-200 rounded-full">
                 <div className="w-16 h-2 bg-orange-500 rounded-full"></div>
@@ -237,7 +337,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
         onClose={() => setShowMascotModal(false)}
         onMascotChange={handleMascotChange}
         currentMascotId={currentMascotId}
-        clubId={1} // TODO: 실제 클럽 ID로 교체
+        clubId={clubId || 1}
       />
     </div>
   );

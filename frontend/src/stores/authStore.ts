@@ -14,13 +14,17 @@ interface AuthStore {
   // 상태
   isAuthenticated: boolean;
   user: User | null;
+  clubId: number | null;
+  myRole: string | null;
 
   // 액션
   login: (user: User) => void;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
   clearAuth: () => void;
-  setClubId: (clubId: number) => void; 
+  setClubId: (clubId: number) => void;
+  setClubInfo: (clubId: number, myRole: string) => void;
+  clearClubInfo: () => void;
 }
 
 // Zustand Store 생성 (persist로 localStorage에 저장)
@@ -30,6 +34,8 @@ export const useAuthStore = create<AuthStore>()(
       // 초기 상태
       isAuthenticated: false,
       user: null,
+      clubId: null,
+      myRole: null,
 
       // 로그인 액션
       login: (user: User) => {
@@ -51,6 +57,8 @@ export const useAuthStore = create<AuthStore>()(
           set({
             isAuthenticated: false,
             user: null,
+            clubId: null,
+            myRole: null,
           });
         }
       },
@@ -68,15 +76,22 @@ export const useAuthStore = create<AuthStore>()(
         set({
           isAuthenticated: false,
           user: null,
+          clubId: null,
+          myRole: null,
         });
       },
 
-      setClubId: (clubId) =>
-        set((state) =>
-          state.user
-            ? { user: { ...state.user, clubId } }
-            : state
-        ),
+      setClubId: (clubId) => {
+        set({ clubId });
+      },
+
+      setClubInfo: (clubId, myRole) => {
+        set({ clubId, myRole });
+      },
+
+      clearClubInfo: () => {
+        set({ clubId: null, myRole: null });
+      },
     }),
     {
       name: 'auth-store', // localStorage key
@@ -84,6 +99,8 @@ export const useAuthStore = create<AuthStore>()(
         // 필요한 상태만 localStorage에 저장
         isAuthenticated: state.isAuthenticated,
         user: state.user,
+        clubId: state.clubId,
+        myRole: state.myRole,
       }),
     }
   )
