@@ -148,6 +148,7 @@ const fetchClient = async <T>(url: string, options: FetchOptions = {}): Promise<
     throw new Error("UNAUTHORIZED");
   }
   if (res.status === 403) {
+    console.log(40333333333333333)
     throw new Error("FORBIDDEN");
   }
   if (!res.ok) {

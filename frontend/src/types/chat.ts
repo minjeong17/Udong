@@ -48,12 +48,13 @@ export type UIMsg = {
   isOwn: boolean; // 내가 보낸 메시지 여부
 };
 
-// // 서버 응답 메시지 타입
-// export interface ChatMessageApi {
-//   messageId: number;
-//   roomId: number;
-//   senderUserId: number;
-//   senderName: string | null;
-//   content: string;
-//   createdAt: string; // ISO 문자열 (예: "2025-09-20T07:52:31Z")
-// }
+export interface Participant {
+  id: number;
+  name: string;
+  isOwner: boolean;
+}
+
+export interface ChatParticipants {
+  chatId: number;
+  participants: Participant[];
+}

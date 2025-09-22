@@ -6,6 +6,7 @@ import com.udong.backend.clubs.entity.Membership;
 import com.udong.backend.clubs.service.ClubService;
 import com.udong.backend.clubs.dto.ClubDtos.*;
 import com.udong.backend.global.dto.response.ApiResponse;
+import com.udong.backend.global.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,15 +20,16 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class ClubController {
     private final ClubService clubs;
+    private final SecurityUtils securityUtils;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Res>> create(
-            @RequestBody @Valid CreateReq req,
+            @RequestBody @Valid CreateReq req
             // A안: 프린시펄의 id 프로퍼티가 있을 때 (ex. AuthUser.getId())
-            @AuthenticationPrincipal String userIdStr
+//            @AuthenticationPrincipal String userIdStr
     ) {
 
-        Integer userId = Integer.valueOf(userIdStr);
+        Integer userId = securityUtils.currentUserId();
 
         Club c = clubs.create(
                 req.name(),
