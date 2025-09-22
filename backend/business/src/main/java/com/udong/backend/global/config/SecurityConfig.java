@@ -51,8 +51,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // preflight 안전망
                         .requestMatchers(HttpMethod.POST, "/v1/clubs").authenticated() // ✅ 역할 조건 없이 인증만
-                        // 필요시 권한 정책 추가:
-                        // .requestMatchers(HttpMethod.POST, "/v1/clubs").hasAnyRole("LEADER","MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/v1/clubs/join-by-code").authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -60,43 +59,6 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-//        http
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(csrf -> csrf
-//                        .ignoringRequestMatchers(
-//                                "/ws/**",
-//                                "/v1/auth/**",       // ✅ 로그인/리프레시/로그아웃
-//                                "/v1/users/signup"   // ✅ 회원가입
-//                        ))
-//                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(
-//                                "/v1/users/signup",
-//                                "/v1/auth/login",
-//                                "/v1/auth/refresh",
-//                                "/v1/auth/logout",
-//                                "/v1/codes/details",
-//                                "/actuator/**",
-//
-//                                "/swagger-ui.html",
-//                                "/swagger-ui/**",
-//                                "/v3/api-docs/**",
-//                                "/api-docs/**",
-//                                "/swagger-resources/**",
-//                                "/webjars/**",
-//
-//                                "/ws/**"
-//                        ).permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/v1/clubs/join-by-code").authenticated()
-//                        .anyRequest().authenticated()
-//                )
-//                .exceptionHandling(ex -> ex
-//                        .authenticationEntryPoint(authEntryPoint)     // 401
-//                        .accessDeniedHandler(accessDeniedHandler)     // 403
-//                )
-//                // UsernamePasswordAuthenticationFilter 전에 JWT 필터 삽입
-//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
