@@ -4,7 +4,6 @@ import NotificationModal from '../components/NotificationModal';
 
 /** 현재 로그인 사용자 (더미) */
 const currentUserId = 1
-const currentUserName = "김민수"
 
 /** 타입들 */
 type PollStatus = "open" | "closed"
@@ -209,7 +208,6 @@ export default function VotingPage({
   /** UI 상태 */
   const [selectedPollId, setSelectedPollId] = useState<number | null>(polls[0]?.id ?? null)
   const [showClosed, setShowClosed] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
 
   // 초안(내 표 수만), 잠금(확정 후 +/− 비활성), 제출중 상태
@@ -220,12 +218,6 @@ export default function VotingPage({
   const [submitting, setSubmitting] =
     useState<Record<number, boolean>>({}) // 제출 버튼 로딩/비활성
 
-  /** 생성 모달 입력 */
-  const [title, setTitle] = useState("")
-  const [desc, setDesc] = useState("")
-  const [deadline, setDeadline] = useState("")
-  const [allowMultiple, setAllowMultiple] = useState(false)
-  const [optionInputs, setOptionInputs] = useState<string[]>(["", ""])
 
   /** 파생 */
   const visiblePolls = useMemo(
@@ -380,40 +372,6 @@ export default function VotingPage({
     })
   }
 
-  const addOptionInput = () => setOptionInputs((xs) => [...xs, ""])
-  const removeOptionInput = (idx: number) =>
-    setOptionInputs((xs) => (xs.length <= 2 ? xs : xs.filter((_, i) => i !== idx)))
-  const updateOptionInput = (idx: number, v: string) =>
-    setOptionInputs((xs) => xs.map((x, i) => (i === idx ? v : x)))
-
-  const handleCreate = () => {
-    const trimmed = optionInputs.map((x) => x.trim()).filter(Boolean)
-    if (!title.trim() || !deadline || trimmed.length < 2) return
-
-    const newPoll: Poll = {
-      id: Math.max(0, ...polls.map((p) => p.id)) + 1,
-      title: title.trim(),
-      description: desc.trim() || undefined,
-      createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
-      deadline,
-      status: "open",
-      allowMultiple,
-      createdBy: currentUserName,
-      createdById: currentUserId,
-      options: trimmed.map((label, i) => ({ id: i + 1, label, votesByUser: {} })),
-      bonusVotesByUser: {},
-    }
-
-    setPolls((prev) => [newPoll, ...prev])
-    setShowCreateModal(false)
-    setTitle("")
-    setDesc("")
-    setDeadline("")
-    setAllowMultiple(false)
-    setOptionInputs(["", ""])
-    setShowClosed(false)
-    setSelectedPollId(newPoll.id)
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
@@ -431,13 +389,6 @@ export default function VotingPage({
             <div className="p-6 border-b border-orange-200 bg-white">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800 font-jua">투표 목록</h2>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="bg-green-400 hover:bg-green-500 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg font-jua"
-                >
-                  <span className="text-white font-bold">➕</span>
-                  <span className="text-white font-semibold">생성</span>
-                </button>
               </div>
 
               {/* 탭: 진행중 / 완료 */}
@@ -448,7 +399,7 @@ export default function VotingPage({
                   className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-colors font-jua ${
                     !showClosed
                       ? "bg-green-400 text-white shadow-sm"
-                      : "text-orange-700 hover:bg-orange-200 bg-transparent"
+                      : "text-orange-700 hover:bg-orange-200 bg-transparent "
                   }`}
                   aria-pressed={!showClosed}
                 >
@@ -739,7 +690,7 @@ export default function VotingPage({
                     <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-lg lg:col-span-3">
                     <h3 className="font-semibold text-gray-800 text-base mb-3 font-jua">투표 정보</h3>
 
-                    <div className="space-y-2 text-sm text-gray-700 max-h-80 overflow-y-auto calendar-scrollbar">
+                    <div className={`space-y-2 text-sm text-gray-700 ${iAmOwner ? 'max-h-80 overflow-y-auto calendar-scrollbar' : 'max-h-none'}`}>
                         {/* 마감일 */}
                         <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-600 font-gowun">마감일</span>
@@ -850,147 +801,6 @@ export default function VotingPage({
         </div>
       </div>
 
-      {/* 생성 모달 */}
-      {showCreateModal && (
-        <div
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm"
-            onClick={() => setShowCreateModal(false)}
-        >
-            <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="createPollTitle"
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl border border-orange-200 backdrop-blur-lg
-                        w-[min(92vw,720px)] max-h-[min(92vh,840px)]
-                        mx-4 sm:mx-0 flex flex-col overflow-hidden"
-            >
-            {/* 헤더 */}
-            <div className="flex justify-between items-center p-6 md:p-8 border-b border-orange-200">
-                <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-white text-xl">🗳️</span>
-                </div>
-                <div>
-                    <h3 id="createPollTitle" className="text-3xl font-bold text-gray-800 font-jua">새 투표 생성</h3>
-                    <p className="text-gray-600 text-sm mt-1 font-gowun">모임 의사결정을 빠르고 투명하게!</p>
-                </div>
-                </div>
-                <button
-                className="w-10 h-10 bg-orange-100 hover:bg-orange-200 rounded-xl flex items-center justify-center text-orange-600 hover:text-orange-700 transition-all duration-200 hover:scale-105"
-                onClick={() => setShowCreateModal(false)}
-                >
-                ✕
-                </button>
-            </div>
-
-            {/* 바디 (스크롤 영역) */}
-            <div className="grow overflow-y-auto px-6 md:px-8 py-6 md:py-8">
-                <div className="space-y-6">
-                {/* 제목 */}
-                <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">제목 *</label>
-                    <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    type="text"
-                    className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200"
-                    placeholder="예) MT 장소 선정"
-                    />
-                </div>
-
-                {/* 설명 */}
-                <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">설명</label>
-                    <textarea
-                    value={desc}
-                    onChange={(e) => setDesc(e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200 resize-none"
-                    placeholder="투표에 대한 설명을 입력하세요 (선택사항)"
-                    />
-                </div>
-
-                {/* 마감/다중선택 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">마감일 *</label>
-                    <input
-                        value={deadline}
-                        onChange={(e) => setDeadline(e.target.value)}
-                        type="datetime-local"
-                        className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200"
-                    />
-                    </div>
-                    <div className="flex items-end">
-                    <label className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-2xl cursor-pointer select-none w-full">
-                        <input
-                        type="checkbox"
-                        checked={allowMultiple}
-                        onChange={(e) => setAllowMultiple(e.target.checked)}
-                        className="w-5 h-5"
-                        />
-                        <span className="font-medium text-gray-800 font-gowun">다중 선택 허용</span>
-                    </label>
-                    </div>
-                </div>
-
-                {/* 선택지 */}
-                <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2 font-jua">선택지 *</label>
-                    <div className="space-y-3">
-                    {optionInputs.map((op, idx) => (
-                        <div key={idx} className="flex gap-2">
-                        <input
-                            value={op}
-                            onChange={(e) => updateOptionInput(idx, e.target.value)}
-                            type="text"
-                            className="flex-1 px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200"
-                            placeholder={`선택지 ${idx + 1}`}
-                        />
-                        {optionInputs.length > 2 && (
-                            <button
-                            type="button"
-                            onClick={() => removeOptionInput(idx)}
-                            className="w-12 h-12 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-all duration-200"
-                            >
-                            🗑️
-                            </button>
-                        )}
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={addOptionInput}
-                        className="w-full py-3 border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl text-gray-600 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <span className="text-lg">+</span>
-                        <span className="font-gowun">선택지 추가</span>
-                    </button>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            {/* 푸터 */}
-            <div className="shrink-0 flex justify-end gap-4 px-6 md:px-8 py-4 border-t border-orange-200">
-                <button
-                className="px-8 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-2xl font-semibold transition-all duration-200 border border-orange-200 font-jua"
-                onClick={() => setShowCreateModal(false)}
-                >
-                취소
-                </button>
-                <button
-                onClick={handleCreate}
-                disabled={!title.trim() || !deadline || optionInputs.map((x) => x.trim()).filter(Boolean).length < 2}
-                className="px-8 py-3 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-200 font-jua"
-                >
-                생성
-                </button>
-            </div>
-            </div>
-        </div>
-        )}
 
       {/* Notification Modal */}
       <NotificationModal

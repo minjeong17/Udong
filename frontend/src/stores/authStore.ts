@@ -6,6 +6,7 @@ import { logout as apiLogout } from '../apis/fetchClient';
 export interface User {
   id: number;
   name?: string;  // 추후 프로필 API에서 가져올 예정
+  clubId?: number; 
 }
 
 // Auth Store 타입
@@ -19,6 +20,7 @@ interface AuthStore {
   logout: () => Promise<void>;
   setUser: (user: User) => void;
   clearAuth: () => void;
+  setClubId: (clubId: number) => void; 
 }
 
 // Zustand Store 생성 (persist로 localStorage에 저장)
@@ -68,6 +70,13 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
         });
       },
+
+      setClubId: (clubId) =>
+        set((state) =>
+          state.user
+            ? { user: { ...state.user, clubId } }
+            : state
+        ),
     }),
     {
       name: 'auth-store', // localStorage key
