@@ -4,11 +4,16 @@ import com.udong.backend.calendar.dto.EventCreateReq;
 import com.udong.backend.calendar.dto.EventListItemRes;
 import com.udong.backend.calendar.dto.EventRes;
 import com.udong.backend.calendar.dto.EventUpdateReq;
+import com.udong.backend.calendar.entity.ConfirmParticipantsRequest;
+import com.udong.backend.calendar.service.EventMemberService;
+import com.udong.backend.calendar.service.EventService;
 import com.udong.backend.calendar.service.EventService;
 import com.udong.backend.global.dto.response.ApiResponse;
+import com.udong.backend.global.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,6 +26,7 @@ import java.util.List;
 public class EventController {
 
     private final EventService service;
+    private final EventMemberService eventMemberService;
 
     // 일정 등록
     @PostMapping
@@ -79,5 +85,17 @@ public class EventController {
                                         @PathVariable Long eventId) {
         return ApiResponse.ok(service.getOne(clubId, eventId));
     }
+
+    @PutMapping("/chats/{chatId}/participants/confirm")
+    public ResponseEntity<ApiResponse<?>> confirmParticipantsByChatId(
+            @PathVariable Integer chatId,
+            @RequestBody ConfirmParticipantsRequest req
+    ) {
+
+        System.out.println("controllerrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+        eventMemberService.confirmParticipantsByChatId(chatId, req.getUserIds());
+        return ResponseEntity.ok(ApiResponse.ok("참여자 확정 완료"));
+    }
+
 }
 
