@@ -2,6 +2,7 @@ package com.udong.backend.shop.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,7 +13,6 @@ import com.udong.backend.shop.dto.UserPointLedgerResponse;
 import com.udong.backend.shop.entity.UserPointLedger;
 import com.udong.backend.shop.service.PointService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +29,7 @@ public class PointController {
      */
     @PostMapping("/earn")
     public ResponseEntity<ApiResponse<UserPointLedgerResponse>> addPoints(@Valid @RequestBody UserPointLedgerRequest req) {
-        Integer userId = securityUtils.currentUserId();
+    	Integer userId = securityUtils.currentUserId();
         UserPointLedger ledger = pointService.addPoints(userId, req);
         return ResponseEntity.ok(ApiResponse.ok(UserPointLedgerResponse.from(ledger)));
     }

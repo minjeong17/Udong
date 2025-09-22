@@ -32,8 +32,8 @@ public class ShopService {
 
         // 포인트 차감
         UserPointLedgerRequest pointRequest = UserPointLedgerRequest.builder()
-                .clubId(clubId) // 필요에 따라 설정
-                .CodeName("PURCHASE")
+                .clubId(clubId)
+                .codeName("PURCHASE")
                 .delta(item.getPrice())
                 .memo("아이템 구매: " + item.getName())
                 .build();

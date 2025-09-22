@@ -36,6 +36,9 @@ public class Inventory {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
     
+    @Column(name = "club_id", nullable = false)
+    private Integer clubId;
+    
     @Column(name = "user_id", nullable = false)
     private Integer userId;
     

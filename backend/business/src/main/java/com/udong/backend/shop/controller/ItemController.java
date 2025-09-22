@@ -45,7 +45,7 @@ public class ItemController {
      * 단일 아이템 조회
      */
     @GetMapping("/{itemId}")
-    public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable Integer itemId) {
+    public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable("itemId") Integer itemId) {
         Item item = itemService.getItem(itemId);
         return ResponseEntity.ok(ApiResponse.ok(ItemResponse.from(item)));
     }
@@ -68,7 +68,7 @@ public class ItemController {
      * 인벤토리 아이템 수량 증가
      */
     @PostMapping("/purchase/{itemId}")
-    public ResponseEntity<ApiResponse<InventoryResponse>> purchase(@PathVariable Integer itemId) {
+    public ResponseEntity<ApiResponse<InventoryResponse>> purchase(@PathVariable("itemId") Integer itemId) {
         Integer userId = securityUtils.currentUserId();
         Inventory inventory = inventoryService.addItem(userId, itemId);
         return ResponseEntity.ok(ApiResponse.ok(InventoryResponse.from(inventory)));
@@ -78,7 +78,7 @@ public class ItemController {
      * 인벤토리 아이템 수량 감소
      */
     @PostMapping("/use/{itemId}")
-    public ResponseEntity<ApiResponse<InventoryResponse>> use(@PathVariable Integer itemId) {
+    public ResponseEntity<ApiResponse<InventoryResponse>> use(@PathVariable("itemId") Integer itemId) {
         Integer userId = securityUtils.currentUserId();
         Inventory inventory = inventoryService.useItem(userId, itemId);
         return ResponseEntity.ok(ApiResponse.ok(InventoryResponse.from(inventory)));
