@@ -1,4 +1,4 @@
-package com.udong.backend.points.dto;
+package com.udong.backend.shop.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,6 +1,6 @@
-package com.udong.backend.items.dto;
+package com.udong.backend.shop.dto;
 
-import com.udong.backend.items.entity.Inventory;
+import com.udong.backend.shop.entity.Inventory;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

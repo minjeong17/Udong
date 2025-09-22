@@ -1,4 +1,4 @@
-package com.udong.backend.points.entity;
+package com.udong.backend.shop.entity;
 
 import java.time.LocalDateTime;
 

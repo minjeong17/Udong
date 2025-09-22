@@ -1,4 +1,4 @@
-package com.udong.backend.items.controller;
+package com.udong.backend.shop.controller;
 
 import java.util.List;
 
@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
-import com.udong.backend.items.dto.InventoryResponse;
-import com.udong.backend.items.dto.ItemResponse;
-import com.udong.backend.items.entity.Inventory;
-import com.udong.backend.items.entity.Item;
-import com.udong.backend.items.service.InventoryService;
-import com.udong.backend.items.service.ItemService;
+import com.udong.backend.shop.dto.InventoryResponse;
+import com.udong.backend.shop.dto.ItemResponse;
+import com.udong.backend.shop.entity.Inventory;
+import com.udong.backend.shop.entity.Item;
+import com.udong.backend.shop.service.InventoryService;
+import com.udong.backend.shop.service.ItemService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +34,10 @@ public class ItemController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<ItemResponse>>> getAllItems() {
-        List<ItemResponse> items = itemService.getAllItems();
+        List<ItemResponse> items = itemService.getAllItems().stream()
+        		.map(ItemResponse::from)
+        		.toList();
+        
         return ResponseEntity.ok(ApiResponse.ok(items));
     }
 
@@ -43,8 +46,8 @@ public class ItemController {
      */
     @GetMapping("/{itemId}")
     public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable Integer itemId) {
-        ItemResponse item = itemService.getItem(itemId);
-        return ResponseEntity.ok(ApiResponse.ok(item));
+        Item item = itemService.getItem(itemId);
+        return ResponseEntity.ok(ApiResponse.ok(ItemResponse.from(item)));
     }
     
     /**
@@ -52,9 +55,13 @@ public class ItemController {
      */
     @GetMapping("/inv")
     public ResponseEntity<ApiResponse<List<InventoryResponse>>> getInventory() {
-        Integer userId = securityUtils.currentUserId();
-        List<InventoryResponse> inventories = inventoryService.getUserInventories(userId);
-        return ResponseEntity.ok(ApiResponse.ok(inventories));
+    	Integer userId = securityUtils.currentUserId();
+
+    	List<InventoryResponse> inventories = inventoryService.getUserInventories(userId).stream()
+    	        .map(InventoryResponse::from)
+    	        .toList();
+
+    	return ResponseEntity.ok(ApiResponse.ok(inventories));
     }
 
     /**
@@ -63,8 +70,8 @@ public class ItemController {
     @PostMapping("/purchase/{itemId}")
     public ResponseEntity<ApiResponse<InventoryResponse>> purchase(@PathVariable Integer itemId) {
         Integer userId = securityUtils.currentUserId();
-        InventoryResponse inventory = inventoryService.addItem(userId, itemId);
-        return ResponseEntity.ok(ApiResponse.ok(inventory));
+        Inventory inventory = inventoryService.addItem(userId, itemId);
+        return ResponseEntity.ok(ApiResponse.ok(InventoryResponse.from(inventory)));
     }
     
     /**
@@ -73,8 +80,8 @@ public class ItemController {
     @PostMapping("/use/{itemId}")
     public ResponseEntity<ApiResponse<InventoryResponse>> use(@PathVariable Integer itemId) {
         Integer userId = securityUtils.currentUserId();
-        InventoryResponse inventory = inventoryService.useItem(userId, itemId);
-        return ResponseEntity.ok(ApiResponse.ok(inventory));
+        Inventory inventory = inventoryService.useItem(userId, itemId);
+        return ResponseEntity.ok(ApiResponse.ok(InventoryResponse.from(inventory)));
     }
     
 }

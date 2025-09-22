@@ -1,7 +1,6 @@
-package com.udong.backend.items.entity;
+package com.udong.backend.shop.entity;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;

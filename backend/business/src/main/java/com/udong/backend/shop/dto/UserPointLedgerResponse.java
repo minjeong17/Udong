@@ -1,8 +1,8 @@
-package com.udong.backend.points.dto;
+package com.udong.backend.shop.dto;
 
 import java.time.LocalDateTime;
 
-import com.udong.backend.points.entity.UserPointLedger;
+import com.udong.backend.shop.entity.UserPointLedger;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

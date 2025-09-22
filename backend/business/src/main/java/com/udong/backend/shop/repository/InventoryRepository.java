@@ -1,4 +1,4 @@
-package com.udong.backend.items.repository;
+package com.udong.backend.shop.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.udong.backend.items.entity.Inventory;
+import com.udong.backend.shop.entity.Inventory;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
