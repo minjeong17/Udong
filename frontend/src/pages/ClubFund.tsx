@@ -134,9 +134,6 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const income = useMemo(() => txs.filter(t=>t.type==="입금").reduce((s,t)=>s+t.amount,0), [txs]);
-  const expense = useMemo(() => txs.filter(t=>t.type==="출금").reduce((s,t)=>s+t.amount,0), [txs]);
-  const net = income - expense;
 
   const refreshBalance = async () => {
     setIsLoading(true);
@@ -229,22 +226,6 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-orange-200 bg-white/70 p-4 backdrop-blur-sm">
-                  <div className="text-xs text-gray-500 font-gowun">이번 달 입금</div>
-                  <div className="mt-1 text-xl font-semibold text-green-600 font-jua">+ {krw(income)}</div>
-                </div>
-                <div className="rounded-2xl border border-orange-200 bg-white/70 p-4 backdrop-blur-sm">
-                  <div className="text-xs text-gray-500 font-gowun">이번 달 출금</div>
-                  <div className="mt-1 text-xl font-semibold text-red-600 font-jua">- {krw(expense)}</div>
-                </div>
-                <div className={clsx("rounded-2xl border border-orange-200 bg-white/70 p-4 backdrop-blur-sm")}>
-                  <div className="text-xs text-gray-500 font-gowun">순 증감</div>
-                  <div className={clsx("mt-1 text-xl font-semibold font-jua", net>=0?"text-green-600":"text-red-600")}>
-                    {net>=0?"+":"-"} {krw(Math.abs(net))}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 

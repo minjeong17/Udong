@@ -33,8 +33,16 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
   const calculateDaysSinceJoined = (joinedAt: string): number => {
     const joinedDate = new Date(joinedAt);
     const currentDate = new Date();
-    const timeDiff = currentDate.getTime() - joinedDate.getTime();
-    return Math.floor(timeDiff / (1000 * 3600 * 24));
+
+    // 시간을 00:00:00으로 맞춰서 정확한 날짜 차이 계산
+    const joinedDateOnly = new Date(joinedDate.getFullYear(), joinedDate.getMonth(), joinedDate.getDate());
+    const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+
+    const timeDiff = currentDateOnly.getTime() - joinedDateOnly.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+    // 당일 가입은 1일차, 그 이후는 실제 경과일 + 1일로 계산
+    return daysDiff + 1;
   };
 
   // 역할 한국어 변환
@@ -106,8 +114,9 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
     try {
       setIsLoading(true);
       setError(null);
-      // TODO: 초대코드로 동아리 가입 API 호출
-      console.log('Joining club with invite code:', inviteCode);
+      // 초대코드로 동아리 가입 API 호출
+      await ClubApi.joinWithCode(inviteCode);
+      console.log('Successfully joined club with invite code:', inviteCode);
       setInviteCode('');
       // 가입 성공 후 목록 새로고침
       await fetchMyClubs();

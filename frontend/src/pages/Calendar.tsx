@@ -53,10 +53,9 @@ const startOfCalendar = (d: Date) => {
   return start;
 };
 const endOfCalendar = (d: Date) => {
-  const last = endOfMonth(d);
-  const dow = last.getDay();
-  const end = new Date(last);
-  end.setDate(last.getDate() + (6 - dow));
+  const start = startOfCalendar(d);
+  const end = new Date(start);
+  end.setDate(start.getDate() + (6 * 7 - 1)); // 6주 고정 (42일 - 1)
   return end;
 };
 const isSameDay = (a: Date, b: Date) =>
@@ -324,9 +323,9 @@ const Calendar: React.FC<CalendarProps> = ({
         />
 
         {/* Main Content */}
-        <main className="flex-1 px-8 py-6 bg-gradient-to-br from-orange-50 via-white to-orange-100">
+        <main className="flex-1 px-6 py-2 bg-gradient-to-br from-orange-50 via-white to-orange-100">
         {/* 헤더 */}
-        <div className="mb-5">
+        <div className="mb-2">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-extrabold text-gray-900 font-jua">일정 관리</h1>
             <p className="text-sm text-gray-600 font-gowun">동아리 모임과 일정을 체계적으로 관리하세요</p>
@@ -334,11 +333,11 @@ const Calendar: React.FC<CalendarProps> = ({
         </div>
 
         {/* 좌/우 2칸 */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr,380px] gap-6 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr,380px] gap-4 items-start">
           {/* Left: Calendar */}
           <section className="bg-white/80 backdrop-blur rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden min-h-[calc(100vh-220px)] flex flex-col">
             {/* 캘린더 헤더 */}
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-white to-gray-50">
+            <div className="flex items-center justify-between px-4 py-2 border-b bg-gradient-to-r from-white to-gray-50">
               <div className="flex items-center gap-2">
                 <button onClick={goPrev} aria-label="이전" className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">
                   <ChevronLeft className="w-5 h-5 text-gray-600"/>
@@ -353,7 +352,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 <button onClick={goNext} aria-label="다음" className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">
                   <ChevronRight className="w-5 h-5 text-gray-600"/>
                 </button>
-                <span className="ml-3 text-xs text-gray-500 font-gowun">단축키: 월 · 연 · 십년 이동( ←/→ ) | 오늘 ( T / Home )</span>
+                <span className="ml-2 text-xs text-gray-500 font-gowun">단축키: 월 · 연 이동( ←/→ ) | 오늘 ( T / Home )</span>
               </div>
 
               <div className="flex items-center gap-3">
@@ -381,10 +380,10 @@ const Calendar: React.FC<CalendarProps> = ({
             {/* 캘린더 바디 */}
             {view === "month" && (
               <>
-                <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-6 pt-4 font-gowun">
-                  {korWeek.map((w) => <div key={w} className="py-2 font-medium">{w}</div>)}
+                <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-4 pt-1 font-gowun">
+                  {korWeek.map((w) => <div key={w} className="py-0.5 font-medium">{w}</div>)}
                 </div>
-                <div className="px-4 pb-5">
+                <div className="px-4 pb-3">
                   <div className="grid grid-cols-7 gap-2">
                     {days.map((d, idx) => {
                       const inMonth = d.getMonth() === cursor.getMonth() && d.getFullYear() === cursor.getFullYear();
@@ -394,6 +393,7 @@ const Calendar: React.FC<CalendarProps> = ({
                       const more = Math.max(0, all.length - preview.length);
                       const sel = selected && isSameDay(selected, d);
                       const weekend = d.getDay() === 0 || d.getDay() === 6;
+                      const isToday = isSameDay(d, new Date());
 
                       return (
                         <div
@@ -402,15 +402,18 @@ const Calendar: React.FC<CalendarProps> = ({
                           className={`relative h-24 rounded-xl border transition cursor-pointer
                             ${inMonth ? "bg-white/90 border-gray-200" : "bg-gray-50 border-gray-200/60 text-gray-400"}
                             ${weekend && inMonth ? "bg-orange-50/70" : ""}
+                            ${isToday && inMonth ? "bg-gradient-to-br from-orange-100 to-orange-150 border-orange-300 border-[3px]" : ""}
                             ${sel ? "ring-2 ring-blue-400" : "hover:shadow-sm"}`}
                         >
-                          <div className="absolute top-1 left-2 text-[12px] font-semibold text-gray-700 font-jua">{d.getDate()}</div>
+                          <div className={`absolute top-1 left-2 text-[12px] font-semibold font-jua ${isToday && inMonth ? "text-orange-700" : "text-gray-700"}`}>
+                            {d.getDate()}
+                          </div>
                           <div className="absolute left-2 right-2 top-6 space-y-1">
                             {preview.map((ev) => renderCellPreview(ev))}
                             {more > 0 && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); openDayModal(d); }}
-                                className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left underline underline-offset-2 font-gowun"
+                                className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left font-gowun"
                               >
                                 +{more}개 더 보기
                               </button>
@@ -582,17 +585,17 @@ const Calendar: React.FC<CalendarProps> = ({
 
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                   <dt className="text-sm text-gray-500 font-gowun">일시</dt>
-                  <dd className="text-sm text-gray-900 font-gowun">{formatWhen(eventModalItem)}</dd>
+                  <dd className="text-sm text-gray-900 font-jua">{formatWhen(eventModalItem)}</dd>
                 </div>
 
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                   <dt className="text-sm text-gray-500 font-gowun">장소</dt>
-                  <dd className="text-sm text-gray-900 font-gowun">{eventModalItem.location ?? "미정"}</dd>
+                  <dd className="text-sm text-gray-900 font-jua">{eventModalItem.location ?? "미정"}</dd>
                 </div>
 
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                   <dt className="text-sm text-gray-500 font-gowun">참가 인원</dt>
-                  <dd className="text-sm text-gray-900">
+                  <dd className="text-sm text-gray-900 font-jua">
                     {typeof eventModalItem.attendees === "number" && eventModalItem.capacity
                       ? `${eventModalItem.attendees}/${eventModalItem.capacity}명`
                       : "미정"}
@@ -600,14 +603,14 @@ const Calendar: React.FC<CalendarProps> = ({
                 </div>
 
                 <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                  <dt className="text-sm text-gray-500">준비물</dt>
-                  <dd className="text-sm text-gray-900">{eventModalItem.materials ?? "-"}</dd>
+                  <dt className="text-sm text-gray-500 font-gowun">준비물</dt>
+                  <dd className="text-sm text-gray-900 font-jua">{eventModalItem.materials ?? "-"}</dd>
                 </div>
 
                 <div className="grid grid-cols-[120px,1fr] items-start gap-4">
-                  <dt className="text-sm text-gray-500">상세 내용</dt>
+                  <dt className="text-sm text-gray-500 font-gowun">상세 내용</dt>
                   <dd>
-                    <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 min-h-[64px]">
+                    <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 min-h-[64px] font-gowun">
                       {eventModalItem.description ?? "내용 없음"}
                     </div>
                   </dd>
@@ -621,13 +624,13 @@ const Calendar: React.FC<CalendarProps> = ({
                   <>
                     <button
                       onClick={() => { setEditOpen(true); }}
-                      className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm"
+                      className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua"
                     >
                       ✎ 수정
                     </button>
                     <button
                       onClick={() => { if (confirm("정말 삭제할까요?")) { deleteEvent(eventModalItem.id); setEventModalOpen(false); } }}
-                      className="px-3 py-2 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 text-sm"
+                      className="px-3 py-2 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 text-sm font-jua"
                     >
                       🗑 삭제
                     </button>
@@ -635,7 +638,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 )}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setEventModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm">닫기</button>
+                <button onClick={() => setEventModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua">닫기</button>
                 <button onClick={() => {
                   setEvents((prev) =>
                     prev.map((e) =>
