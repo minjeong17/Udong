@@ -1,6 +1,6 @@
 import fetchClient from '../fetchClient';
 import type { ClubCreateRequest } from './request';
-import type { ClubCreateResponse, ClubListResponse, MascotResponse, MemberResponse, ChangeRoleRequest } from './response';
+import type { ClubCreateResponse, ClubListResponse, MascotResponse, MemberResponse } from './response';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api/v1'

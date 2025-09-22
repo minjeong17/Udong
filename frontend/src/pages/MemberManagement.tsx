@@ -196,12 +196,6 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
     }
   };
 
-  const getPaymentStatusColor = (status: string): string => {
-    return status === '납부완료'
-      ? 'bg-green-500 text-white'
-      : 'bg-red-500 text-white';
-  };
-
   // 프론트엔드에서 검색 및 역할 필터링
   const filteredMembers = membersList.filter(member => {
     // 검색 필터
