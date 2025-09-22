@@ -42,5 +42,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> {
      */
     @EntityGraph(attributePaths = {"createdBy"})
     Optional<ChatRoom> findWithCreatorById(Integer id);
+
+    @Query("select c from ChatRoom c join fetch c.type where c.id = :chatId")
+    Optional<ChatRoom> findByIdWithType(@Param("chatId") Integer chatId);
 }
 

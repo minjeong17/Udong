@@ -154,4 +154,22 @@ public class ChatRoomService {
                 .participants(participants)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public Integer resolveEventIdByChatId(Integer chatId) {
+        ChatRoom room = chatRoomRepository.findByIdWithType(chatId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 없습니다. chatId=" + chatId));
+
+        // CodeDetail의 어떤 필드가 코드키인지 확인 필요: 보통 codeName 또는 code
+        // 예시는 codeName으로 가정합니다. (다르면 메서드명만 바꿔주세요)
+        String typeCode = room.getType() != null ? room.getType().getCodeName() : null;
+
+        // 이벤트 방이 아니면 null 반환
+        if (!"EVENT".equals(typeCode)) {
+            return null;
+        }
+
+        // 이벤트 방이면 targetId가 곧 eventId
+        return room.getTargetId();
+    }
 }
