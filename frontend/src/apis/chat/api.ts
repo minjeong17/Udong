@@ -1,6 +1,5 @@
 import fetchClient, { BASE_URL, API_PREFIX } from "../fetchClient";
-import type { ApiResponse, ChatRoomApi, ChatMessageApi, Channel, ChatParticipantsResponse,
-  ParticipantRes } from "./response";
+import type { ApiResponse, ChatRoomApi, ChatMessageApi, Channel, ChatParticipantsResponse, ParticipantRes } from "./response";
 import type { ChatParticipants, Participant } from "../../types/chat";
 
 // mapper: 백 응답(ChatRoomApi) → 프론트 Channel
@@ -58,7 +57,7 @@ export const ChatApi = {
     });
   },
 
-    async getParticipants(chatId: number): Promise<ChatParticipants> {
+  async getParticipants(chatId: number): Promise<ChatParticipants> {
     const token = localStorage.getItem("accessToken");
 
     const res = await fetch(`${BASE_URL}${API_PREFIX}/chat/rooms/${chatId}/participants`, {
@@ -78,4 +77,13 @@ export const ChatApi = {
     return mapChatParticipants(json.data);
   },
 
+  /** (EVENT 전용) 실제 참여 인원 확정 */
+  confirmParticipantsByChatId: async (clubId: number, chatId: number, userIds: number[]): Promise<void> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/events/chats/${chatId}/participants/confirm`;
+    await fetchClient<ApiResponse<unknown>>(url, {
+      method: "PUT",
+      auth: true,
+      body: JSON.stringify({ userIds }),
+    });
+  },
 };
