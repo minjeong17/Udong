@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
 import MascotChangeModal from '../components/MascotChangeModal';
+import DuesPaymentModal from '../components/DuesPaymentModal';
 import { useRouter } from '../hooks/useRouter';
 import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
+import { ClubDuesApi } from '../apis/clubdues';
 import type { ClubCreateResponse, MascotResponse } from '../apis/clubs/response';
+import type { MyUnpaidDuesResponse, MyUnpaidDuesItem } from '../apis/clubdues/response';
 
 interface ClubDashboardProps {
   onNavigateToOnboarding: () => void;
@@ -21,10 +24,13 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
 
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showMascotModal, setShowMascotModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedDues, setSelectedDues] = useState<MyUnpaidDuesItem | null>(null);
   const [currentMascotId, setCurrentMascotId] = useState(1);
 
   const [clubInfo, setClubInfo] = useState<ClubCreateResponse | null>(null);
   const [mascotInfo, setMascotInfo] = useState<MascotResponse | null>(null);
+  const [unpaidDues, setUnpaidDues] = useState<MyUnpaidDuesResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // 동아리 정보와 마스코트 정보 가져오기
@@ -43,6 +49,16 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
 
         setClubInfo(clubData);
         setMascotInfo(mascotData);
+
+        // 미납 회비 정보는 별도로 가져오기 (실패해도 다른 데이터에 영향 없음)
+        try {
+          const unpaidDuesData = await ClubDuesApi.getMyUnpaidDues(clubId);
+          setUnpaidDues(unpaidDuesData);
+        } catch (error) {
+          console.error('Failed to fetch unpaid dues:', error);
+          // 미납 회비 조회 실패 시 빈 목록으로 설정
+          setUnpaidDues({ unpaidDuesList: [] });
+        }
 
         // 마스코트 ID 업데이트
         if (mascotData) {
@@ -76,6 +92,18 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
       console.error('마스코트 변경 실패:', error);
       throw new Error('마스코트 변경에 실패했습니다.');
     }
+  };
+
+  // 회비 칸 클릭 핸들러
+  const handleDuesClick = (dues: MyUnpaidDuesItem) => {
+    setSelectedDues(dues);
+    setShowPaymentModal(true);
+  };
+
+  // 결제 완료 핸들러
+  const handlePaymentComplete = () => {
+    // 추후 결제 API 연동 후 미납 회비 목록 새로고침
+    console.log('결제 완료 - 추후 API 연동');
   };
 
   return (
@@ -244,19 +272,47 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             </div>
 
             {/* 회비 납부 알림 - 좌상단, 겹치도록 가깝게 */}
-            <div className="absolute top-8 left-56 bg-yellow-50 rounded-full shadow-xl border border-yellow-200 w-64 h-64 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mb-2">
-                <span className="text-yellow-600 text-lg">💰</span>
+            {unpaidDues && unpaidDues.unpaidDuesList.length > 0 ? (
+              <div className="absolute top-8 left-56 bg-yellow-50 rounded-full shadow-xl border border-yellow-200 w-64 h-64 flex flex-col items-center justify-center">
+                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-yellow-600 text-lg">💰</span>
+                </div>
+                <h3 className="text-base font-bold text-gray-700 font-jua mb-2">회비 납부 알림</h3>
+                <p className="text-sm text-gray-600 font-jua text-center px-2">
+                  납부하지 않은<br />
+                  회비 내역이 있습니다.
+                </p>
+                <div className="mt-2 space-y-1 flex flex-col items-center">
+                  {unpaidDues.unpaidDuesList.slice(0, 2).map((dues) => (
+                    <button
+                      key={dues.duesId}
+                      onClick={() => handleDuesClick(dues)}
+                      className="bg-yellow-100 hover:bg-yellow-200 rounded-lg px-3 py-1 transition-colors"
+                    >
+                      <span className="text-xs text-gray-600 font-jua">
+                        제 {dues.duesNo}회차 ({dues.membershipDues.toLocaleString()}원)
+                      </span>
+                    </button>
+                  ))}
+                  {unpaidDues.unpaidDuesList.length > 2 && (
+                    <div className="text-xs text-gray-500 font-jua text-center">
+                      외 {unpaidDues.unpaidDuesList.length - 2}건
+                    </div>
+                  )}
+                </div>
               </div>
-              <h3 className="text-base font-bold text-gray-700 font-jua mb-2">회비 납부 알림</h3>
-              <p className="text-sm text-gray-600 font-jua text-center px-2">
-                납부하지 않은<br />
-                회비 내역이 있습니다.
-              </p>
-              <div className="mt-2 bg-yellow-100 rounded-lg px-3 py-2">
-                <span className="text-sm text-gray-600 font-jua">제 3회차 정기 납부</span>
+            ) : (
+              <div className="absolute top-8 left-56 bg-green-50 rounded-full shadow-xl border border-green-200 w-64 h-64 flex flex-col items-center justify-center">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-green-600 text-lg">✅</span>
+                </div>
+                <h3 className="text-base font-bold text-gray-700 font-jua mb-2">회비 납부 현황</h3>
+                <p className="text-sm text-gray-600 font-jua text-center px-2">
+                  모든 회비가<br />
+                  납부 완료되었습니다!
+                </p>
               </div>
-            </div>
+            )}
 
             {/* 진행 중인 정산 - 좌하단, 겹치도록 가깝게 */}
             <div className="absolute bottom-0 left-48 bg-pink-50 rounded-full shadow-xl border border-pink-200 w-[17rem] h-[17rem] flex flex-col items-center justify-center">
@@ -339,6 +395,16 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
         currentMascotId={currentMascotId}
         clubId={clubId || 1}
       />
+
+      {/* 회비 결제 모달 */}
+      {selectedDues && (
+        <DuesPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onConfirm={handlePaymentComplete}
+          duesInfo={selectedDues}
+        />
+      )}
     </div>
   );
 };

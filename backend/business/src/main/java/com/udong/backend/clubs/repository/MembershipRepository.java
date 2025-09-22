@@ -37,6 +37,9 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
 
     Optional<Membership> findByIdAndClub_Id(Integer id, Integer clubId);
 
+    // 동아리의 모든 회원 조회
+    List<Membership> findByClubId(Integer clubId);
+
     // 목록 검색/필터 (단순 버전)
 // 기존 searchByClub 에서 actorId로 self 제외하거나 LEADER 제외하는 조건이 있었다면 제거!
     @Query("""
