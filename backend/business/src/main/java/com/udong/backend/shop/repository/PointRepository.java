@@ -9,8 +9,8 @@ import com.udong.backend.shop.entity.UserPointLedger;
 
 public interface PointRepository extends JpaRepository<UserPointLedger, Integer> {
 
-	List<UserPointLedger> findByUserId(Integer userId);
+	List<UserPointLedger> findByUserIdAndClubId(Integer userId, Integer clubId);
 
-	Optional<UserPointLedger> findTopByUserIdOrderByCreatedAtDesc(Integer userId);
+	Optional<UserPointLedger> findTopByUserIdAndClubIdOrderByCreatedAtDesc(Integer userId, Integer clubId);
 
 }

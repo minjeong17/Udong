@@ -1,6 +1,10 @@
 package com.udong.backend.shop.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
+import com.udong.backend.shop.dto.ItemResponse;
 import com.udong.backend.shop.dto.UserPointLedgerRequest;
 import com.udong.backend.shop.dto.UserPointLedgerResponse;
 import com.udong.backend.shop.entity.UserPointLedger;
@@ -23,6 +28,19 @@ public class PointController {
 	
 	private final SecurityUtils securityUtils;	
 	private final PointService pointService;
+	
+	/**
+     * 동아리 포인트 내역 조회
+     */
+    @GetMapping("/{clubId}")
+    public ResponseEntity<ApiResponse<List<UserPointLedgerResponse>>> getAllLedgers(@PathVariable("clubId") Integer clubId) {
+    	Integer userId = securityUtils.currentUserId();
+    	List<UserPointLedgerResponse> ledgers = pointService.getLedgers(userId, clubId).stream()
+        		.map(UserPointLedgerResponse::from)
+        		.toList();
+        
+        return ResponseEntity.ok(ApiResponse.ok(ledgers));
+    }
 	
 	/**
      * 포인트 적립

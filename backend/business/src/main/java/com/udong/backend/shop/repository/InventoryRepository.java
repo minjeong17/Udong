@@ -11,10 +11,15 @@ import com.udong.backend.shop.entity.Inventory;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
-	@Query("SELECT i FROM Inventory i JOIN FETCH i.item WHERE i.userId = :userId")
-	List<Inventory> findByUserId(@Param("userId")Integer userId);
+	@Query("SELECT i FROM Inventory i JOIN FETCH i.item " +
+		       "WHERE i.userId = :userId AND i.clubId = :clubId")
+		List<Inventory> findByUserIdAndClubId(@Param("userId") Integer userId,
+		                                      @Param("clubId") Integer clubId);
 
-	@Query("SELECT i FROM Inventory i JOIN FETCH i.item WHERE i.userId = :userId AND i.item.id = :itemId")
-	Optional<Inventory> findByUserIdAndItemId(@Param("userId") Integer userId, @Param("itemId") Integer itemId);
+	@Query("SELECT i FROM Inventory i JOIN FETCH i.item " +
+		       "WHERE i.userId = :userId AND i.clubId = :clubId AND i.item.id = :itemId")
+		Optional<Inventory> findByUserIdAndClubIdAndItemId(@Param("userId") Integer userId,
+		                                                   @Param("clubId") Integer clubId,
+		                                                   @Param("itemId") Integer itemId);
 
 }

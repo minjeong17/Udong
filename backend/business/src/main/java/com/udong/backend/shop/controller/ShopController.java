@@ -24,7 +24,7 @@ public class ShopController {
      * 아이템 구매
      */
     @PostMapping("/{clubId}/{itemId}")
-    public ResponseEntity<ApiResponse<?>> getItem(@PathVariable Integer clubId, @PathVariable Integer itemId) {
+    public ResponseEntity<ApiResponse<?>> getItem(@PathVariable("clubId") Integer clubId, @PathVariable("itemId") Integer itemId) {
     	Integer userId = securityUtils.currentUserId();
     	shopService.purchaseItem(clubId, userId, itemId);
         return ResponseEntity.ok(ApiResponse.ok("구매 완료"));

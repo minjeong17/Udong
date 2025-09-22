@@ -42,6 +42,6 @@ public class ShopService {
         pointService.usePoints(userId, pointRequest);
 
         // 인벤토리에 아이템 추가
-        inventoryService.addItem(userId, itemId);
+        inventoryService.addItem(userId, clubId, itemId);
     }
 }
