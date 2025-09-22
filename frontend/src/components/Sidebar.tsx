@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import { useLogout } from '../hooks/useLogout';
+import { useAuthStore } from '../stores/authStore';
+import { ClubApi } from '../apis/clubs';
+import type { ClubCreateResponse, MascotResponse } from '../apis/clubs/response';
 
 interface SidebarProps {
   onNavigateToOnboarding: () => void; // 로그아웃은 특별히 처리
@@ -12,29 +15,86 @@ const Sidebar: React.FC<SidebarProps> = ({
   onShowNotification
 }) => {
   const { navigate } = useRouter();
-
-  // 로그아웃 커스텀 훅 사용
   const { handleLogout } = useLogout();
+  const clubId = useAuthStore((state) => state.clubId);
+
+  const [clubInfo, setClubInfo] = useState<ClubCreateResponse | null>(null);
+  const [mascotInfo, setMascotInfo] = useState<MascotResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 동아리 정보와 마스코트 정보 가져오기
+  useEffect(() => {
+    if (!clubId) return;
+
+    const fetchClubData = async () => {
+      try {
+        setIsLoading(true);
+
+        // 동아리 정보와 마스코트 정보를 병렬로 가져오기
+        const [clubData, mascotData] = await Promise.all([
+          ClubApi.getClubDetails(clubId),
+          ClubApi.getActiveMascot(clubId)
+        ]);
+
+        setClubInfo(clubData);
+        setMascotInfo(mascotData);
+      } catch (error) {
+        console.error('Failed to fetch club data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClubData();
+  }, [clubId]);
   return (
     <div className="w-20 bg-white shadow-lg min-h-screen">
       <div className="flex flex-col items-center py-4 space-y-4 h-screen overflow-y-auto sidebar-scrollbar">
         {/* Current Club Info */}
-        <div
-          className="w-16 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-2xl p-2 mb-2"
-          title="코스모스 - 현재 동아리"
-        >
-          <div className="w-12 h-12 bg-orange-200 rounded-xl flex items-center justify-center mb-1">
-            <img
-              src="/images/mas_1.png"
-              alt="현재 동아리"
-              className="w-8 h-8 object-contain"
-            />
+        {clubInfo ? (
+          <div
+            className="w-16 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-2xl p-2 mb-2"
+            title={`${clubInfo.name} - 현재 동아리`}
+          >
+            <div className="w-12 h-12 bg-orange-200 rounded-xl flex items-center justify-center mb-1">
+              {mascotInfo?.imageUrl ? (
+                <img
+                  src={mascotInfo.imageUrl}
+                  alt="동아리 마스코트"
+                  className="w-8 h-8 object-contain rounded-lg"
+                />
+              ) : (
+                <span className="text-orange-600 font-bold text-sm">
+                  {clubInfo.name.charAt(0)}
+                </span>
+              )}
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-bold text-orange-700 font-jua truncate">{clubInfo.name}</p>
+              <p className="text-[10px] text-orange-600 font-gowun leading-tight">현재<br/>동아리</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-xs font-bold text-orange-700 font-jua truncate">코스모스</p>
-            <p className="text-[10px] text-orange-600 font-gowun leading-tight">현재<br/>동아리</p>
+        ) : isLoading ? (
+          <div className="w-16 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-2 mb-2">
+            <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center mb-1 animate-pulse">
+              <span className="text-gray-400 text-xs">⏳</span>
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-bold text-gray-400 font-jua">로딩중...</p>
+              <p className="text-[10px] text-gray-400 font-gowun leading-tight">현재<br/>동아리</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-16 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-2 mb-2">
+            <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center mb-1">
+              <span className="text-gray-400 text-xs">?</span>
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-bold text-gray-400 font-jua">동아리 없음</p>
+              <p className="text-[10px] text-gray-400 font-gowun leading-tight">현재<br/>동아리</p>
+            </div>
+          </div>
+        )}
         {/* Logout Button */}
         <button
           onClick={() => handleLogout(onNavigateToOnboarding)}

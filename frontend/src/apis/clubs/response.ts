@@ -19,3 +19,30 @@ export interface ClubListResponse {
   joinedAt: string;
   myRole: string;
 }
+
+export interface MascotResponse {
+  id: number;
+  clubId: number;
+  imageUrl: string;
+  promptMeta: string;
+  createdAt: string;
+}
+
+export interface MemberResponse {
+  membershipId: number;
+  userId: number;
+  name: string;
+  phone: string;
+  email: string;
+  gender: string;
+  university: string;
+  major: string;
+  residence: string;
+  role: string;
+  joinedAtIso: string;
+}
+
+export interface ChangeRoleRequest {
+  memberId: number;
+  role: string;
+}

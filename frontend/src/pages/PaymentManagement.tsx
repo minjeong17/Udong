@@ -24,7 +24,8 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
   const [activeCollection, setActiveCollection] = useState<'first' | 'second'>('second');
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showOnlyUnpaid, setShowOnlyUnpaid] = useState(false);
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'completed' | 'unpaid'>('all');
+  const [searchName, setSearchName] = useState('');
 
   // 샘플 데이터
   const paymentRecords: PaymentRecord[] = [
@@ -107,9 +108,24 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
   };
 
   // 필터링된 데이터
-  const filteredRecords = showOnlyUnpaid
-    ? paymentRecords.filter(record => record.paymentStatus === '미납')
-    : paymentRecords;
+  const filteredRecords = paymentRecords.filter(record => {
+    // 납부 상태 필터
+    const statusMatch = (() => {
+      switch (paymentFilter) {
+        case 'completed':
+          return record.paymentStatus === '납부완료';
+        case 'unpaid':
+          return record.paymentStatus === '미납';
+        default:
+          return true; // 'all' case
+      }
+    })();
+
+    // 이름 검색 필터
+    const nameMatch = record.name.toLowerCase().includes(searchName.toLowerCase());
+
+    return statusMatch && nameMatch;
+  });
 
   const completedCount = paymentRecords.filter(record => record.paymentStatus === '납부완료').length;
   const unpaidCount = paymentRecords.filter(record => record.paymentStatus === '미납').length;
@@ -130,24 +146,9 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
       <div className="flex-1 p-8">
         {/* 페이지 헤더 */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold text-gray-800 font-jua">동아리원 회비 관리</h1>
-              <p className="text-gray-600 font-gowun">동아리 회원들의 회비 납부 현황을 관리하고 수금을 진행할 수 있습니다.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 font-gowun">미납부자만 보기</span>
-              <button
-                onClick={() => setShowOnlyUnpaid(!showOnlyUnpaid)}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 font-jua ${
-                  showOnlyUnpaid
-                    ? 'bg-red-500 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                }`}
-              >
-                {showOnlyUnpaid ? '✅ 미납부자만' : '전체 보기'}
-              </button>
-            </div>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-gray-800 font-jua">동아리원 회비 관리</h1>
+            <p className="text-gray-600 font-gowun">동아리 회원들의 회비 납부 현황을 관리하고 수금을 진행할 수 있습니다.</p>
           </div>
         </div>
 
@@ -202,16 +203,67 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
           </div>
         </div>
 
-        {/* 드롭다운 */}
-        <div className="flex justify-end mb-4">
-          <select
-            value={activeCollection}
-            onChange={(e) => setActiveCollection(e.target.value as 'first' | 'second')}
-            className="px-4 py-2 border border-gray-200 rounded-lg font-gowun focus:outline-none focus:border-orange-300 bg-white text-sm"
-          >
-            <option value="second">2차 수금 내역</option>
-            <option value="first">1차 수금 내역</option>
-          </select>
+        {/* 필터 및 드롭다운 */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            <select
+              value={activeCollection}
+              onChange={(e) => setActiveCollection(e.target.value as 'first' | 'second')}
+              className="px-4 py-2 border border-gray-200 rounded-lg font-gowun focus:outline-none focus:border-orange-300 bg-white text-sm"
+            >
+              <option value="second">2차 수금 내역</option>
+              <option value="first">1차 수금 내역</option>
+            </select>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="이름으로 검색..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="px-4 py-2 pl-10 border border-gray-200 rounded-lg font-gowun focus:outline-none focus:border-orange-300 bg-white text-sm w-48"
+              />
+              <svg
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPaymentFilter('all')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 font-jua text-sm ${
+                paymentFilter === 'all'
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              전체보기
+            </button>
+            <button
+              onClick={() => setPaymentFilter('completed')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 font-jua text-sm ${
+                paymentFilter === 'completed'
+                  ? 'bg-green-500 text-white shadow-md'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              납부완료
+            </button>
+            <button
+              onClick={() => setPaymentFilter('unpaid')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 font-jua text-sm ${
+                paymentFilter === 'unpaid'
+                  ? 'bg-red-500 text-white shadow-md'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              미납자만
+            </button>
+          </div>
         </div>
 
         {/* 테이블 헤더 */}
@@ -230,25 +282,25 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
         </div>
 
         {/* 결제 목록 */}
-        <div className="bg-white rounded-b-2xl shadow-lg border-l border-r border-b border-orange-100">
+        <div className="bg-white rounded-b-2xl shadow-lg border-l border-r border-b border-orange-100 max-h-64 overflow-y-auto">
           {filteredRecords.map((record, index) => (
             <div
               key={record.id}
               className={`p-4 border-b border-gray-100 ${
                 index === filteredRecords.length - 1 ? 'border-b-0' : ''
-              } hover:bg-gray-50 transition-colors`}
+              } hover:bg-gray-50 transition-colors h-16`}
             >
-              <div className="grid gap-4 text-sm font-gowun items-center" style={{gridTemplateColumns: '1fr 1.2fr 1fr 1.2fr'}}>
-                <div className="font-medium text-gray-800">{record.name}</div>
-                <div className="text-gray-600">{record.phone}</div>
-                <div className="text-gray-600">{record.birthDate}</div>
-                <div>
+              <div className="grid gap-4 text-sm font-gowun items-center h-full" style={{gridTemplateColumns: '1fr 1.2fr 1fr 1.2fr'}}>
+                <div className="font-medium text-gray-800 flex items-center">{record.name}</div>
+                <div className="text-gray-600 flex items-center">{record.phone}</div>
+                <div className="text-gray-600 flex items-center">{record.birthDate}</div>
+                <div className="flex items-center">
                   {record.paymentStatus === '납부완료' ? (
-                    <span className={`px-3 py-2 rounded-lg text-xs font-medium ${getPaymentStatusColor(record.paymentStatus)}`}>
+                    <span className={`px-3 py-2 rounded-lg text-xs font-medium ${getPaymentStatusColor(record.paymentStatus)} inline-flex items-center`}>
                       {record.paymentStatus}
                     </span>
                   ) : (
-                    <button className={`px-3 py-2 rounded-lg text-xs font-medium ${getPaymentStatusColor(record.paymentStatus)} hover:bg-red-600 transition-colors flex items-center gap-1`}>
+                    <button className={`px-3 py-2 rounded-lg text-xs font-medium ${getPaymentStatusColor(record.paymentStatus)} hover:bg-red-600 transition-colors inline-flex items-center gap-1`}>
                       <span>❌</span>
                       {record.paymentStatus}
                     </button>
