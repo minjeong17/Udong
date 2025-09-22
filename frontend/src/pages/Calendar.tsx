@@ -44,7 +44,6 @@ const parseYMD = (s: string) => {
   return new Date(y, (m || 1) - 1, d || 1);
 };
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
-const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
 const startOfCalendar = (d: Date) => {
   const first = startOfMonth(d);
   const dow = first.getDay();
