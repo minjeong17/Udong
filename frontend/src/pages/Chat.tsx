@@ -11,7 +11,7 @@ import type {
 } from "../types/chat";
 import { ChatApi } from "../apis/chat";
 import { parseJwt } from "../utils/jwt";
-// import { useAuthStore } from "../stores/authStore";
+import { useAuthStore } from "../stores/authStore";
 
 interface ChatProps {
   onNavigateToOnboarding: () => void;
@@ -150,9 +150,12 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             version: 0
           }
         */
-        // const auth = useAuthStore.getState();
-        // const clubId = auth?.user?.clubId;
-        const clubId = 4;
+
+        const auth = useAuthStore.getState();
+        const clubId = auth?.user?.clubId;
+
+        if (clubId == null) return;
+        // const clubId = 4;
 
         const rooms = await ChatApi.getRoomsByClub(clubId); // clubId = 4
         console.log("채팅방 목록:", rooms);
