@@ -7,6 +7,7 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api/v1'
 
 export const ClubApi = {
   create: async (payload: ClubCreateRequest): Promise<ClubCreateResponse> => {
+    console.log(payload);
     const url = `${BASE_URL}${API_PREFIX}/clubs`;
     const response = await fetchClient<{success: boolean, data: ClubCreateResponse}>(url, {
       method: 'POST',

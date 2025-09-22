@@ -58,26 +58,35 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
         />
 
         {/* Main Content */}
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-2">
           {/* Club Info Header */}
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-6 mb-4 border border-orange-200">
+          <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-2 mb-3 border border-orange-200 w-full">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-24 h-16 bg-orange-200 rounded-xl flex items-center justify-center">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-10 bg-orange-200 rounded-lg flex items-center justify-center">
                   <img
                     src={`/images/mas_${currentMascotId}.png`}
                     alt="동아리 마스코트"
-                    className="w-12 h-12 object-contain"
+                    className="w-6 h-6 object-contain"
                   />
                 </div>
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-700 font-jua">코스모스</h1>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-gowun">
-                    스터디
-                  </span>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg font-semibold text-gray-700 font-jua">코스모스</h1>
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs font-gowun">
+                      스터디
+                    </span>
+                  </div>
+                  <p className="text-gray-600 font-jua">
+                    함께 성장하는 개발자들의 모임입니다. 매주 알고리즘 문제를 풀고
+                    프로젝트를 진행하며 서로의 실력을 향상시켜나가고 있어요.
+                  </p>
                 </div>
               </div>
-              <button className="bg-slate-400 hover:bg-slate-500 text-gray-800 px-6 py-3 rounded-xl font-jua transition-colors flex items-center gap-2 shadow-md">
+              <button
+                onClick={() => navigate('member-management')}
+                className="bg-slate-400 hover:bg-slate-500 text-gray-800 px-6 py-3 rounded-xl font-jua transition-colors flex items-center gap-2 shadow-md"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -85,16 +94,12 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 동아리원 관리
               </button>
             </div>
-            <p className="text-gray-600 mt-4 font-jua">
-              함께 성장하는 개발자들의 모임입니다. 매주 알고리즘 문제를 풀고
-              프로젝트를 진행하며 서로의 실력을 향상시켜나가고 있어요.
-            </p>
           </div>
 
           {/* Dashboard Circular Layout */}
-          <div className="relative w-full h-[800px] flex items-center justify-center">
+          <div className="relative w-full h-[650px] flex items-center justify-center">
             {/* Central Mascot Card - 완전한 원형 */}
-            <div className="absolute bg-orange-50 rounded-full shadow-2xl border border-orange-100 w-96 h-96 flex flex-col items-center justify-center z-10 top-60">
+            <div className="absolute bg-orange-50 rounded-full shadow-2xl border border-orange-100 w-96 h-96 flex flex-col items-center justify-center z-10 top-52">
               <div className="w-40 h-40 flex items-center justify-center mb-1 pt-8">
                 <img
                   src={`/images/mas_${currentMascotId}.png`}
@@ -103,7 +108,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 />
               </div>
               <h2 className="text-lg font-semibold text-gray-700 font-jua mb-2 pt-14">코스모스</h2>
-              <div className="text-2xl font-bold text-orange-500 font-jua mb-3">2,450점</div>
+              <div className="text-2xl font-bold text-orange-500 font-jua mb-3">2450p</div>
               <div className="w-20 h-2 bg-orange-200 rounded-full">
                 <div className="w-16 h-2 bg-orange-500 rounded-full"></div>
               </div>
@@ -111,7 +116,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
               {/* 마스코트 변경 버튼 - 원형 카드의 오른쪽 하단 */}
               <button
                 onClick={() => setShowMascotModal(true)}
-                className="absolute bottom-28 right-12 w-16 h-16 bg-gradient-to-br from-green-100 to-lime-100 hover:from-green-200 hover:to-lime-200 rounded-full shadow-lg border-2 border-white hover:border-green-200 flex items-center justify-center transition-all duration-300 transform hover:scale-110 group"
+                className="absolute bottom-28 right-12 w-12 h-12 bg-gradient-to-br from-green-100 to-lime-100 hover:from-green-200 hover:to-lime-200 rounded-full shadow-lg border-2 border-white hover:border-green-200 flex items-center justify-center transition-all duration-300 transform hover:scale-110 group"
                 title="마스코트 변경"
               >
                 <img
@@ -123,7 +128,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             </div>
 
             {/* 동아리 전체 채팅방 - 중앙 위쪽, 매우 가깝게 */}
-            <div className="absolute top-0 bg-blue-50 rounded-full shadow-xl border border-blue-200 w-56 h-56 flex flex-col items-center justify-center">
+            <div className="absolute top-0 bg-blue-50 rounded-full shadow-xl border border-blue-200 w-48 h-48 flex flex-col items-center justify-center">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-blue-600 text-lg">💬</span>
               </div>
@@ -139,7 +144,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             </div>
 
             {/* 회비 납부 알림 - 좌상단, 겹치도록 가깝게 */}
-            <div className="absolute top-8 left-44 bg-yellow-50 rounded-full shadow-xl border border-yellow-200 w-72 h-72 flex flex-col items-center justify-center">
+            <div className="absolute top-8 left-56 bg-yellow-50 rounded-full shadow-xl border border-yellow-200 w-64 h-64 flex flex-col items-center justify-center">
               <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-yellow-600 text-lg">💰</span>
               </div>
@@ -154,7 +159,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             </div>
 
             {/* 진행 중인 정산 - 좌하단, 겹치도록 가깝게 */}
-            <div className="absolute bottom-20 left-40 bg-pink-50 rounded-full shadow-xl border border-pink-200 w-72 h-72 flex flex-col items-center justify-center">
+            <div className="absolute bottom-0 left-48 bg-pink-50 rounded-full shadow-xl border border-pink-200 w-[17rem] h-[17rem] flex flex-col items-center justify-center">
               <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-pink-600 text-lg">💸</span>
               </div>
@@ -176,7 +181,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             </div>
 
             {/* 진행 중인 투표 - 우상단, 겹치도록 가깝게 */}
-            <div className="absolute top-8 right-44 bg-purple-50 rounded-full shadow-xl border border-purple-200 w-72 h-72 flex flex-col items-center justify-center">
+            <div className="absolute top-8 right-56 bg-purple-50 rounded-full shadow-xl border border-purple-200 w-64 h-64 flex flex-col items-center justify-center">
               <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-purple-600 text-lg">📊</span>
               </div>
@@ -195,7 +200,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             </div>
 
             {/* 진행 중인 모임 - 우하단, 겹치도록 가깝게 */}
-            <div className="absolute bottom-20 right-40 bg-green-50 rounded-full shadow-xl border border-green-200 w-72 h-72 flex flex-col items-center justify-center">
+            <div className="absolute bottom-0 right-48 bg-green-50 rounded-full shadow-xl border border-green-200 w-[17rem] h-[17rem] flex flex-col items-center justify-center">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-green-600 text-lg">👥</span>
               </div>

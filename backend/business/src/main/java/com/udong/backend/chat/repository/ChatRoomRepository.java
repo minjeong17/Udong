@@ -2,6 +2,7 @@ package com.udong.backend.chat.repository;
 
 import com.udong.backend.chat.dto.ChatRoomListItem;
 import com.udong.backend.chat.entity.ChatRoom;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,5 +36,11 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> {
     """)
     List<ChatRoomListItem> findMyRoomsInClub(@Param("userId") Integer userId,
                                              @Param("clubId") Integer clubId);
+
+    /**
+     * chat_rooms.id = :id 인 채팅방을 createdBy(User)까지 즉시 로딩해서 가져온다.
+     */
+    @EntityGraph(attributePaths = {"createdBy"})
+    Optional<ChatRoom> findWithCreatorById(Integer id);
 }
 

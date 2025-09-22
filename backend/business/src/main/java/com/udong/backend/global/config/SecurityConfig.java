@@ -29,16 +29,12 @@ public class SecurityConfig {
     }
 
 
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(
-                                "/ws/**",
-                                "/v1/auth/**",       // ✅ 로그인/리프레시/로그아웃
-                                "/v1/users/signup"   // ✅ 회원가입
-                        ))             
+                .csrf(csrf -> csrf.disable())                 // ✅ 여기를 전역 비활성화
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -48,24 +44,20 @@ public class SecurityConfig {
                                 "/v1/auth/logout",
                                 "/v1/codes/details",
                                 "/actuator/**",
-
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**",
-
+                                "/swagger-ui.html", "/swagger-ui/**",
+                                "/v3/api-docs/**", "/api-docs/**",
+                                "/swagger-resources/**", "/webjars/**",
                                 "/ws/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // preflight 안전망
+                        .requestMatchers(HttpMethod.POST, "/v1/clubs").authenticated() // ✅ 역할 조건 없이 인증만
                         .requestMatchers(HttpMethod.POST, "/v1/clubs/join-by-code").authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authEntryPoint)     // 401
-                        .accessDeniedHandler(accessDeniedHandler)     // 403
+                        .authenticationEntryPoint(authEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
-                // UsernamePasswordAuthenticationFilter 전에 JWT 필터 삽입
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,5 +1,5 @@
 // 공통 응답 wrapper
-export interface ApiEnvelope<T> {
+export interface ApiResponse<T> {
   success: boolean;
   data: T;
   status: number;
@@ -31,4 +31,17 @@ export interface Channel {
   typeCode: "GLOBAL" | "EVENT";
   targetId: number;
   memberCount: number;
+}
+
+// 서버 응답 내 개별 참여자 레코드 
+export interface ParticipantRes {
+  userId: number;
+  name: string;
+  owner: boolean;
+}
+
+// 서버 응답 루트(data) 
+export interface ChatParticipantsResponse {
+  chatId: number;
+  participants: ParticipantRes[];
 }
