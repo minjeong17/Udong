@@ -114,6 +114,18 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const twoLetters = (name: string = "") => {
+    const t = name.trim();
+    if (!t) return "??";
+    // 한글이면 그냥 앞 2글자
+    if (/[\uAC00-\uD7A3]/.test(t)) return t.slice(0, 2);
+    // 영문/기타: 단어별 이니셜
+    const parts = t.split(/\s+/);
+    const a = parts[0]?.[0] ?? "";
+    const b = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
+    return (a + b).toUpperCase();
+  };
+
   // messages 바뀔 때마다 scrollToBottom()
   useEffect(() => {
     scrollToBottom();
@@ -288,6 +300,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
       // 프론트 DTO(Participant[])으로 반환되도록 ChatApi.getParticipants 구현되어 있어야 합니다
       const resp = await ChatApi.getParticipants(selectedChannel);
+      console.log(resp);
       setParticipants(resp.participants);
       setShowParticipantsModal(true);
     } catch (e: any) {
@@ -536,9 +549,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                           {!msg.isOwn && (
                             <div
                               className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full
-                        flex items-center justify-center text-white text-sm font-semibold flex-shrink-0"
+                   flex items-center justify-center text-white text-sm font-semibold flex-shrink-0"
                             >
-                              {msg.avatar}
+                              {twoLetters(msg.user)}
                             </div>
                           )}
 

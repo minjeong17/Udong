@@ -61,7 +61,7 @@ export const ChatApi = {
     async getParticipants(chatId: number): Promise<ChatParticipants> {
     const token = localStorage.getItem("accessToken");
 
-    const res = await fetch(`${BASE_URL}${API_PREFIX}/v1/chat/rooms/${chatId}/participants`, {
+    const res = await fetch(`${BASE_URL}${API_PREFIX}/chat/rooms/${chatId}/participants`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
