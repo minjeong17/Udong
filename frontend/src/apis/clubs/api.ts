@@ -33,5 +33,14 @@ export const ClubApi = {
       auth: true
     });
     return response.data;
+  },
+
+  joinWithCode: async (inviteCode: string): Promise<void> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/join-by-code`;
+    await fetchClient<{success: boolean}>(url, {
+      method: 'POST',
+      body: JSON.stringify({ code: inviteCode }),
+      auth: true
+    });
   }
 };
