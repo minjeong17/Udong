@@ -10,20 +10,20 @@ import com.udong.backend.fin.client.FinApiClient;
 import com.udong.backend.fin.dto.*;
 import com.udong.backend.fin.util.FinHeaderFactory;
 import com.udong.backend.global.config.AccountCrypto;
-import com.udong.backend.global.s3.S3Uploader;                 // ✅ 추가
-import com.github.f4b6a3.ulid.UlidCreator;                    // ✅ 추가
+import com.udong.backend.global.s3.S3Uploader;
+import com.github.f4b6a3.ulid.UlidCreator;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;           // ✅ 추가
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;                                  // ✅ 추가
-import java.awt.image.BufferedImage;                           // ✅ 추가
-import java.io.ByteArrayOutputStream;                          // ✅ 추가
-import java.io.IOException;                                    // ✅ 추가
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,24 +36,23 @@ public class ClubFundQueryService {
     private final ClubFundReceiptRepository receiptRepository;
     private final FinApiClient finApiClient;
     private final AccountCrypto accountCrypto;
+    private final S3Uploader s3Uploader;
 
-    // === S3 업로더 & 프리픽스 ===
-    private final S3Uploader s3Uploader;                        // ✅ 추가
-
-    @Value("${S3_PREFIX_CLUBFUND:clubfund}")                   // ✅ 기본값 제공
+    @Value("${S3_PREFIX_CLUBFUND:clubfund}")
     private String clubfundPrefix;
 
     @Value("${finapi.institution-code}") private String institutionCode;
     @Value("${finapi.app-no}") private String fintechAppNo;
     @Value("${finapi.api-key}") private String apiKey;
 
-    /** 조회 버튼 = 거래내역 + 잔액 동시 */
+    /** =========================
+     *  A) 거래내역만 조회
+     * ========================== */
     @Transactional
-    public QueryResponse queryTransactionsAndBalance(Integer clubId, String startDate, String endDate) {
-        // 1) 계좌/키 준비
+    public TransactionsResponse fetchTransactions(Integer clubId, String startDate, String endDate) {
         PreparedFinContext ctx = prepareContext(clubId);
 
-        // 2) 거래내역 조회
+        // 거래내역 조회
         var historyHeader = FinHeaderFactory.create(
                 "inquireTransactionHistoryList", institutionCode, fintechAppNo, apiKey, ctx.userKey);
         var historyReq = InquireHistoryRequest.builder()
@@ -76,22 +75,7 @@ public class ClubFundQueryService {
                 .map(InquireHistoryResponse.Rec::getList)
                 .orElseGet(List::of);
 
-        // 3) 잔액 조회
-        var balanceHeader = FinHeaderFactory.create(
-                "inquireDemandDepositAccountBalance", institutionCode, fintechAppNo, apiKey, ctx.userKey);
-        var balanceReq = InquireBalanceRequest.builder()
-                .header(balanceHeader)
-                .accountNo(ctx.accountNo)
-                .build();
-        var balanceRes = finApiClient.post(
-                "/edu/demandDeposit/inquireDemandDepositAccountBalance",
-                balanceReq,
-                InquireBalanceResponse.class
-        );
-        ensureOk(balanceRes.getHeader(), "잔액 조회 실패");
-        int balance = Integer.parseInt(balanceRes.getRec().getAccountBalance());
-
-        // 4) 영수증 존재 여부 벌크로 계산
+        // 영수증 존재 여부 벌크 체크
         List<Integer> txnIds = items.stream()
                 .map(it -> Integer.valueOf(it.getTransactionUniqueNo()))
                 .toList();
@@ -99,7 +83,6 @@ public class ClubFundQueryService {
         Map<Integer, ClubFundReceipt> receiptByTxn = receiptRepository.findByTransactionIdIn(txnIds)
                 .stream().collect(Collectors.toMap(ClubFundReceipt::getTransactionId, r -> r));
 
-        // 5) 응답 변환
         var txViews = items.stream().map(it -> {
             Integer tid = Integer.valueOf(it.getTransactionUniqueNo());
             boolean withdrawal = "2".equals(it.getTransactionType()); // 2 = 출금
@@ -124,25 +107,40 @@ public class ClubFundQueryService {
                     .build();
         }).toList();
 
-        return QueryResponse.builder()
-                .balance(balance)
+        return TransactionsResponse.builder()
                 .transactions(txViews)
                 .build();
     }
 
-    /**
-     * ✅ [신규] 출금 거래에 영수증 1개 업로드+연결 (idempotent)
-     *  - MultipartFile 영수증을 S3에 업로드하고, imageUrl/s3Key를 receipt 엔티티에 저장.
-     *  - 이미 영수증이 있으면 업로드 없이 기존 것 반환.
-     */
+    /** =========================
+     *  B) 잔액만 조회
+     * ========================== */
+    @Transactional
+    public BalanceResponse fetchBalance(Integer clubId) {
+        PreparedFinContext ctx = prepareContext(clubId);
+
+        var balanceHeader = FinHeaderFactory.create(
+                "inquireDemandDepositAccountBalance", institutionCode, fintechAppNo, apiKey, ctx.userKey);
+        var balanceReq = InquireBalanceRequest.builder()
+                .header(balanceHeader)
+                .accountNo(ctx.accountNo)
+                .build();
+
+        var balanceRes = finApiClient.post(
+                "/edu/demandDeposit/inquireDemandDepositAccountBalance",
+                balanceReq,
+                InquireBalanceResponse.class
+        );
+        ensureOk(balanceRes.getHeader(), "잔액 조회 실패");
+
+        int balance = Integer.parseInt(balanceRes.getRec().getAccountBalance());
+        return BalanceResponse.builder().balance(balance).build();
+    }
+
+    // ========= 영수증 업로드 (변경 없음) =========
     @Transactional
     public AttachReceiptResponse attachReceiptWithImage(
-            Integer clubId,
-            Integer transactionId,
-            String memo,
-            MultipartFile receipt // ✅ 업로드 파일
-    ) {
-        // 0) 이미 존재하면 재사용
+            Integer clubId, Integer transactionId, String memo, MultipartFile receipt) {
         var existed = receiptRepository.findByTransactionIdIn(List.of(transactionId));
         if (!existed.isEmpty()) {
             return AttachReceiptResponse.builder()
@@ -150,19 +148,13 @@ public class ClubFundQueryService {
                     .created(false)
                     .build();
         }
-
-        // 1) 파일 검증
         validateImage(receipt);
-
-        // 2) 키 생성: clubfund/{clubId}/receipts/{txnId}_{ULID}.png
         String ulid = UlidCreator.getMonotonicUlid().toString().toLowerCase();
         String key = "%s/%s/receipts/%s_%s.png".formatted(clubfundPrefix, clubId, transactionId, ulid);
 
-        // 3) PNG 인코딩 후 업로드
         byte[] pngBytes = toPngBytes(receipt);
         String publicUrl = s3Uploader.putPng(pngBytes, key);
 
-        // 4) 영수증 저장
         ClubFundReceipt saved = ClubFundReceipt.builder()
                 .clubId(clubId)
                 .transactionId(transactionId)
@@ -170,7 +162,6 @@ public class ClubFundQueryService {
                 .imageUrl(publicUrl)
                 .s3Key(key)
                 .build();
-
         saved = receiptRepository.save(saved);
 
         return AttachReceiptResponse.builder()
@@ -179,9 +170,8 @@ public class ClubFundQueryService {
                 .build();
     }
 
-    // ---- 내부 유틸 ----
+    // ---- 내부 유틸 (그대로) ----
     private record PreparedFinContext(String accountNo, String userKey) {}
-
     private PreparedFinContext prepareContext(Integer clubId) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new IllegalArgumentException("클럽 없음: " + clubId));
@@ -191,7 +181,6 @@ public class ClubFundQueryService {
         String userKey = accountCrypto.decrypt(leader.getUserKeyCipher());
         return new PreparedFinContext(accountNo, userKey);
     }
-
     private void ensureOk(InquireHistoryResponse.Header h, String prefix) {
         if (h == null || !"H0000".equals(h.getResponseCode())) {
             throw new IllegalStateException(prefix + ": " +
@@ -204,28 +193,16 @@ public class ClubFundQueryService {
                     (h == null ? "no header" : (h.getResponseCode() + " - " + h.getResponseMessage())));
         }
     }
-
-    /** ✅ 이미지 기본 검증: 5MB 이하 & image/* */
     private void validateImage(MultipartFile f) {
-        if (f == null || f.isEmpty()) {
-            throw new IllegalArgumentException("영수증 파일이 비었습니다.");
-        }
-        if (f.getSize() > 5 * 1024 * 1024) {
-            throw new IllegalArgumentException("영수증은 최대 5MB까지 가능합니다.");
-        }
+        if (f == null || f.isEmpty()) throw new IllegalArgumentException("영수증 파일이 비었습니다.");
+        if (f.getSize() > 5 * 1024 * 1024) throw new IllegalArgumentException("영수증은 최대 5MB까지 가능합니다.");
         String ct = f.getContentType();
-        if (ct == null || !ct.startsWith("image/")) {
-            throw new IllegalArgumentException("이미지 파일만 업로드 가능합니다.");
-        }
+        if (ct == null || !ct.startsWith("image/")) throw new IllegalArgumentException("이미지 파일만 업로드 가능합니다.");
     }
-
-    /** ✅ MultipartFile → PNG 바이트 */
     private byte[] toPngBytes(MultipartFile file) {
         try {
             BufferedImage image = ImageIO.read(file.getInputStream());
-            if (image == null) {
-                throw new IllegalArgumentException("유효한 이미지가 아닙니다.");
-            }
+            if (image == null) throw new IllegalArgumentException("유효한 이미지가 아닙니다.");
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 boolean ok = ImageIO.write(image, "png", baos);
                 if (!ok) throw new IllegalStateException("PNG 인코딩 실패");
