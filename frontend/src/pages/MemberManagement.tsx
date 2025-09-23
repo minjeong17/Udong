@@ -6,6 +6,7 @@ import NotificationModal from '../components/NotificationModal';
 import { useRouter } from '../hooks/useRouter';
 import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
+import type { ClubCreateResponse } from '../apis/clubs/response';
 
 interface MemberManagementProps {
   onNavigateToOnboarding: () => void;
@@ -46,6 +47,8 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [clubInfo, setClubInfoState] = useState<ClubCreateResponse | null>(null);
+  const [isRegeneratingCode, setIsRegeneratingCode] = useState(false);
 
   // API에서 멤버 목록 가져오기
   const fetchMembers = async () => {
@@ -87,9 +90,59 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
     }
   };
 
-  // 컴포넌트 마운트 시 멤버 목록 불러오기
+  // 동아리 정보 가져오기
+  const fetchClubInfo = async () => {
+    if (!clubId) return;
+
+    try {
+      const clubData = await ClubApi.getClubDetails(clubId);
+      setClubInfoState(clubData);
+    } catch (error) {
+      console.error('Failed to fetch club info:', error);
+    }
+  };
+
+  // 초대코드 재발급
+  const handleRegenerateInviteCode = async () => {
+    if (!clubId || isRegeneratingCode) return;
+
+    const confirmed = confirm('초대코드를 재발급하시겠습니까?\n기존 초대코드는 더 이상 사용할 수 없습니다.');
+    if (!confirmed) return;
+
+    try {
+      setIsRegeneratingCode(true);
+      const newCode = await ClubApi.regenerateInviteCode(clubId);
+
+      // 상태 업데이트로 새 초대코드 반영
+      setClubInfoState(prev => prev ? { ...prev, codeUrl: newCode } : null);
+
+      // 동아리 정보 새로고침 (최신 데이터 확보)
+      await fetchClubInfo();
+
+      alert('초대코드가 재발급되었습니다.');
+    } catch (error) {
+      console.error('Failed to regenerate invite code:', error);
+      alert('초대코드 재발급에 실패했습니다.');
+    } finally {
+      setIsRegeneratingCode(false);
+    }
+  };
+
+  // 초대코드 복사
+  const handleCopyInviteCode = () => {
+    if (!clubInfo?.codeUrl) return;
+
+    navigator.clipboard.writeText(clubInfo.codeUrl).then(() => {
+      alert('초대코드가 클립보드에 복사되었습니다.');
+    }).catch(() => {
+      alert('복사에 실패했습니다.');
+    });
+  };
+
+  // 컴포넌트 마운트 시 데이터 불러오기
   useEffect(() => {
     fetchMembers();
+    fetchClubInfo();
   }, [clubId]);
 
   const handleRoleClick = (member: Member) => {
@@ -132,11 +185,11 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
   };
 
   // 회장 위임 확인
-  const handleConfirmLeaderTransfer = async () => {
+  const handleConfirmLeaderTransfer = async (newAccountNumber: string) => {
     if (!transferTargetMember || !clubId) return;
 
     try {
-      await ClubApi.transferLeader(clubId, transferTargetMember.userId);
+      await ClubApi.transferLeader(clubId, transferTargetMember.userId, newAccountNumber);
 
       // 위임 성공 후 내 역할을 일반 멤버로 변경
       if (clubId) {
@@ -147,13 +200,36 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
       alert('회장 위임이 완료되었습니다. 동아리 대시보드로 이동합니다.');
       navigate('club-dashboard');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to transfer leader:', error);
-      alert('회장 위임에 실패했습니다.');
-    } finally {
-      setShowLeaderTransferModal(false);
-      setTransferTargetMember(null);
+
+      let errorMessage = '회장 위임에 실패했습니다.';
+
+      // 서버 응답에서 data 필드 추출
+      if (error?.responseText) {
+        try {
+          const errorData = JSON.parse(error.responseText);
+          if (errorData?.data) {
+            errorMessage = errorData.data;
+          } else {
+            errorMessage = error.message;
+          }
+        } catch {
+          errorMessage = error.message;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      alert(errorMessage);
+
+      // 에러 발생 시에는 모달을 닫지 않고 계속 열어둠
+      return;
     }
+
+    // 성공한 경우에만 모달 닫기
+    setShowLeaderTransferModal(false);
+    setTransferTargetMember(null);
   };
 
   // 멤버 추방 핸들러
@@ -223,7 +299,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
         onShowNotification={() => setShowNotificationModal(true)}
       />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 relative">
         {/* 페이지 헤더 */}
         <div className="mb-8">
           <div className="flex items-center gap-4">
@@ -231,6 +307,36 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
             <p className="text-gray-600 font-gowun">동아리 회원들의 정보를 관리하고 현황을 확인할 수 있습니다.</p>
           </div>
         </div>
+
+        {/* 초대코드 카드 - 절대 위치로 오른쪽 위에 고정 */}
+        {myRole === 'LEADER' && (
+          <div className="absolute top-4 right-8 bg-white rounded-xl shadow-lg border border-orange-100 p-4 w-[320px] z-10">
+            <h2 className="text-sm font-bold text-gray-800 font-jua mb-2">초대코드</h2>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <span className="font-mono text-sm font-semibold text-gray-800">
+                  {clubInfo?.codeUrl || '로딩중...'}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCopyInviteCode}
+                disabled={!clubInfo?.codeUrl}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+              >
+                📋 복사
+              </button>
+              <button
+                onClick={handleRegenerateInviteCode}
+                disabled={isRegeneratingCode || !clubInfo?.codeUrl}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+              >
+                {isRegeneratingCode ? '재발급 중...' : '🔄 재발급'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 탭 메뉴 */}
         <div className="mb-8">

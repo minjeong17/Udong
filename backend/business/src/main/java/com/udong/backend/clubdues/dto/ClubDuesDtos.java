@@ -107,6 +107,20 @@ public class ClubDuesDtos {
         ) {}
     }
 
+    // 회비 결제 요청 DTO
+    @Builder
+    public record PayDuesRequest(
+            Integer originalAmount,
+            Integer discountAmount
+    ) {}
+
+    // 회비 결제 응답 DTO
+    @Builder
+    public record PayDuesResponse(
+            Integer duesId,
+            Integer finalAmount
+    ) {}
+
     // JOIN 쿼리 결과용 DTO
     @Builder
     public record MemberPaymentInfo(

@@ -11,5 +11,6 @@ public class MemberDtos {
 
     public record ChangeRoleReq(@NotNull Integer memberId, @NotBlank String role) {}
     public record ReasonReq(String reason) {}
+    public record TransferLeaderReq(@NotBlank(message = "새로운 계좌번호는 필수입니다") String newAccountNumber) {}
 }
 

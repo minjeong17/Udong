@@ -3,7 +3,7 @@ package com.udong.backend.fin.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder @ToString
 public class FinHeader {
 
     @JsonProperty("apiName")

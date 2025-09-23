@@ -46,3 +46,7 @@ export interface ChangeRoleRequest {
   memberId: number;
   role: string;
 }
+
+export interface InviteCodeResponse {
+  code: string;
+}

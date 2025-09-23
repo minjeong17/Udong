@@ -61,6 +61,20 @@ const MyPage: React.FC<MyPageProps> = ({ onNavigateToOnboarding }) => {
   const [showItemModal, setShowItemModal] = useState(false);
   const [showPointModal, setShowPointModal] = useState(false);
 
+  // 모달이 열릴 때 body 스크롤 방지
+  React.useEffect(() => {
+    if (showItemModal || showPointModal || showProfileModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showItemModal, showPointModal, showProfileModal]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="flex">
@@ -216,46 +230,48 @@ const MyPage: React.FC<MyPageProps> = ({ onNavigateToOnboarding }) => {
       )}
 
       {showItemModal && (
-        <div className="min-h-screen bg-orange-50">
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-        <div className="bg-white w-[500px] max-h-[90vh] overflow-y-auto rounded-2xl p-6 relative">
-        {/* 헤더 */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold font-jua">내 아이템 내역</h2>
-          <button 
-            onClick={() => setShowItemModal(false)}
-            className="text-gray-500 text-xl">✕</button>
-        </div>
-
-        {/* 내역 리스트 */}
-        {history.map((item) => (
-          <div key={item.id} className="mb-6">
-            {/* 날짜 라벨 */}
-            <div className="flex justify-center my-2">
-              <span className="bg-orange-100 text-orange-600 text-sm px-3 py-1 rounded-full font-gowun">
-                {item.date}
-              </span>
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white w-[500px] max-h-[90vh] rounded-2xl flex flex-col relative">
+            {/* 헤더 */}
+            <div className="flex justify-between items-center p-6 pb-4 border-b border-gray-100">
+              <h2 className="text-lg font-bold font-jua">내 아이템 내역</h2>
+              <button
+                onClick={() => setShowItemModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                ✕
+              </button>
             </div>
 
-            {/* 아이템 카드 */}
-            <div className="flex justify-between items-center bg-orange-50 p-4 rounded-lg">
-              <div>
-                <p className="font-semibold font-gowun">
-                  <span className={item.type === "구매" ? "text-blue-500" : "text-green-500"}>
-                    {item.type}:
-                  </span>{" "}
-                  {item.title}
-                </p>
-                <p className="text-sm text-gray-500 mt-1 font-gowun">{item.time}</p>
-              </div>
-              {item.points && (
-                <p className="text-red-500 font-bold font-jua">-{item.points}P</p>
-              )}
-              </div>
+            {/* 스크롤 가능한 내역 리스트 */}
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              {history.map((item) => (
+                <div key={item.id} className="mb-6">
+                  {/* 날짜 라벨 */}
+                  <div className="flex justify-center my-2">
+                    <span className="bg-orange-100 text-orange-600 text-sm px-3 py-1 rounded-full font-gowun">
+                      {item.date}
+                    </span>
+                  </div>
+
+                  {/* 아이템 카드 */}
+                  <div className="flex justify-between items-center bg-orange-50 p-4 rounded-lg">
+                    <div>
+                      <p className="font-semibold font-gowun">
+                        <span className={item.type === "구매" ? "text-blue-500" : "text-green-500"}>
+                          {item.type}:
+                        </span>{" "}
+                        {item.title}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1 font-gowun">{item.time}</p>
+                    </div>
+                    {item.points && (
+                      <p className="text-red-500 font-bold font-jua">-{item.points}P</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-           ))}
           </div>
-        </div>
         </div>
       )}
 

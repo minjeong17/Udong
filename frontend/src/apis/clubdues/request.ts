@@ -8,3 +8,9 @@ export interface CreateDuesRequest {
 export interface UpdatePaymentStatusRequest {
   paymentStatus: number; // 0: 미납, 1: 납부완료
 }
+
+// 회비 결제 요청 타입
+export interface PayDuesRequest {
+  originalAmount: number;
+  discountAmount: number;
+}

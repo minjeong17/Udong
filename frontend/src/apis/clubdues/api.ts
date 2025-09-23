@@ -1,5 +1,5 @@
 import fetchClient from '../fetchClient';
-import type { CreateDuesRequest, UpdatePaymentStatusRequest } from './request';
+import type { CreateDuesRequest, UpdatePaymentStatusRequest, PayDuesRequest } from './request';
 import type {
   CreateDuesResponse,
   DuesListResponse,
@@ -7,7 +7,8 @@ import type {
   UpdatePaymentStatusResponse,
   CurrentDuesResponse,
   DuesSummaryResponse,
-  MyUnpaidDuesResponse
+  MyUnpaidDuesResponse,
+  PayDuesResponse
 } from './response';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -95,6 +96,17 @@ export const ClubDuesApi = {
     const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/clubdues/my-unpaid`;
     const response = await fetchClient<{success: boolean, data: MyUnpaidDuesResponse}>(url, {
       method: 'GET',
+      auth: true
+    });
+    return response.data;
+  },
+
+  // 9. 회비 결제
+  payDues: async (clubId: number, duesId: number, payload: PayDuesRequest): Promise<PayDuesResponse> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/clubdues/${duesId}/pay`;
+    const response = await fetchClient<{success: boolean, data: PayDuesResponse}>(url, {
+      method: 'POST',
+      body: JSON.stringify(payload),
       auth: true
     });
     return response.data;

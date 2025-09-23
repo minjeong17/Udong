@@ -99,9 +99,22 @@ public class ClubService {
     }
 
     private String generateCode() {
-        StringBuilder sb = new StringBuilder(8);
-        for (int i = 0; i < 8; i++) sb.append(CODE_CHARS.charAt(RND.nextInt(CODE_CHARS.length())));
-        return sb.toString();
+        String code;
+        int attempts = 0;
+        final int MAX_ATTEMPTS = 10;
+
+        do {
+            StringBuilder sb = new StringBuilder(8);
+            for (int i = 0; i < 8; i++) sb.append(CODE_CHARS.charAt(RND.nextInt(CODE_CHARS.length())));
+            code = sb.toString();
+            attempts++;
+
+            if (attempts >= MAX_ATTEMPTS) {
+                throw new IllegalStateException("고유한 초대코드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+            }
+        } while (clubs.existsByCodeUrl(code));
+
+        return code;
     }
 
     // ✅ 조회용: 마스킹된 계좌 반환

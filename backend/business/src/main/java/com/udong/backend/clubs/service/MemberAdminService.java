@@ -7,7 +7,11 @@ import com.udong.backend.clubs.entity.Membership;
 import com.udong.backend.clubs.repository.ClubRepository;
 import com.udong.backend.clubs.repository.MembershipRepository;
 import com.udong.backend.codes.repository.CodeDetailRepository;
+import com.udong.backend.fin.client.FinApiClient;
+import com.udong.backend.global.config.AccountCrypto;
+import com.udong.backend.users.entity.User;
 import com.udong.backend.users.repository.UserRepository;
+import com.udong.backend.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +31,9 @@ public class MemberAdminService {
     private final CodeDetailRepository codes;
     private final ClubRepository clubs;
     private final UserRepository users;
+    private final UserService userService;
+    private final AccountCrypto accountCrypto;
+    private final FinApiClient finApiClient;
     private final MemberAuthz authz; // 신규 Authz
 
     @Transactional(readOnly = true)
@@ -99,6 +106,11 @@ public class MemberAdminService {
 
     @Transactional
     public void transferLeaderByUserId(Long rawClubId, Integer actorId, Integer targetUserId) {
+        transferLeaderByUserId(rawClubId, actorId, targetUserId, null);
+    }
+
+    @Transactional
+    public void transferLeaderByUserId(Long rawClubId, Integer actorId, Integer targetUserId, String newAccountNumber) {
         authz.requireLeader(rawClubId, actorId);
         Integer clubId = Math.toIntExact(rawClubId);
 
@@ -113,6 +125,40 @@ public class MemberAdminService {
 
         if (Objects.equals(target.getUserId(), club.getLeaderUserId())) {
             return; // 이미 리더면 no-op
+        }
+
+        // 새로운 동아리 공용계좌 검증 및 업데이트
+        try {
+            // 1. 위임받을 사람의 userKey 가져오기 (계좌 검증용)
+            User targetUser = users.findById(targetUserId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "위임받을 사용자를 찾을 수 없습니다."));
+
+            String targetUserKey = accountCrypto.decrypt(targetUser.getUserKeyCipher());
+
+            // 2. 입력된 계좌번호 유효성 검증 (실제 존재하는 계좌인지)
+            boolean isValidAccount = finApiClient.validateAccount(targetUserKey, newAccountNumber);
+
+            if (!isValidAccount) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "유효하지 않은 계좌번호입니다. 존재하는 계좌번호를 입력해주세요.");
+            }
+
+            // 3. 검증 통과 후 동아리 계좌번호 암호화 및 업데이트
+            String normalized = accountCrypto.normalize(newAccountNumber);
+            if (normalized.length() < 8) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "계좌번호 형식이 올바르지 않습니다.");
+            }
+
+            String cipher = accountCrypto.encrypt(normalized);
+            club.setAccountCipher(cipher);
+            club.setAccountKeyVer((short) accountCrypto.keyVersion());
+
+        } catch (ResponseStatusException e) {
+            throw e; // 이미 적절한 에러 메시지가 있는 경우 그대로 전파
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "계좌 검증 중 오류가 발생했습니다: " + e.getMessage());
         }
 
         curLeader.setRoleCode("MANAGER");

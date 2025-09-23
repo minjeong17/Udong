@@ -35,7 +35,7 @@ public class UserService {
 
         // 1) 계좌 암호화 (기존)
         String normalized = accountCrypto.normalize(req.getAccount());
-        if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다");
+        if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다.");
         String accountCipher = accountCrypto.encrypt(normalized);
         short keyVer = (short) accountCrypto.keyVersion();
 
@@ -80,6 +80,90 @@ public class UserService {
 
         // JPA cascade/orphanRemoval이 먹도록 '엔티티 삭제'로 처리
         userRepository.delete(user);
+    }
+
+    @Transactional(readOnly = true)
+    public AccountInfo getDecryptedAccountInfo(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"));
+
+        String decryptedAccount = accountCrypto.decrypt(user.getAccountCipher());
+
+        return AccountInfo.builder()
+                .bankName("한국은행")
+                .accountNumber(decryptedAccount)
+                .build();
+    }
+
+    @Transactional
+    public void updateAccount(Integer userId, String newAccountNumber) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"));
+
+        // 1. 현재 사용자의 userKey 복호화
+        String currentUserKey = accountCrypto.decrypt(user.getUserKeyCipher());
+
+        // 2. 이메일로 외부 API에서 userKey 가져와서 검증
+        String fetchedUserKey = finApiClient.fetchUserKeyByEmail(user.getEmail());
+
+        if (!currentUserKey.equals(fetchedUserKey)) {
+            throw new IllegalArgumentException("사용자 인증에 실패했습니다. 계좌를 변경할 수 없습니다.");
+        }
+
+        // 3. 계좌번호 유효성 검증
+        if (!finApiClient.validateAccount(currentUserKey, newAccountNumber)) {
+            throw new IllegalArgumentException("유효하지 않은 계좌번호입니다. 존재하는 계좌번호를 입력해주세요.");
+        }
+
+        // 4. 검증 통과 후 signup과 동일한 암호화 로직
+        String normalized = accountCrypto.normalize(newAccountNumber);
+        if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다.");
+        String accountCipher = accountCrypto.encrypt(normalized);
+        short keyVer = (short) accountCrypto.keyVersion();
+
+        user.updateAccount(accountCipher, keyVer);
+        userRepository.save(user);
+    }
+
+    public static class AccountInfo {
+        private String bankName;
+        private String accountNumber;
+
+        public AccountInfo(String bankName, String accountNumber) {
+            this.bankName = bankName;
+            this.accountNumber = accountNumber;
+        }
+
+        public static AccountInfoBuilder builder() {
+            return new AccountInfoBuilder();
+        }
+
+        public String getBankName() {
+            return bankName;
+        }
+
+        public String getAccountNumber() {
+            return accountNumber;
+        }
+
+        public static class AccountInfoBuilder {
+            private String bankName;
+            private String accountNumber;
+
+            public AccountInfoBuilder bankName(String bankName) {
+                this.bankName = bankName;
+                return this;
+            }
+
+            public AccountInfoBuilder accountNumber(String accountNumber) {
+                this.accountNumber = accountNumber;
+                return this;
+            }
+
+            public AccountInfo build() {
+                return new AccountInfo(bankName, accountNumber);
+            }
+        }
     }
 
     private String generateCode() {

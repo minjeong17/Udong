@@ -1,6 +1,6 @@
 import fetchClient from '../fetchClient';
 import type { ClubCreateRequest } from './request';
-import type { ClubCreateResponse, ClubListResponse, MascotResponse, MemberResponse } from './response';
+import type { ClubCreateResponse, ClubListResponse, MascotResponse, MemberResponse, InviteCodeResponse } from './response';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api/v1'
@@ -93,11 +93,23 @@ export const ClubApi = {
     });
   },
 
-  transferLeader: async (clubId: number, userId: number): Promise<void> => {
+  transferLeader: async (clubId: number, userId: number, newAccountNumber?: string): Promise<void> => {
     const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/members/${userId}/role`;
+    const body = newAccountNumber ? { newAccountNumber } : undefined;
+
     await fetchClient<{success: boolean}>(url, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+      auth: true
+    });
+  },
+
+  regenerateInviteCode: async (clubId: number): Promise<string> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/invite-code:reissue`;
+    const response = await fetchClient<{success: boolean, data: InviteCodeResponse}>(url, {
       method: 'POST',
       auth: true
     });
+    return response.data.code;
   }
 };

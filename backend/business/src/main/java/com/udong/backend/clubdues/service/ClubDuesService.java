@@ -11,7 +11,17 @@ import com.udong.backend.clubs.repository.ClubRepository;
 import com.udong.backend.clubs.repository.MembershipRepository;
 import com.udong.backend.notification.dto.NotificationRequest;
 import com.udong.backend.notification.service.NotificationService;
+import com.udong.backend.fin.client.FinApiClient;
+import com.udong.backend.fin.dto.FinHeader;
+import com.udong.backend.fin.util.FinHeaderFactory;
+import com.udong.backend.global.config.AccountCrypto;
+import com.udong.backend.users.entity.User;
+import com.udong.backend.users.repository.UserRepository;
+import com.udong.backend.dutchpay.dto.FinTransferRequest;
+import com.udong.backend.dutchpay.dto.FinTransferResponse;
+import com.udong.backend.global.exception.TransferException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +37,18 @@ public class ClubDuesService {
     private final ClubRepository clubRepository;
     private final MembershipRepository membershipRepository;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
+    private final AccountCrypto accountCrypto;
+    private final FinApiClient finApiClient;
+
+    @Value("${finapi.institution-code:00100}")
+    private String institutionCode;
+
+    @Value("${finapi.fintech-app-no:001}")
+    private String fintechAppNo;
+
+    @Value("${finapi.api-key}")
+    private String apiKey;
 
     // 1. 새로운 회비 요청 생성
     @Transactional
@@ -267,6 +289,110 @@ public class ClubDuesService {
 
         return ClubDuesDtos.MyUnpaidDuesResponse.builder()
                 .unpaidDuesList(unpaidItems)
+                .build();
+    }
+
+    // 9. 회비 결제
+    @Transactional
+    public ClubDuesDtos.PayDuesResponse payDues(Integer clubId, Integer duesId, Integer currentUserId, ClubDuesDtos.PayDuesRequest request) {
+        // 1) 회비 정보 조회
+        ClubDuesStatus duesStatus = clubDuesStatusRepository.findByDuesIdAndUserId(duesId, currentUserId)
+                .orElseThrow(() -> new RuntimeException("회비 납부 정보를 찾을 수 없습니다."));
+
+        if (duesStatus.getDuesStatus() == 1) {
+            throw new RuntimeException("이미 납부 완료된 회비입니다.");
+        }
+
+        // 2) 동아리 정보 조회 (동아리 계좌 복호화)
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new RuntimeException("동아리를 찾을 수 없습니다."));
+
+        // 3) 사용자 정보 조회 (사용자 계좌 + userKey 복호화)
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        String userAccount = accountCrypto.decrypt(user.getAccountCipher());
+        String clubAccount = accountCrypto.decrypt(club.getAccountCipher());
+        String userKey = accountCrypto.decrypt(user.getUserKeyCipher());
+
+        // 4) 최종 결제 금액 계산 (할인 적용)
+        int finalAmount = request.originalAmount() - request.discountAmount();
+        if (finalAmount <= 0) {
+            throw new RuntimeException("결제 금액이 0보다 작거나 같을 수 없습니다.");
+        }
+
+        // 5) FinHeaderFactory 이용해서 헤더 생성
+        FinHeader header = FinHeaderFactory.create(
+                "updateDemandDepositAccountTransfer",
+                institutionCode,
+                fintechAppNo,
+                apiKey,
+                userKey
+        );
+
+        // 6) 요청 DTO 조립 (사용자 계좌 → 동아리 계좌)
+        FinTransferRequest finReq = FinTransferRequest.builder()
+                .header(header)
+                .depositAccountNo(clubAccount)
+                .depositTransactionSummary("(수시입출금) : 입금(이체)")
+                .transactionBalance(String.valueOf(finalAmount))
+                .withdrawalAccountNo(userAccount)
+                .withdrawalTransactionSummary("(수시입출금) : 출금(이체)")
+                .build();
+
+        // 7) 외부 API 호출
+        FinTransferResponse res;
+        try {
+            res = finApiClient.post(
+                    "/edu/demandDeposit/updateDemandDepositAccountTransfer",
+                    finReq,
+                    FinTransferResponse.class
+            );
+
+            String code = res.getHeader() != null ? res.getHeader().getResponseCode() : null;
+            String msg = res.getHeader() != null ? res.getHeader().getResponseMessage() : null;
+
+            if (!"H0000".equals(code)) {
+                throw new TransferException("이체 실패: " + msg);
+            }
+        } catch (TransferException e) {
+            // TransferException은 그대로 재던지기
+            throw e;
+        } catch (Exception e) {
+            // 금융 API 에러 메시지 파싱
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && errorMessage.contains("responseMessage")) {
+                try {
+                    // "계좌 잔액이 부족하여 거래가 실패했습니다." 같은 메시지 추출
+                    int start = errorMessage.indexOf("\"responseMessage\" : \"");
+                    if (start != -1) {
+                        start += "\"responseMessage\" : \"".length();
+                        int end = errorMessage.indexOf("\"", start);
+                        if (end != -1) {
+                            String message = errorMessage.substring(start, end);
+                            throw new TransferException(message);
+                        }
+                    }
+                } catch (Exception parseError) {
+                    // 파싱 실패 시 원본 메시지 사용
+                }
+            }
+
+            // 특정 에러 코드별 사용자 친화적 메시지
+            if (errorMessage != null && errorMessage.contains("A1014")) {
+                throw new TransferException("계좌 잔액이 부족합니다.");
+            }
+
+            throw new TransferException("계좌 이체에 실패했습니다. 다시 시도해 주세요.");
+        }
+
+        // 8) 납부 상태 업데이트 (미납 → 납부완료)
+        duesStatus.setDuesStatus((byte) 1);
+        clubDuesStatusRepository.save(duesStatus);
+
+        return ClubDuesDtos.PayDuesResponse.builder()
+                .duesId(duesId)
+                .finalAmount(finalAmount)
                 .build();
     }
 }
