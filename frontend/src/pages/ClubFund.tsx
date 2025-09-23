@@ -110,11 +110,12 @@ const Modal: React.FC<ModalProps> = ({ open, title, onClose, children }) => {
 const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
-  const auth = useAuthStore.getState();
-  const CLUB_ID = auth?.user?.clubId;
+  const CLUB_ID = useAuthStore(s => s.clubId);
+  const myRole  = useAuthStore(s => s.myRole);
 
   // 🔒 권한: 지금은 LEADER로 하드코딩
-  const role: "LEADER" | "MANAGER" | "MEMBER" = "LEADER";
+  const role: "LEADER" | "MANAGER" | "MEMBER" =
+  myRole === "LEADER" || myRole === "MANAGER" || myRole === "MEMBER" ? myRole : "MEMBER";
   const canEditReceipt = role === "LEADER";
 
   if (CLUB_ID == null) return null;
