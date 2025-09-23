@@ -57,6 +57,8 @@ export interface Participant {
 export interface ChatParticipants {
   chatId: number;
   participants: Participant[];
+  confirmed?: boolean;       
+  confirmedCount?: number;
 }
 
 export type CreateDutchpayPayload = {

@@ -8,6 +8,8 @@ import com.udong.backend.calendar.entity.ConfirmParticipantsRequest;
 import com.udong.backend.calendar.service.EventMemberService;
 import com.udong.backend.calendar.service.EventService;
 import com.udong.backend.calendar.service.EventService;
+import com.udong.backend.chat.dto.ChatParticipantsResponse;
+import com.udong.backend.dutchpay.service.DutchpayService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -27,6 +29,7 @@ public class EventController {
 
     private final EventService service;
     private final EventMemberService eventMemberService;
+    private final DutchpayService dutchpayService;
 
     // 일정 등록
     @PostMapping
@@ -88,13 +91,13 @@ public class EventController {
 
     @PutMapping("/chats/{chatId}/participants/confirm")
     public ResponseEntity<ApiResponse<?>> confirmParticipantsByChatId(
+            @PathVariable Integer clubId,
             @PathVariable Integer chatId,
             @RequestBody ConfirmParticipantsRequest req
     ) {
 
-        System.out.println("controllerrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
-        eventMemberService.confirmParticipantsByChatId(chatId, req.getUserIds());
-        return ResponseEntity.ok(ApiResponse.ok("참여자 확정 완료"));
+        ChatParticipantsResponse dto = eventMemberService.confirmParticipantsByChatId(chatId, req.getUserIds());
+        return ResponseEntity.ok(ApiResponse.ok(dto));
     }
 
 }

@@ -1,7 +1,7 @@
 package com.udong.backend.votes.service;
 
 import com.udong.backend.chat.entity.ChatRoom;
-import com.udong.backend.chat.repository.ChatRoomMemberRepository;
+import com.udong.backend.chat.repository.ChatMemberRepository;
 import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.repository.UserRepository;
@@ -31,7 +31,7 @@ public class VoteService {
     private final VoteOptionRepository voteOptionRepository;
     private final VoteSelectionRepository voteSelectionRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final ChatRoomMemberRepository chatMemberRepository;
+    private final ChatMemberRepository chatMemberRepository;
     private final UserRepository userRepository;
 
     /**

@@ -6,7 +6,7 @@ import com.udong.backend.chat.dto.ChatRoomListItem;
 import com.udong.backend.chat.dto.CreateRoomRequest;
 import com.udong.backend.chat.entity.ChatMember;
 import com.udong.backend.chat.entity.ChatRoom;
-import com.udong.backend.chat.repository.ChatRoomMemberRepository;
+import com.udong.backend.chat.repository.ChatMemberRepository;
 import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.clubs.repository.MembershipRepository;
 import com.udong.backend.codes.entity.CodeDetail;
@@ -31,7 +31,7 @@ public class ChatRoomService {
     private static final String CODE_GROUP = "chats"; // code_group.group_name
 
     private final ChatRoomRepository chatRoomRepository;
-    private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
     private final CodeService codeService;
     private final MembershipRepository membershipRepository;
@@ -149,9 +149,20 @@ public class ChatRoomService {
                         .toList()
         );
 
+        // ✅ 확정 여부 / 인원수 포함
+        boolean confirmed = room.isParticipantsConfirmed();
+        Integer confirmedCount = room.getParticipantsConfirmedCount();
+
+        // 방어: DB에 confirmed=true인데 count가 null/음수면 현재 참여자 수로 대체
+        if (confirmed && (confirmedCount == null || confirmedCount < 0)) {
+            confirmedCount = participants.size();
+        }
+
         return ChatParticipantsResponse.builder()
                 .chatId(chatId)
                 .participants(participants)
+                .confirmed(confirmed)            // ✅ 추가
+                .confirmedCount(confirmed ? confirmedCount : null)  // ✅ 추가(미확정이면 null)
                 .build();
     }
 

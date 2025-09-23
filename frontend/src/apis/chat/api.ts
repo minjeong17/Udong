@@ -23,6 +23,8 @@ function mapChatParticipants(r: ChatParticipantsResponse): ChatParticipants {
   return {
     chatId: r.chatId,
     participants: r.participants.map(mapParticipant),
+    confirmed: r.confirmed ?? false,         
+    confirmedCount: r.confirmedCount ?? 0, 
   };
 }
 
@@ -59,7 +61,6 @@ export const ChatApi = {
 
   async getParticipants(chatId: number): Promise<ChatParticipants> {
     const token = localStorage.getItem("accessToken");
-
     const res = await fetch(`${BASE_URL}${API_PREFIX}/chat/rooms/${chatId}/participants`, {
       method: "GET",
       headers: {
@@ -67,14 +68,22 @@ export const ChatApi = {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
-
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(`참여자 조회 실패 (${res.status}) ${text}`);
     }
-
     const json = (await res.json()) as ApiResponse<ChatParticipantsResponse>;
     return mapChatParticipants(json.data);
+  },
+
+  /** (EVENT 전용) 실제 참여 인원 확정 */
+  confirmParticipantsByChatId: async (clubId: number, chatId: number, userIds: number[]): Promise<void> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/events/chats/${chatId}/participants/confirm`;
+    await fetchClient<ApiResponse<unknown>>(url, {
+      method: "PUT",
+      auth: true,
+      body: JSON.stringify({ userIds }),
+    });
   },
 
   /** 채팅방에서 정산 생성 (multipart/form-data) */
@@ -97,7 +106,9 @@ export const ChatApi = {
       form.append("receipt", receipt, filename);
     }
 
-    const url = `${BASE_URL}${API_PREFIX}/dutchpays/${encodeURIComponent(chatId)}`;
+    const url = `${BASE_URL}${API_PREFIX}/dutchpay/${encodeURIComponent(chatId)}`;
+
+    console.log("URLLLLL ", url);
 
     // ✅ fetchClient가 JSON 파싱/토큰/401재시도 다 처리
     return await fetchClient<ApiResponse<string>>(url, {
@@ -105,15 +116,6 @@ export const ChatApi = {
       body: form,
       auth: true,
     });
-  }, // ← 메서드 끝! 쉼표로 다음 메서드와 구분
-
-  /** (EVENT 전용) 실제 참여 인원 확정 */
-  confirmParticipantsByChatId: async (clubId: number, chatId: number, userIds: number[]): Promise<void> => {
-    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/events/chats/${chatId}/participants/confirm`;
-    await fetchClient<ApiResponse<unknown>>(url, {
-      method: "PUT",
-      auth: true,
-      body: JSON.stringify({ userIds }),
-    });
   },
+
 };
