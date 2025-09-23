@@ -53,8 +53,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
   const [items, setItems] = useState<ItemResponse[]>([]);
   const [inventory, setInventory] = useState<InventoryResponse[]>([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const auth = useAuthStore.getState();
-  const clubId = auth?.user?.clubId;
+  const clubId = useAuthStore((state) => state.clubId);
 
   const itemIcons: Record<number, string> = {
     1: "🧪",  // 포션
