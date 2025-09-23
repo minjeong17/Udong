@@ -1,6 +1,7 @@
 package com.udong.backend.shop.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -16,9 +17,13 @@ import lombok.RequiredArgsConstructor;
 public class PointService {
 	
 	private final PointRepository pointRepository;
+	
+	public Optional<UserPointLedger> getLatest(Integer userId, Integer clubId) {
+		return pointRepository.findTopByUserIdAndClubIdOrderByCreatedAtDesc(userId, clubId);
+	}
 
-	public List<UserPointLedger> getLedgers(Integer userId) {
-        return pointRepository.findByUserId(userId);
+	public List<UserPointLedger> getLedgers(Integer userId, Integer clubId) {
+        return pointRepository.findByUserIdAndClubId(userId, clubId);
     }
 
     @Transactional
@@ -27,7 +32,7 @@ public class PointService {
             throw new IllegalArgumentException("증가 포인트는 0보다 커야 합니다.");
         }
 
-        Integer currPoint = pointRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+        Integer currPoint = pointRepository.findTopByUserIdAndClubIdOrderByCreatedAtDesc(userId, req.getClubId())
                 .map(UserPointLedger::getCurrPoint)
                 .orElse(0);
 
@@ -51,7 +56,7 @@ public class PointService {
             throw new IllegalArgumentException("차감 포인트는 0보다 커야 합니다.");
         }
 
-        Integer currPoint = pointRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+        Integer currPoint = pointRepository.findTopByUserIdAndClubIdOrderByCreatedAtDesc(userId, req.getClubId())
                 .map(UserPointLedger::getCurrPoint)
                 .orElse(0);
 

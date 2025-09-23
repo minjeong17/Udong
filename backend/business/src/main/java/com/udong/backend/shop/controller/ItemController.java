@@ -45,7 +45,7 @@ public class ItemController {
      * 단일 아이템 조회
      */
     @GetMapping("/{itemId}")
-    public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable Integer itemId) {
+    public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable("itemId") Integer itemId) {
         Item item = itemService.getItem(itemId);
         return ResponseEntity.ok(ApiResponse.ok(ItemResponse.from(item)));
     }
@@ -53,11 +53,11 @@ public class ItemController {
     /**
      * 인벤토리 조회
      */
-    @GetMapping("/inv")
-    public ResponseEntity<ApiResponse<List<InventoryResponse>>> getInventory() {
+    @GetMapping("/inv/{clubId}")
+    public ResponseEntity<ApiResponse<List<InventoryResponse>>> getInventory(@PathVariable("clubId") Integer clubId) {
     	Integer userId = securityUtils.currentUserId();
 
-    	List<InventoryResponse> inventories = inventoryService.getUserInventories(userId).stream()
+    	List<InventoryResponse> inventories = inventoryService.getUserInventories(userId, clubId).stream()
     	        .map(InventoryResponse::from)
     	        .toList();
 
@@ -67,20 +67,20 @@ public class ItemController {
     /**
      * 인벤토리 아이템 수량 증가
      */
-    @PostMapping("/purchase/{itemId}")
-    public ResponseEntity<ApiResponse<InventoryResponse>> purchase(@PathVariable Integer itemId) {
+    @PostMapping("/purchase/{clubId}/{itemId}")
+    public ResponseEntity<ApiResponse<InventoryResponse>> purchase(@PathVariable("clubId") Integer clubId, @PathVariable("itemId") Integer itemId) {
         Integer userId = securityUtils.currentUserId();
-        Inventory inventory = inventoryService.addItem(userId, itemId);
+        Inventory inventory = inventoryService.addItem(userId, clubId, itemId);
         return ResponseEntity.ok(ApiResponse.ok(InventoryResponse.from(inventory)));
     }
     
     /**
      * 인벤토리 아이템 수량 감소
      */
-    @PostMapping("/use/{itemId}")
-    public ResponseEntity<ApiResponse<InventoryResponse>> use(@PathVariable Integer itemId) {
+    @PostMapping("/use/{clubId}/{itemId}")
+    public ResponseEntity<ApiResponse<InventoryResponse>> use(@PathVariable("clubId") Integer clubId, @PathVariable("itemId") Integer itemId) {
         Integer userId = securityUtils.currentUserId();
-        Inventory inventory = inventoryService.useItem(userId, itemId);
+        Inventory inventory = inventoryService.useItem(userId, clubId, itemId);
         return ResponseEntity.ok(ApiResponse.ok(InventoryResponse.from(inventory)));
     }
     

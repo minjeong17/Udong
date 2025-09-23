@@ -18,14 +18,14 @@ public class InventoryService {
 	private final ItemRepository itemRepository;
 	private final InventoryRepository inventoryRepository;
 	
-	public List<Inventory> getUserInventories(Integer userId) {
-		return inventoryRepository.findByUserId(userId);
+	public List<Inventory> getUserInventories(Integer userId, Integer clubId) {
+		return inventoryRepository.findByUserIdAndClubId(userId, clubId);
 	}
 	
 	@Transactional
-	public Inventory addItem(Integer userId, Integer itemId) {
+	public Inventory addItem(Integer userId, Integer clubId, Integer itemId) {
 		
-		return inventoryRepository.findByUserIdAndItemId(userId, itemId)
+		return inventoryRepository.findByUserIdAndClubIdAndItemId(userId, clubId, itemId)
 	            .map(inv -> {
 	                inv.setQty(inv.getQty() + 1);
 	                return inventoryRepository.save(inv);
@@ -33,6 +33,7 @@ public class InventoryService {
 	            .orElseGet(() -> {
 	                Inventory newInv = Inventory.builder()
 	                        .userId(userId)
+	                        .clubId(clubId)
 	                        .item(itemRepository.findById(itemId)
 	                                .orElseThrow(() -> new RuntimeException("아이템을 찾을 수 없습니다.")))
 	                        .qty(1)
@@ -42,8 +43,8 @@ public class InventoryService {
 	}
 	
 	@Transactional
-    public Inventory useItem(Integer userId, Integer itemId) {
-		Inventory inv = inventoryRepository.findByUserIdAndItemId(userId, itemId)
+    public Inventory useItem(Integer userId, Integer clubId, Integer itemId) {
+		Inventory inv = inventoryRepository.findByUserIdAndClubIdAndItemId(userId, clubId, itemId)
 	                .orElseThrow(() -> new RuntimeException("아이템이 없습니다."));
 
 	    if (inv.getQty() <= 0) {

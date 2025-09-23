@@ -12,6 +12,7 @@ export interface ChatRoomApi {
   typeCode: "GLOBAL" | "EVENT";
   targetId: number;
   memberCount: number;
+  createdByUserId: number; 
 }
 
 // 메시지 응답
@@ -31,6 +32,7 @@ export interface Channel {
   typeCode: "GLOBAL" | "EVENT";
   targetId: number;
   memberCount: number;
+  createdByUserId: number;  
 }
 
 // 서버 응답 내 개별 참여자 레코드 

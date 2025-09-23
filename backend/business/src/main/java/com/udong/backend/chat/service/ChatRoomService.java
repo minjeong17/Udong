@@ -18,6 +18,7 @@ import com.udong.backend.users.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -208,5 +209,20 @@ public class ChatRoomService {
             }
         }
         // event가 연동되지 않은 독립 채팅방이라면 이벤트 멤버 삭제는 생략
+    }
+
+
+    @Transactional
+    public void deleteRoom(Integer chatId, Integer currentUserId) {
+        ChatRoom room = chatRoomRepository.findById(chatId)
+                .orElseThrow(() -> new EntityNotFoundException("채팅방을 찾을 수 없습니다. id=" + chatId));
+
+        // 1. 방 생성자와 현재 사용자 일치 여부 확인
+        if (!room.getCreatedBy().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("채팅방 삭제 권한이 없습니다.");
+        }
+
+        // 2. Cascade + orphanRemoval 로 members, messages 자동 삭제
+        chatRoomRepository.delete(room);
     }
 }
