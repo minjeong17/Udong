@@ -100,6 +100,7 @@ public class EventService {
 
         Event saved = events.save(e);
 
+
         CreateRoomRequest chatReq = new CreateRoomRequest("EVENT", saved.getId(), saved.getTitle());
 
         chatRoomService.create(userId, chatReq);
