@@ -23,11 +23,11 @@ public class DutchpayController {
 
     /** 정산 생성 */
     @PostMapping(
-            value = "/{eventId}",
+            value = "/{chatId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<ApiResponse<?>> createDutchpay(
-            @PathVariable Integer eventId,
+            @PathVariable Integer chatId,
             @RequestPart(name = "receipt", required = false) MultipartFile receipt,
             @RequestParam(required = false) String note,
             @RequestParam Integer amount,
@@ -39,11 +39,10 @@ public class DutchpayController {
         CreateDutchpayRequest req = CreateDutchpayRequest.builder()
                 .amount(amount)
                 .note(note)
-                .eventId(eventId)
                 .participantUserIds(participantUserIds)
                 .build();
 
-        dutchpayService.createWithOptionalImage(req, userId, receipt);
+        dutchpayService.createWithOptionalImage(chatId, req, userId, receipt);
         return ResponseEntity.ok(ApiResponse.ok("정산 생성 완료"));
     }
 

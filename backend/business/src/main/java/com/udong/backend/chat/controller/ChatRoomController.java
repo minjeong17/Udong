@@ -3,6 +3,8 @@ package com.udong.backend.chat.controller;
 import com.udong.backend.chat.dto.ChatParticipantsResponse;
 import com.udong.backend.chat.dto.ChatRoomListItem;
 import com.udong.backend.chat.dto.CreateRoomRequest;
+import com.udong.backend.chat.entity.ChatRoom;
+import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.chat.service.ChatRoomService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
@@ -20,6 +22,7 @@ public class ChatRoomController {
 
     private final SecurityUtils securityUtils;
     private final ChatRoomService chatRoomService;
+    private final ChatRoomRepository chatRoomRepository;
 
     /** 채팅방 생성 */
     @PostMapping
@@ -58,4 +61,5 @@ public class ChatRoomController {
         ChatParticipantsResponse resp = chatRoomService.getParticipants(chatId);
         return ResponseEntity.ok(ApiResponse.ok(resp));
     }
+
 }

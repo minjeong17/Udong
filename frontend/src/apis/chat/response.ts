@@ -44,4 +44,6 @@ export interface ParticipantRes {
 export interface ChatParticipantsResponse {
   chatId: number;
   participants: ParticipantRes[];
+  confirmed: boolean;
+  confirmedCount: number|null;
 }

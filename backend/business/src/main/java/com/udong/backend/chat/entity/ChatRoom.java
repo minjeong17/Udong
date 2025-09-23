@@ -62,4 +62,20 @@ public class ChatRoom {
      */
     @Column(name = "target_id", nullable = false)
     private Integer targetId;
+
+    @Column(name = "participants_confirmed", nullable = false)
+    private boolean participantsConfirmed = false;
+
+    @Column(name = "participants_confirmed_count")
+    private Integer participantsConfirmedCount;
+
+    public void confirmParticipants(int count) {
+        this.participantsConfirmed = true;
+        this.participantsConfirmedCount = count;
+    }
+
+    public void unconfirmParticipants() {
+        this.participantsConfirmed = false;
+        this.participantsConfirmedCount = null;
+    }
 }
