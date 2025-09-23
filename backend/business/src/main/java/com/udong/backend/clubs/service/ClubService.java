@@ -71,7 +71,6 @@ public class ClubService {
         mascotService.reroll(saved.getId(),new MascotCreateReq(saved.getCategory(), null));
 
         chatRoomService.create(saved.getLeaderUserId(),new CreateRoomRequest(GLOBAL_CODE,saved.getId(),GLOBAL_CHATROOM_NAME));
-
         return saved;
     }
 
@@ -137,7 +136,11 @@ public class ClubService {
                 .club(club)
                 .roleCode(memberCode.getCodeName())   // "MEMBER"
                 .build();
-        return memberships.save(m);
+
+        Membership res = memberships.save(m);
+        chatRoomService.addMember("GLOBAL", club.getId(), res.getUserId());
+
+        return res;
     }
 
     /** ISO8601(Z) 포맷 문자열로 */
