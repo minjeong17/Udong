@@ -92,7 +92,6 @@ public class EventController {
             @RequestBody ConfirmParticipantsRequest req
     ) {
 
-        System.out.println("controllerrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
         eventMemberService.confirmParticipantsByChatId(chatId, req.getUserIds());
         return ResponseEntity.ok(ApiResponse.ok("참여자 확정 완료"));
     }

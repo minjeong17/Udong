@@ -3,6 +3,8 @@ package com.udong.backend.dutchpay.entity;
 import com.udong.backend.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Setter
@@ -27,6 +29,7 @@ public class DutchpayParticipant {
     /** 정산 본문 FK */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "dutchpay_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Dutchpay dutchpay;
 
     /** 참여 유저 FK */

@@ -121,3 +121,22 @@ export const CalendarApi = {
     await fetchClient<void>(url, { method: 'POST', body: JSON.stringify({ userIds }) });
   },
 };
+
+// --- [추가] 참여/취소/목록 ---
+export const CalendarJoinApi = {
+  async join(clubId: number, eventId: number) {
+    const url = withBase(`/clubs/${clubId}/events/${eventId}/join`);
+    const raw = await fetchClient<any>(url, { method: 'POST' });
+    return unwrap<{ eventId: number; userId: number; participated: true; attendees: number; capacity?: number }>(raw);
+  },
+  async leave(clubId: number, eventId: number) {
+    const url = withBase(`/clubs/${clubId}/events/${eventId}/join`);
+    const raw = await fetchClient<any>(url, { method: 'DELETE' });
+    return unwrap<{ eventId: number; userId: number; participated: false; attendees: number; capacity?: number }>(raw);
+  },
+  async participants(clubId: number, eventId: number) {
+    const url = withBase(`/clubs/${clubId}/events/${eventId}/participants`);
+    const raw = await fetchClient<any>(url, { method: 'GET' });
+    return unwrap<Array<{ userId: number; nickname?: string; participated: boolean }>>(raw);
+  },
+};

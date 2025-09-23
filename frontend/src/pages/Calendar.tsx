@@ -1,28 +1,30 @@
+// src/pages/Calendar.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import NotificationModal from "../components/NotificationModal";
-// (선택) auth-store 사용 시 주석 해제
-// import { useAuthStore } from "../stores/auth";
+import {
+  CalendarApi,
+  CalendarJoinApi,
+  eventTypeToUi,
+  uiToEventType,
+  toIsoDateTime,
+} from "../apis/calendar";
+import { useAuthStore } from "../stores/authStore";
 
-// =========================
-// Types
-// =========================
+/* =========================
+   Types
+   ========================= */
 type Role = "member" | "officer" | "president";
 type Category = "정모" | "번개모임" | "MT";
 
-/**
- * 단일 이벤트(저장용)
- * - date: 시작 날짜
- * - endDate: 종료 날짜
- * - time/endTime: 시작/종료 시간
- */
+/** 단일 이벤트(UI용) */
 type EventItem = {
   id: string | number;
   title: string;
-  date: string; // YYYY-MM-DD (start)
-  endDate?: string; // YYYY-MM-DD (end; 없으면 date와 동일)
-  time?: string; // HH:mm
-  endTime?: string; // HH:mm
+  date: string;       // YYYY-MM-DD (start)
+  endDate?: string;   // YYYY-MM-DD (end; 없으면 date와 동일)
+  time?: string;      // HH:mm
+  endTime?: string;   // HH:mm
   allDay?: boolean;
   location?: string;
   category: Category;
@@ -33,19 +35,18 @@ type EventItem = {
   description?: string;
   createdById?: string | number;
 };
-
 type ViewMode = "month" | "year" | "decade";
 
-/** 화면 렌더링용 '날짜 슬라이스' */
+/** 렌더링용 날짜 슬라이스 */
 type DaySlice = EventItem & {
-  sliceDate: string; // 이 슬라이스가 속한 날짜 (YYYY-MM-DD)
+  sliceDate: string; // YYYY-MM-DD
   sliceKind: "single" | "start" | "middle" | "end";
-  timeLabel: string; // 칩에 보여줄 시간 문구
+  timeLabel: string; // 칩에 표시할 시간 문구
 };
 
-// =========================
-// Utils
-// =========================
+/* =========================
+   Utils
+   ========================= */
 const pad = (n: number) => String(n).padStart(2, "0");
 const ymd = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -64,7 +65,7 @@ const startOfCalendar = (d: Date) => {
 const endOfCalendar = (d: Date) => {
   const start = startOfCalendar(d);
   const end = new Date(start);
-  end.setDate(start.getDate() + (6 * 7 - 1)); // 6주 고정 (42일 - 1)
+  end.setDate(start.getDate() + (6 * 7 - 1)); // 42칸
   return end;
 };
 const isSameDay = (a: Date, b: Date) =>
@@ -72,119 +73,100 @@ const isSameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-// =========================
-// Labels
-// =========================
+/* =========================
+   Labels
+   ========================= */
 const korWeek = ["일", "월", "화", "수", "목", "금", "토"];
-const monthNames = [
-  "1월",
-  "2월",
-  "3월",
-  "4월",
-  "5월",
-  "6월",
-  "7월",
-  "8월",
-  "9월",
-  "10월",
-  "11월",
-  "12월",
-];
+const monthNames = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 const monthLabel = (d: Date) => `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
 const yearLabel = (d: Date) => `${d.getFullYear()}년`;
 const decadeStart = (year: number) => Math.floor(year / 10) * 10;
 
-// =========================
-// Visual map
-// =========================
+/* =========================
+   Visual map
+   ========================= */
 const catColor: Record<
   Category,
   { bg: string; text: string; ring: string; left: string }
 > = {
-  정모: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    ring: "ring-blue-200",
-    left: "before:bg-blue-500",
-  },
-  번개모임: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    ring: "ring-amber-200",
-    left: "before:bg-amber-500",
-  },
-  MT: {
-    bg: "bg-purple-50",
-    text: "text-purple-700",
-    ring: "ring-purple-200",
-    left: "before:bg-purple-500",
-  },
+  정모:     { bg: "bg-blue-50",   text: "text-blue-700",   ring: "ring-blue-200",   left: "before:bg-blue-500" },
+  번개모임: { bg: "bg-amber-50",  text: "text-amber-700",  ring: "ring-amber-200",  left: "before:bg-amber-500" },
+  MT:      { bg: "bg-purple-50", text: "text-purple-700", ring: "ring-purple-200", left: "before:bg-purple-500" },
 };
 
-// =========================
-// Icons
-// =========================
-const ChevronLeft = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" {...p}>
-    <path
-      d="M15 6l-6 6 6 6"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+/* =========================
+   Icons (IconProps로 안전하게)
+   ========================= */
+type IconProps = React.ComponentPropsWithoutRef<'svg'>;
+
+const ChevronLeft: React.FC<IconProps> = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...p}>
+    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
-const ChevronRight = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" {...p}>
-    <path
-      d="M9 18l6-6-6-6"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+const ChevronRight: React.FC<IconProps> = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...p}>
+    <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
-const Clock = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" {...p}>
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-    <path
-      d="M12 7v5l3 3"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+const Clock: React.FC<IconProps> = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...p}>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={2}/>
+    <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
-const Pin = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" {...p}>
-    <path
-      d="M12 22s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z"
-      stroke="currentColor"
-      strokeWidth="2"
-    />
-    <circle cx="12" cy="11" r="3" stroke="currentColor" strokeWidth="2" />
+const Pin: React.FC<IconProps> = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...p}>
+    <path d="M12 22s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z" stroke="currentColor" strokeWidth={2}/>
+    <circle cx="12" cy="11" r="3" stroke="currentColor" strokeWidth={2}/>
   </svg>
 );
 
-// =========================
-// Props
-// =========================
+/* =========================
+   Props
+   ========================= */
 interface CalendarProps {
   onNavigateToOnboarding: () => void;
 }
 
-// =========================
-// Component
-// =========================
-const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
-  // (선택) auth-store에서 현재 사용자/역할 사용
-  // const { user, myRole } = useAuthStore();
-  const currentUser = { id: "u1", role: "member" as Role };
+/* =========================================================
+   Helpers (BE ↔ UI 매핑)
+   ========================================================= */
+const toDateOnly = (iso?: string | null) => (iso ? iso.slice(0, 10) : "");
+const toHm = (iso?: string | null) => (iso ? iso.slice(11, 16) : undefined);
 
-  // 초기엔 빈 배열(더미 제거). 필요 시 API 연동해서 setEvents 호출.
+const mapListItem = (d: any): EventItem => {
+  const start = String(d.startAt ?? "");
+  const end = String(d.endAt ?? start);
+  const startDate = toDateOnly(start);
+  const endDate = toDateOnly(end);
+  const isAllDay = toHm(start) === "00:00" && toHm(end) === "23:59";
+
+  return {
+    id: d.id,
+    title: d.title,
+    date: startDate,
+    endDate: endDate,
+    time: isAllDay ? undefined : toHm(start),
+    endTime: isAllDay ? undefined : toHm(end),
+    allDay: isAllDay,
+    location: d.place ?? undefined,
+    category: eventTypeToUi(d.type),
+    capacity: d.capacity ?? undefined,
+    description: d.content ?? undefined,
+    createdById: d.createdBy ?? undefined,
+  };
+};
+
+/* =========================
+   Component
+   ========================= */
+const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
+  const { user, clubId, myRole } = useAuthStore();
+  const currentUserId = user?.id;
+  const role: Role =
+    myRole === "PRESIDENT" ? "president" : myRole === "OFFICER" ? "officer" : "member";
+
   const [events, setEvents] = useState<EventItem[]>([]);
 
   // Calendar state
@@ -217,46 +199,59 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
     return out;
   }, [calStart.getTime(), calEnd.getTime()]);
 
-  // 현재 달에 걸친 이벤트만 필터링
+  /* ============ API: 월 목록 로드 ============ */
+  const refreshMonth = async () => {
+    if (!clubId) return;
+    const year = cursor.getFullYear();
+    const month = cursor.getMonth() + 1;
+    try {
+      const list = await CalendarApi.getMonth({ clubId, year, month });
+      setEvents(list.map(mapListItem));
+    } catch (e) {
+      console.error("getMonth failed", e);
+    }
+  };
+
+  useEffect(() => {
+    refreshMonth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId, cursor]);
+
+  // 현재 달에 걸친 이벤트만 필터링(다중일정 포함)
   const monthEvents = useMemo(() => {
     const y = cursor.getFullYear();
     const m = cursor.getMonth();
-
-    // 캘린더에 보이는 범위(해당 월의 1일~말일)를 기준으로 겹치는 이벤트 포함
-    const monthStart = new Date(y, m, 1);
-    const monthEnd = new Date(y, m + 1, 0); // 말일
-    const ms = monthStart.getTime();
-    const me = monthEnd.getTime();
+    const monthStart = new Date(y, m, 1).getTime();
+    const monthEnd = new Date(y, m + 1, 0).getTime();
 
     return events
       .filter((e) => {
         const s = parseYMD(e.date).getTime();
         const eEnd = parseYMD(e.endDate ?? e.date).getTime();
-        // 한 달 범위와 겹치면 포함
-        return !(eEnd < ms || s > me);
+        return !(eEnd < monthStart || s > monthEnd);
       })
       .sort(
         (a, b) =>
           parseYMD(a.date).getTime() - parseYMD(b.date).getTime() ||
-          (a.time ?? "99:99").localeCompare(b.time ?? "99:99")
+          (a.time ?? "99:99").localeCompare(b.time ?? "99:99"),
       );
   }, [cursor, events]);
 
-  // 이벤트 → 날짜별 슬라이스로 펼치기
+  // 이벤트 → 날짜별 슬라이스로 확장
   const expandEventToSlices = (ev: EventItem): DaySlice[] => {
     const start = parseYMD(ev.date);
     const end = parseYMD(ev.endDate ?? ev.date);
     const slices: DaySlice[] = [];
 
-    const sameDay = (a: Date, b: Date) =>
+    const same = (a: Date, b: Date) =>
       a.getFullYear() === b.getFullYear() &&
       a.getMonth() === b.getMonth() &&
       a.getDate() === b.getDate();
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const cur = new Date(d);
-      const first = sameDay(cur, start);
-      const last = sameDay(cur, end);
+      const first = same(cur, start);
+      const last = same(cur, end);
       const kind: DaySlice["sliceKind"] =
         first && last ? "single" : first ? "start" : last ? "end" : "middle";
 
@@ -264,7 +259,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
         ? "종일"
         : kind === "single"
         ? ev.time && ev.endTime
-          ? `${ev.time} - ${ev.endTime}`
+          ? `${ev.time} ~ ${ev.endTime}`
           : ev.time
           ? ev.time
           : ev.endTime
@@ -287,14 +282,12 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
         timeLabel,
       });
     }
-
     return slices;
   };
 
   // 날짜별 map (슬라이스 기준)
   const byDay = useMemo(() => {
     const map = new Map<string, DaySlice[]>();
-
     for (const ev of monthEvents) {
       const slices = expandEventToSlices(ev);
       for (const s of slices) {
@@ -303,8 +296,6 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
         map.set(s.sliceDate, arr);
       }
     }
-
-    // 정렬: 종일 우선 → 시작시간
     for (const arr of map.values()) {
       arr.sort((a, b) => {
         if ((a.allDay ?? false) !== (b.allDay ?? false)) {
@@ -313,7 +304,6 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
         return (a.time ?? "99:99").localeCompare(b.time ?? "99:99");
       });
     }
-
     return map;
   }, [monthEvents]);
 
@@ -322,8 +312,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
   useEffect(() => {
     if (!selected || !listRef.current) return;
     const key = ymd(selected);
-    const el =
-      listRef.current.querySelector<HTMLDivElement>(`[data-date="${key}"]`);
+    const el = listRef.current.querySelector<HTMLDivElement>(`[data-date="${key}"]`);
     if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [selected]);
 
@@ -332,19 +321,15 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
         setCursor((c) =>
-          view === "month"
-            ? new Date(c.getFullYear(), c.getMonth() - 1, 1)
-            : view === "year"
-            ? new Date(c.getFullYear() - 1, c.getMonth(), 1)
-            : new Date(c.getFullYear() - 10, c.getMonth(), 1)
+          view === "month" ? new Date(c.getFullYear(), c.getMonth() - 1, 1)
+          : view === "year" ? new Date(c.getFullYear() - 1, c.getMonth(), 1)
+          : new Date(c.getFullYear() - 10, c.getMonth(), 1)
         );
       } else if (e.key === "ArrowRight") {
         setCursor((c) =>
-          view === "month"
-            ? new Date(c.getFullYear(), c.getMonth() + 1, 1)
-            : view === "year"
-            ? new Date(c.getFullYear() + 1, c.getMonth(), 1)
-            : new Date(c.getFullYear() + 10, c.getMonth(), 1)
+          view === "month" ? new Date(c.getFullYear(), c.getMonth() + 1, 1)
+          : view === "year" ? new Date(c.getFullYear() + 1, c.getMonth(), 1)
+          : new Date(c.getFullYear() + 10, c.getMonth(), 1)
         );
       } else if (e.key === "Home" || e.key.toLowerCase() === "t") {
         setCursor(startOfMonth(new Date()));
@@ -369,13 +354,12 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
     }
 
     if (same) {
-      if (ev.time && ev.endTime) return `${left} ${ev.time} - ${ev.endTime}`;
+      if (ev.time && ev.endTime) return `${left} ${ev.time} ~ ${ev.endTime}`;
       if (ev.time) return `${left} ${ev.time}`;
       if (ev.endTime) return `${left} ~ ${ev.endTime}`;
       return `${left} 시간 미정`;
     }
 
-    // 다른 날짜로 이어지는 경우
     const right = `${e.getFullYear()}. ${e.getMonth() + 1}. ${e.getDate()}.`;
     const timeLeft = ev.time ? `${ev.time} ~` : "시작 ~";
     const timeRight = ev.endTime ? ` ${ev.endTime}` : "";
@@ -387,81 +371,24 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
     setDayModalDate(d);
     setDayModalOpen(true);
   };
-  const openEventModal = (ev: EventItem) => {
+  const openEventModal = async (ev: EventItem) => {
     setEventModalItem(ev);
     setEventModalOpen(true);
+    // 필요 시 단건으로 createdBy 등을 보강
+    if (!clubId) return;
+    try {
+      const full = await CalendarApi.getOne(clubId, Number(ev.id));
+      const mapped = mapListItem(full);
+      setEventModalItem((prev) => prev ? { ...prev, ...mapped } : mapped);
+    } catch {}
   };
 
   const canEdit = (ev: EventItem | null) =>
-    !!ev && String(ev.createdById) === String(currentUser.id);
+    !!ev && currentUserId != null && String(ev.createdById ?? "") === String(currentUserId);
 
-  const addEvent = (ev: EventItem) => setEvents((prev) => [...prev, ev]);
-  const updateEvent = (id: EventItem["id"], patch: Partial<EventItem>) =>
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
-  const deleteEvent = (id: EventItem["id"]) =>
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-
-  // Header label/mode
-  const headerLabel = () =>
-    view === "month"
-      ? monthLabel(cursor)
-      : view === "year"
-      ? yearLabel(cursor)
-      : (() => {
-          const ds = decadeStart(cursor.getFullYear());
-          return `${ds} ~ ${ds + 9}`;
-        })();
-  const goPrev = () => {
-    setCursor((c) =>
-      view === "month"
-        ? new Date(c.getFullYear(), c.getMonth() - 1, 1)
-        : view === "year"
-        ? new Date(c.getFullYear() - 1, c.getMonth(), 1)
-        : new Date(c.getFullYear() - 10, c.getMonth(), 1)
-    );
-  };
-  const goNext = () => {
-    setCursor((c) =>
-      view === "month"
-        ? new Date(c.getFullYear(), c.getMonth() + 1, 1)
-        : view === "year"
-        ? new Date(c.getFullYear() + 1, c.getMonth(), 1)
-        : new Date(c.getFullYear() + 10, c.getMonth(), 1)
-    );
-  };
-  const onHeaderClick = () => {
-    setView((v) => (v === "month" ? "year" : v === "year" ? "decade" : "month"));
-  };
-
-  // Month cell chip (DaySlice 사용)
-  const renderCellPreview = (ev: DaySlice) => {
-    const color = catColor[ev.category];
-    const label = `${ev.title} • ${ev.timeLabel}${
-      ev.location ? ` • ${ev.location}` : ""
-    }`;
-    return (
-      <button
-        key={`${ev.id}-${ev.sliceDate}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          openEventModal(ev);
-        }}
-        title={label}
-        className={`relative w-full text-[10px] truncate pl-2 pr-1 py-0.5 rounded-md border text-left
-          before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${color.left}
-          bg-white/70 border-gray-200/60 hover:bg-white`}
-      >
-        <span className="font-medium text-gray-900 truncate font-gowun">
-          {ev.title}
-        </span>
-        <span className="ml-1 text-gray-500 font-gowun">{ev.timeLabel}</span>
-      </button>
-    );
-  };
-
-  // =========================
-  // Render
-  // =========================
+  /* =========================
+     Render
+     ========================= */
   return (
     <div className="min-h-screen bg-[#fcf9f5] relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -476,103 +403,69 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
       </div>
 
       <div className="flex relative z-10">
-        {/* Left Sidebar */}
         <Sidebar
           onNavigateToOnboarding={onNavigateToOnboarding}
           onShowNotification={() => setShowNotificationModal(true)}
         />
 
-        {/* Main Content */}
         <main className="flex-1 px-6 py-2 bg-gradient-to-br from-orange-50 via-white to-orange-100">
-          {/* 헤더 */}
           <div className="mb-2">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-extrabold text-gray-900 font-jua">
-                일정 관리
-              </h1>
-              <p className="text-sm text-gray-600 font-gowun">
-                동아리 모임과 일정을 체계적으로 관리하세요
-              </p>
+              <h1 className="text-2xl font-extrabold text-gray-900 font-jua">일정 관리</h1>
+              <p className="text-sm text-gray-600 font-gowun">동아리 모임과 일정을 체계적으로 관리하세요</p>
             </div>
           </div>
 
-          {/* 좌/우 2칸 */}
           <div className="grid grid-cols-1 xl:grid-cols-[1fr,380px] gap-4 items-start">
             {/* Left: Calendar */}
             <section className="bg-white/80 backdrop-blur rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden min-h-[calc(100vh-220px)] flex flex-col">
-              {/* 캘린더 헤더 */}
+              {/* header */}
               <div className="flex items-center justify-between px-4 py-2 border-b bg-gradient-to-r from-white to-gray-50">
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={goPrev}
-                    aria-label="이전"
-                    className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100"
-                  >
-                    <ChevronLeft className="w-5 h-5 text-gray-600" />
+                  <button onClick={() => setCursor(c => new Date(c.getFullYear(), c.getMonth()-1, 1))} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100" aria-label="이전">
+                    <ChevronLeft className="w-5 h-5 text-gray-600"/>
                   </button>
-                  <button
-                    onClick={onHeaderClick}
-                    className="px-2 py-1 rounded-lg text-lg font-bold tracking-tight text-gray-900 hover:bg-gray-100 font-jua"
-                    title="클릭: 월 ↔ 연 ↔ 십년"
-                  >
-                    {headerLabel()}
+                  <button onClick={() => setView(v => v==="month"?"year":v==="year"?"decade":"month")} className="px-2 py-1 rounded-lg text-lg font-bold tracking-tight text-gray-900 hover:bg-gray-100 font-jua" title="클릭: 월 ↔ 연 ↔ 십년">
+                    {view==="month"
+                      ? monthLabel(cursor)
+                      : view==="year"
+                        ? yearLabel(cursor)
+                        : (() => { const ds = decadeStart(cursor.getFullYear()); return `${ds} ~ ${ds+9}`; })()}
                   </button>
-                  <button
-                    onClick={goNext}
-                    aria-label="다음"
-                    className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100"
-                  >
-                    <ChevronRight className="w-5 h-5 text-gray-600" />
+                  <button onClick={() => setCursor(c => new Date(c.getFullYear(), c.getMonth()+1, 1))} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100" aria-label="다음">
+                    <ChevronRight className="w-5 h-5 text-gray-600"/>
                   </button>
-                  <span className="ml-2 text-xs text-gray-500 font-gowun">
-                    단축키: 월 · 연 이동( ←/→ ) | 오늘 ( T / Home )
-                  </span>
+                  <span className="ml-2 text-xs text-gray-500 font-gowun">단축키: 월 · 연 이동( ←/→ ) | 오늘 ( T / Home )</span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <button
                     className="flex items-center gap-2 bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold shadow font-jua"
-                    onClick={() => {
-                      setCursor(startOfMonth(new Date()));
-                      setView("month");
-                      setSelected(new Date());
-                    }}
+                    onClick={() => { setCursor(startOfMonth(new Date())); setView("month"); setSelected(new Date()); }}
                   >
-                    <span>📅</span>
-                    <span>오늘로 이동</span>
+                    <span>📅</span><span>오늘로 이동</span>
                   </button>
                   <button
                     className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-semibold shadow font-jua"
-                    onClick={() => {
-                      setCreateOpen(true);
-                      setEventModalOpen(false);
-                      setDayModalOpen(false);
-                    }}
+                    onClick={() => { setCreateOpen(true); setEventModalOpen(false); setDayModalOpen(false); }}
                   >
-                    <span>＋</span>
-                    <span>일정 등록</span>
+                    <span>＋</span><span>일정 등록</span>
                   </button>
                 </div>
               </div>
 
-              {/* 캘린더 바디 */}
+              {/* body */}
               {view === "month" && (
                 <>
                   <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-4 pt-1 font-gowun">
-                    {korWeek.map((w) => (
-                      <div key={w} className="py-0.5 font-medium">
-                        {w}
-                      </div>
-                    ))}
+                    {korWeek.map((w) => <div key={w} className="py-0.5 font-medium">{w}</div>)}
                   </div>
                   <div className="px-4 pb-3">
                     <div className="grid grid-cols-7 gap-2">
                       {days.map((d, idx) => {
-                        const inMonth =
-                          d.getMonth() === cursor.getMonth() &&
-                          d.getFullYear() === cursor.getFullYear();
+                        const inMonth = d.getMonth() === cursor.getMonth() && d.getFullYear() === cursor.getFullYear();
                         const key = ymd(d);
-                        const all = byDay.get(key) ?? []; // DaySlice[]
+                        const all = byDay.get(key) ?? [];
                         const preview = all.slice(0, 2);
                         const more = Math.max(0, all.length - preview.length);
                         const sel = selected && isSameDay(selected, d);
@@ -584,37 +477,44 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                             key={idx}
                             onClick={() => openDayModal(d)}
                             className={`relative h-24 rounded-xl border transition cursor-pointer
-                            ${inMonth ? "bg-white/90 border-gray-200" : "bg-gray-50 border-gray-200/60 text-gray-400"}
-                            ${weekend && inMonth ? "bg-orange-50/70" : ""}
-                            ${isToday && inMonth ? "bg-gradient-to-br from-orange-100 to-orange-150 border-orange-300 border-[3px]" : ""}
-                            ${sel ? "ring-2 ring-blue-400" : "hover:shadow-sm"}`}
+                              ${inMonth ? "bg-white/90 border-gray-200" : "bg-gray-50 border-gray-200/60 text-gray-400"}
+                              ${weekend && inMonth ? "bg-orange-50/70" : ""}
+                              ${isToday && inMonth ? "bg-gradient-to-br from-orange-100 to-orange-150 border-orange-300 border-[3px]" : ""}
+                              ${sel ? "ring-2 ring-blue-400" : "hover:shadow-sm"}`}
                           >
-                            <div
-                              className={`absolute top-1 left-2 text-[12px] font-semibold font-jua ${
-                                isToday && inMonth
-                                  ? "text-orange-700"
-                                  : "text-gray-700"
-                              }`}
-                            >
+                            <div className={`absolute top-1 left-2 text-[12px] font-semibold font-jua ${isToday && inMonth ? "text-orange-700" : "text-gray-700"}`}>
                               {d.getDate()}
                             </div>
                             <div className="absolute left-2 right-2 top-6 space-y-1">
-                              {preview.map((ev) => renderCellPreview(ev))}
+                              {preview.map((ev) => {
+                                // Add check for valid category
+                                const color = ev.category in catColor ? catColor[ev.category] : null;
+                                if (!color) return null; // Handle case where category is not in map
+                                const label = `${ev.title} • ${ev.timeLabel}${ev.location ? ` • ${ev.location}` : ""}`;
+                                return (
+                                  <button
+                                    key={`${ev.id}-${ev.sliceDate}`}
+                                    onClick={(e) => { e.stopPropagation(); openEventModal(ev); }}
+                                    title={label}
+                                    className={`relative w-full text-[10px] truncate pl-2 pr-1 py-0.5 rounded-md border text-left
+                                      before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${color.left}
+                                      bg-white/70 border-gray-200/60 hover:bg-white`}
+                                  >
+                                    <span className="font-medium text-gray-900 truncate font-gowun">{ev.title}</span>
+                                    <span className="ml-1 text-gray-500 font-gowun">{ev.timeLabel}</span>
+                                  </button>
+                                );
+                              })}
                               {more > 0 && (
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDayModal(d);
-                                  }}
+                                  onClick={(e) => { e.stopPropagation(); openDayModal(d); }}
                                   className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left font-gowun"
                                 >
                                   +{more}개 더 보기
                                 </button>
                               )}
                             </div>
-                            {!inMonth && (
-                              <div className="absolute inset-0 rounded-xl bg-white/30 pointer-events-none" />
-                            )}
+                            {!inMonth && <div className="absolute inset-0 rounded-xl bg-white/30 pointer-events-none" />}
                           </div>
                         );
                       })}
@@ -629,10 +529,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                     {monthNames.map((m, i) => (
                       <button
                         key={m}
-                        onClick={() => {
-                          setCursor(new Date(cursor.getFullYear(), i, 1));
-                          setView("month");
-                        }}
+                        onClick={() => { setCursor(new Date(cursor.getFullYear(), i, 1)); setView("month"); }}
                         className="h-16 rounded-xl border border-gray-200 bg-white hover:bg-orange-50 text-gray-800 font-semibold font-jua"
                       >
                         {m}
@@ -642,122 +539,73 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                 </div>
               )}
 
-              {view === "decade" &&
-                (() => {
-                  const start = decadeStart(cursor.getFullYear());
-                  const years: { y: number; inRange: boolean }[] = [];
-                  for (let i = -1; i <= 10; i++) {
-                    const y = start + i;
-                    years.push({ y, inRange: i >= 0 && i <= 10 });
-                  }
-                  return (
-                    <div className="p-6">
-                      <div className="grid grid-cols-4 gap-3">
-                        {years.map(({ y, inRange }) => (
-                          <button
-                            key={y}
-                            onClick={() => {
-                              setCursor(new Date(y, cursor.getMonth(), 1));
-                              setView("year");
-                            }}
-                            className={`h-16 rounded-xl border font-semibold font-jua
-                          ${
-                            inRange
-                              ? "border-gray-200 bg-white text-gray-800 hover:bg-orange-50"
-                              : "border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-50"
-                          }`}
-                            title={`${y}년`}
-                          >
-                            {y}년
-                          </button>
-                        ))}
-                      </div>
+              {view === "decade" && (() => {
+                const start = decadeStart(cursor.getFullYear());
+                const years: { y: number; inRange: boolean }[] = [];
+                for (let i = -1; i <= 10; i++) years.push({ y: start + i, inRange: i >= 0 && i <= 10 });
+                return (
+                  <div className="p-6">
+                    <div className="grid grid-cols-4 gap-3">
+                      {years.map(({ y, inRange }) => (
+                        <button
+                          key={y}
+                          onClick={() => { setCursor(new Date(y, cursor.getMonth(), 1)); setView("year"); }}
+                          className={`h-16 rounded-xl border font-semibold font-jua
+                            ${inRange ? "border-gray-200 bg-white text-gray-800 hover:bg-orange-50" : "border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-50"}`}
+                          title={`${y}년`}
+                        >
+                          {y}년
+                        </button>
+                      ))}
                     </div>
-                  );
-                })()}
+                  </div>
+                );
+              })()}
             </section>
 
             {/* Right: list */}
             <aside className="bg-white/80 backdrop-blur rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden min-h-[calc(100vh-220px)] flex flex-col">
               <div className="flex items-center justify-between px-6 py-4 border-b">
-                <div className="text-base font-semibold text-gray-900 font-jua">
-                  이번 달 일정
-                </div>
-                <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-gowun">
-                  {monthEvents.length}개
-                </div>
+                <div className="text-base font-semibold text-gray-900 font-jua">이번 달 일정</div>
+                <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-gowun">{monthEvents.length}개</div>
               </div>
 
-              <div
-                ref={listRef}
-                className="flex-1 overflow-y-auto px-4 py-4 space-y-3 max-h-[calc(100vh-300px)] calendar-scrollbar"
-              >
+              <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 max-h-[calc(100vh-300px)] calendar-scrollbar">
                 {monthEvents.map((ev) => {
                   const d = parseYMD(ev.date);
                   const isSel = selected && isSameDay(selected, d);
-                  const color = catColor[ev.category];
+                  // Add a check to ensure ev.category is a valid key for catColor
+                  if (!(ev.category in catColor)) return null;
+                  const color = catColor[ev.category as Category];
                   return (
                     <button
                       key={ev.id}
                       data-date={ev.date}
                       onClick={() => openEventModal(ev)}
                       className={`w-full text-left flex gap-3 rounded-xl p-3 items-start border transition
-                      ${
-                        isSel
-                          ? "border-rose-300 bg-rose-50"
-                          : "border-gray-200 bg-white"
-                      } hover:shadow-sm`}
+                        ${isSel ? "border-rose-300 bg-rose-50" : "border-gray-200 bg-white"} hover:shadow-sm`}
                     >
                       <div className="w-12 text-center">
-                        <div className="text-[11px] text-gray-500 font-gowun">
-                          {d.getMonth() + 1}월
-                        </div>
-                        <div className="text-lg font-bold text-gray-800 font-jua">
-                          {d.getDate()}
-                        </div>
+                        <div className="text-[11px] text-gray-500 font-gowun">{d.getMonth() + 1}월</div>
+                        <div className="text-lg font-bold text-gray-800 font-jua">{d.getDate()}</div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ring-1 ${color.bg} ${color.text} ${color.ring} font-gowun`}
-                          >
-                            {ev.category}
-                          </span>
-                          <div className="truncate font-semibold text-gray-900 font-jua">
-                            {ev.title}
-                          </div>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ring-1 ${color.bg} ${color.text} ${color.ring} font-gowun`}>{ev.category}</span>
+                          <div className="truncate font-semibold text-gray-900 font-jua">{ev.title}</div>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
-                          <span className="inline-flex items-center gap-1 font-gowun">
-                            <Clock className="w-3.5 h-3.5" />
-                            {formatWhen(ev)}
-                          </span>
-                          {ev.location && (
-                            <span className="inline-flex items-center gap-1 font-gowun">
-                              <Pin className="w-3.5 h-3.5" />
-                              {ev.location}
-                            </span>
-                          )}
-                          {typeof ev.attendees === "number" && ev.capacity && (
-                            <span className="font-gowun">
-                              {ev.attendees}/{ev.capacity}명
-                            </span>
-                          )}
-                          {ev.note && (
-                            <span className="text-gray-500 font-gowun">
-                              · {ev.note}
-                            </span>
-                          )}
+                          <span className="inline-flex items-center gap-1 font-gowun"><Clock className="w-3.5 h-3.5"/>{formatWhen(ev)}</span>
+                          {ev.location && <span className="inline-flex items-center gap-1 font-gowun"><Pin className="w-3.5 h-3.5"/>{ev.location}</span>}
+                          {typeof ev.attendees === "number" && ev.capacity && <span className="font-gowun">{ev.attendees}/{ev.capacity}명</span>}
+                          {ev.note && <span className="text-gray-500 font-gowun">· {ev.note}</span>}
                         </div>
                       </div>
                     </button>
                   );
                 })}
-
                 {monthEvents.length === 0 && (
-                  <div className="text-center text-gray-500 py-16 font-gowun">
-                    이번 달에는 등록된 일정이 없습니다.
-                  </div>
+                  <div className="text-center text-gray-500 py-16 font-gowun">이번 달에는 등록된 일정이 없습니다.</div>
                 )}
               </div>
             </aside>
@@ -766,89 +614,46 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
 
         {/* ===== Day list modal ===== */}
         {dayModalOpen && dayModalDate && (
-          <div
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setDayModalOpen(false)}
-          >
-            <div
-              className="w-full max-w-screen-md max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden ring-1 ring-gray-200 flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setDayModalOpen(false)}>
+            <div className="w-full max-w-screen-md max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden ring-1 ring-gray-200 flex flex-col" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
                 <div className="text-lg font-bold text-gray-900 font-jua">
-                  {dayModalDate.getFullYear()}년 {dayModalDate.getMonth() + 1}월{" "}
-                  {dayModalDate.getDate()}일 일정
+                  {dayModalDate.getFullYear()}년 {dayModalDate.getMonth() + 1}월 {dayModalDate.getDate()}일 일정
                 </div>
-                <button
-                  onClick={() => setDayModalOpen(false)}
-                  className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100"
-                >
-                  ✕
-                </button>
+                <button onClick={() => setDayModalOpen(false)} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {(byDay.get(ymd(dayModalDate)) ?? []).map((ev) => {
-                  const color = catColor[ev.category];
+                  // Add a check to ensure ev.category is a valid key for catColor
+                  if (!(ev.category in catColor)) return null;
+                  const color = catColor[ev.category as Category];
                   return (
                     <button
                       key={`${ev.id}-${ev.sliceDate}`}
-                      onClick={() => {
-                        setDayModalOpen(false);
-                        openEventModal(ev);
-                      }}
+                      onClick={() => { setDayModalOpen(false); openEventModal(ev); }}
                       className={`w-full text-left rounded-xl p-4 border ring-1 ${color.bg} ${color.ring} border-transparent hover:bg-white`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${color.bg} ${color.text} ring-1 ${color.ring}`}
-                        >
-                          {ev.category}
-                        </span>
-                        <div className="font-semibold text-gray-900 font-jua">
-                          {ev.title}
-                        </div>
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${color.bg} ${color.text} ring-1 ${color.ring}`}>{ev.category}</span>
+                        <div className="font-semibold text-gray-900 font-jua">{ev.title}</div>
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
-                        <span className="inline-flex items-center gap-1 font-gowun">
-                          <Clock className="w-4 h-4" />
-                          {ev.timeLabel}
-                        </span>
-                        {ev.location && (
-                          <span className="inline-flex items-center gap-1 font-gowun">
-                            <Pin className="w-4 h-4" />
-                            {ev.location}
-                          </span>
-                        )}
-                        {typeof ev.attendees === "number" && ev.capacity && (
-                          <span>
-                            {ev.attendees}/{ev.capacity}명
-                          </span>
-                        )}
-                        {ev.note && (
-                          <span className="text-gray-600 font-gowun">
-                            · {ev.note}
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1 font-gowun"><Clock className="w-4 h-4"/>{ev.timeLabel}</span>
+                        {ev.location && <span className="inline-flex items-center gap-1 font-gowun"><Pin className="w-4 h-4"/>{ev.location}</span>}
+                        {typeof ev.attendees === "number" && ev.capacity && <span>{ev.attendees}/{ev.capacity}명</span>}
+                        {ev.note && <span className="text-gray-600 font-gowun">· {ev.note}</span>}
                       </div>
                     </button>
                   );
                 })}
-
                 {(byDay.get(ymd(dayModalDate)) ?? []).length === 0 && (
-                  <div className="text-center text-gray-500 py-10 font-gowun">
-                    등록된 일정이 없습니다.
-                  </div>
+                  <div className="text-center text-gray-500 py-10 font-gowun">등록된 일정이 없습니다.</div>
                 )}
               </div>
 
               <div className="p-4 border-t bg-gray-50 text-right">
-                <button
-                  onClick={() => setDayModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 font-gowun"
-                >
-                  닫기
-                </button>
+                <button onClick={() => setDayModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 font-gowun">닫기</button>
               </div>
             </div>
           </div>
@@ -856,24 +661,11 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
 
         {/* ===== Event detail modal ===== */}
         {eventModalOpen && eventModalItem && (
-          <div
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setEventModalOpen(false)}
-          >
-            <div
-              className="w-full max-w-screen-lg max-h-[90vh] bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEventModalOpen(false)}>
+            <div className="w-full max-w-screen-lg max-h-[90vh] bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b">
-                <div className="text-lg font-bold text-gray-900 font-jua">
-                  {eventModalItem.title}
-                </div>
-                <button
-                  onClick={() => setEventModalOpen(false)}
-                  className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100"
-                >
-                  ✕
-                </button>
+                <div className="text-lg font-bold text-gray-900 font-jua">{eventModalItem.title}</div>
+                <button onClick={() => setEventModalOpen(false)} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -881,13 +673,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                     <dt className="text-sm text-gray-500 font-gowun">카테고리</dt>
                     <dd>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-semibold ring-1 ${
-                          catColor[eventModalItem.category].bg
-                        } ${catColor[eventModalItem.category].text} ${
-                          catColor[eventModalItem.category].ring
-                        }`}
-                      >
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ring-1 ${catColor[eventModalItem.category].bg} ${catColor[eventModalItem.category].text} ${catColor[eventModalItem.category].ring}`}>
                         {eventModalItem.category}
                       </span>
                     </dd>
@@ -895,23 +681,18 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
 
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                     <dt className="text-sm text-gray-500 font-gowun">일시</dt>
-                    <dd className="text-sm text-gray-900 font-jua">
-                      {formatWhen(eventModalItem)}
-                    </dd>
+                    <dd className="text-sm text-gray-900 font-jua">{formatWhen(eventModalItem)}</dd>
                   </div>
 
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                     <dt className="text-sm text-gray-500 font-gowun">장소</dt>
-                    <dd className="text-sm text-gray-900 font-jua">
-                      {eventModalItem.location ?? "미정"}
-                    </dd>
+                    <dd className="text-sm text-gray-900 font-jua">{eventModalItem.location ?? "미정"}</dd>
                   </div>
 
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                     <dt className="text-sm text-gray-500 font-gowun">참가 인원</dt>
                     <dd className="text-sm text-gray-900 font-jua">
-                      {typeof eventModalItem.attendees === "number" &&
-                      eventModalItem.capacity
+                      {typeof eventModalItem.attendees === "number" && eventModalItem.capacity
                         ? `${eventModalItem.attendees}/${eventModalItem.capacity}명`
                         : "미정"}
                     </dd>
@@ -919,9 +700,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
 
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                     <dt className="text-sm text-gray-500 font-gowun">준비물</dt>
-                    <dd className="text-sm text-gray-900 font-jua">
-                      {eventModalItem.materials ?? "-"}
-                    </dd>
+                    <dd className="text-sm text-gray-900 font-jua">{eventModalItem.materials ?? "-"}</dd>
                   </div>
 
                   <div className="grid grid-cols-[120px,1fr] items-start gap-4">
@@ -939,19 +718,17 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                 <div className="flex gap-2">
                   {canEdit(eventModalItem) && (
                     <>
+                      <button onClick={() => setEditOpen(true)} className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua">✎ 수정</button>
                       <button
-                        onClick={() => {
-                          setEditOpen(true);
-                        }}
-                        className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua"
-                      >
-                        ✎ 수정
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm("정말 삭제할까요?")) {
-                            deleteEvent(eventModalItem.id);
+                        onClick={async () => {
+                          if (!clubId) return;
+                          if (!confirm("정말 삭제할까요?")) return;
+                          try {
+                            await CalendarApi.remove(clubId, Number(eventModalItem.id));
                             setEventModalOpen(false);
+                            refreshMonth();
+                          } catch (e) {
+                            alert("삭제 실패");
                           }
                         }}
                         className="px-3 py-2 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 text-sm font-jua"
@@ -962,27 +739,16 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                   )}
                 </div>
                 <div className="flex gap-2">
+                  <button onClick={() => setEventModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua">닫기</button>
                   <button
-                    onClick={() => setEventModalOpen(false)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua"
-                  >
-                    닫기
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEvents((prev) =>
-                        prev.map((e) =>
-                          e.id === eventModalItem.id && e.capacity
-                            ? {
-                                ...e,
-                                attendees: Math.min(
-                                  (e.attendees ?? 0) + 1,
-                                  e.capacity
-                                ),
-                              }
-                            : e
-                        )
-                      );
+                    onClick={async () => {
+                      if (!clubId) return;
+                      try {
+                        const res = await CalendarJoinApi.join(clubId, Number(eventModalItem.id));
+                        setEventModalItem((e) => e ? { ...e, attendees: res.attendees, capacity: res.capacity ?? e.capacity } : e);
+                      } catch (e) {
+                        alert("참여 신청 실패");
+                      }
                     }}
                     className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua"
                   >
@@ -999,48 +765,37 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
           <EventFormModal
             title="새 일정 등록"
             onClose={() => setCreateOpen(false)}
-            onSubmit={(form) => {
-              // 날짜 검증
-              const start = parseYMD(form.startDate);
-              const end = parseYMD(form.endDate);
-              if (end < start) {
-                alert("종료 날짜가 시작 날짜보다 앞설 수 없습니다.");
-                return;
-              }
-              if (
-                !form.allDay &&
-                form.startTime &&
-                form.endTime &&
-                form.startDate === form.endDate &&
-                form.startTime > form.endTime
-              ) {
-                alert("종료 시간이 시작 시간보다 빠릅니다.");
-                return;
+            onSubmit={async (form) => {
+              if (!clubId) { alert("클럽 정보가 없습니다."); return; }
+              // 단일/다중일정 검증
+              const s = parseYMD(form.startDate);
+              const e = parseYMD(form.endDate);
+              if (e < s) { alert("종료 날짜가 시작 날짜보다 앞설 수 없습니다."); return; }
+              if (!form.allDay && form.startDate === form.endDate && form.startTime && form.endTime && form.startTime > form.endTime) {
+                alert("종료 시간이 시작 시간보다 빠릅니다."); return;
               }
 
-              const id = `${Date.now()}_${Math.random()
-                .toString(36)
-                .slice(2)}`;
-              const ev: EventItem = {
-                id,
-                title: form.title,
-                date: form.startDate,
-                endDate: form.endDate,
-                time: form.allDay ? undefined : form.startTime || undefined,
-                endTime: form.allDay ? undefined : form.endTime || undefined,
-                allDay: form.allDay,
-                location: form.location || undefined,
-                category: form.category as Category,
-                note: form.note || undefined,
-                capacity: form.capacity ? Number(form.capacity) : undefined,
-                materials: form.materials || undefined,
-                description: form.description || undefined,
-                createdById: currentUser.id,
-              };
-              addEvent(ev);
-              setCreateOpen(false);
+              // API 전송
+              const startAt = toIsoDateTime(form.startDate, form.allDay ? "00:00" : (form.startTime || "00:00"));
+              const endAt   = toIsoDateTime(form.endDate,   form.allDay ? "23:59" : (form.endTime   || "23:59"));
+              try {
+                await CalendarApi.create(clubId, {
+                  title: form.title.trim(),
+                  content: form.description || "",
+                  place: form.location || "",
+                  capacity: form.capacity ? Number(form.capacity) : undefined,
+                  expectedCost: undefined,
+                  startAt,
+                  endAt,
+                  type: uiToEventType(form.category as Category),
+                } as any);
+                setCreateOpen(false);
+                refreshMonth();
+              } catch (err) {
+                alert("일정 등록 실패");
+              }
             }}
-            role={currentUser.role}
+            role={role}
           />
         )}
 
@@ -1057,58 +812,36 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
               endTime: eventModalItem.endTime ?? "",
               allDay: !!eventModalItem.allDay,
               location: eventModalItem.location ?? "",
-              capacity: eventModalItem.capacity
-                ? String(eventModalItem.capacity)
-                : "",
+              capacity: eventModalItem.capacity ? String(eventModalItem.capacity) : "",
               materials: eventModalItem.materials ?? "",
               note: eventModalItem.note ?? "",
             }}
             onClose={() => setEditOpen(false)}
-            onSubmit={(form) => {
-              updateEvent(eventModalItem.id, {
-                category: form.category as Category,
-                title: form.title,
-                description: form.description || undefined,
-                date: form.startDate,
-                endDate: form.endDate,
-                time: form.allDay ? undefined : form.startTime || undefined,
-                endTime: form.allDay ? undefined : form.endTime || undefined,
-                allDay: form.allDay,
-                location: form.location || undefined,
-                capacity: form.capacity ? Number(form.capacity) : undefined,
-                materials: form.materials || undefined,
-                note: form.note || undefined,
-              });
-              setEditOpen(false);
-              setEventModalItem((e) =>
-                e
-                  ? {
-                      ...e,
-                      category: form.category as Category,
-                      title: form.title,
-                      description: form.description || undefined,
-                      date: form.startDate,
-                      endDate: form.endDate,
-                      time: form.allDay ? undefined : form.startTime || undefined,
-                      endTime: form.allDay
-                        ? undefined
-                        : form.endTime || undefined,
-                      allDay: form.allDay,
-                      location: form.location || undefined,
-                      capacity: form.capacity
-                        ? Number(form.capacity)
-                        : undefined,
-                      materials: form.materials || undefined,
-                      note: form.note || undefined,
-                    }
-                  : e
-              );
+            onSubmit={async (form) => {
+              if (!clubId) return;
+              const startAt = toIsoDateTime(form.startDate, form.allDay ? "00:00" : (form.startTime || "00:00"));
+              const endAt   = toIsoDateTime(form.endDate,   form.allDay ? "23:59" : (form.endTime   || "23:59"));
+              try {
+                await CalendarApi.update(clubId, Number(eventModalItem.id), {
+                  title: form.title.trim(),
+                  content: form.description || "",
+                  place: form.location || "",
+                  capacity: form.capacity ? Number(form.capacity) : undefined,
+                  expectedCost: undefined,
+                  startAt,
+                  endAt,
+                } as any);
+                setEditOpen(false);
+                setEventModalOpen(false);
+                refreshMonth();
+              } catch (e) {
+                alert("수정 실패");
+              }
             }}
-            role={currentUser.role}
+            role={role}
           />
         )}
 
-        {/* Notification Modal */}
         <NotificationModal
           isOpen={showNotificationModal}
           onClose={() => setShowNotificationModal(false)}
@@ -1136,6 +869,7 @@ type FormShape = {
   materials: string;
   note: string;
 };
+
 function EventFormModal({
   title,
   onClose,
@@ -1145,12 +879,11 @@ function EventFormModal({
 }: {
   title: string;
   onClose: () => void;
-  onSubmit: (form: FormShape) => void;
+  onSubmit: (form: FormShape) => void | Promise<void>;
   initial?: Partial<FormShape>;
   role: Role;
 }) {
   const today = ymd(new Date());
-
   const [form, setForm] = useState<FormShape>({
     category: (initial?.category as Category) ?? "",
     title: initial?.title ?? "",
@@ -1170,18 +903,11 @@ function EventFormModal({
     (initial?.startDate ?? today) === (initial?.endDate ?? today)
   );
 
-  // 동일 날짜 체크 시 endDate를 startDate와 동기화
   useEffect(() => {
-    if (sameDate) {
-      setForm((f) => ({ ...f, endDate: f.startDate }));
-    }
+    if (sameDate) setForm((f) => ({ ...f, endDate: f.startDate }));
   }, [sameDate]);
-
-  // 시작 날짜가 바뀌면 동일날짜 체크 상태면 endDate 동기화
   useEffect(() => {
-    if (sameDate) {
-      setForm((f) => ({ ...f, endDate: f.startDate }));
-    }
+    if (sameDate) setForm((f) => ({ ...f, endDate: f.startDate }));
   }, [form.startDate]);
 
   const canUseAdminCategory = role === "officer" || role === "president";
@@ -1219,47 +945,26 @@ function EventFormModal({
     if (!form.category) return alert("카테고리를 선택하세요.");
     if (!form.title.trim()) return alert("모임 제목을 입력하세요.");
     if (!form.startDate || !form.endDate) return alert("날짜를 입력하세요.");
-    if (
-      !form.allDay &&
-      form.startTime &&
-      form.endTime &&
-      form.startDate === form.endDate &&
-      form.startTime > form.endTime
-    ) {
+    if (!form.allDay && form.startDate === form.endDate && form.startTime && form.endTime && form.startTime > form.endTime) {
       return alert("종료 시간이 시작 시간보다 빠릅니다.");
     }
     onSubmit(form);
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-screen-lg max-h-[90vh] bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
+    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-screen-lg max-h-[90vh] bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div className="text-lg font-bold text-gray-900 font-jua">{title}</div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
         </div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* 카테고리 */}
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-              카테고리 *
-            </div>
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">카테고리 *</div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {categoryOptions.map((c) => {
                 const disabled = !!c.adminOnly && !canUseAdminCategory;
@@ -1274,14 +979,10 @@ function EventFormModal({
                       ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div className="text-3xl">{c.emoji}</div>
-                    <div className="font-semibold text-gray-900 font-jua">
-                      {c.label}
-                    </div>
+                    <div className="font-semibold text-gray-900 font-jua">{c.label}</div>
                     <div className="text-xs text-gray-500 font-gowun">{c.desc}</div>
                     {c.adminOnly && (
-                      <span className="absolute right-2 top-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-gowun">
-                        관리자 전용
-                      </span>
+                      <span className="absolute right-2 top-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-gowun">관리자 전용</span>
                     )}
                   </button>
                 );
@@ -1291,9 +992,7 @@ function EventFormModal({
 
           {/* 제목 */}
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-              모임 제목 *
-            </div>
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">모임 제목 *</div>
             <input
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -1302,179 +1001,77 @@ function EventFormModal({
             />
           </div>
 
-          {/* 날짜 + 동일 날짜 체크박스 */}
+          {/* 날짜 + 동일 날짜 */}
           <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-gray-800 font-gowun">
-                  시작 날짜 *
-                </div>
+                <div className="text-sm font-semibold text-gray-800 font-gowun">시작 날짜 *</div>
               </div>
-              <input
-                type="date"
-                value={form.startDate}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, startDate: e.target.value }))
-                }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
-              />
+              <input type="date" value={form.startDate} onChange={(e)=>setForm((f)=>({...f, startDate: e.target.value}))} className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-gray-800 font-gowun">
-                  종료 날짜 *
-                </div>
+                <div className="text-sm font-semibold text-gray-800 font-gowun">종료 날짜 *</div>
                 <label className="flex items-center gap-2 text-xs text-gray-600 font-gowun">
-                  <input
-                    type="checkbox"
-                    checked={sameDate}
-                    onChange={(e) => setSameDate(e.target.checked)}
-                  />
+                  <input type="checkbox" checked={sameDate} onChange={(e)=>setSameDate(e.target.checked)}/>
                   동일 날짜
                 </label>
               </div>
-              <input
-                type="date"
-                value={form.endDate}
-                disabled={sameDate}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, endDate: e.target.value }))
-                }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"
-              />
+              <input type="date" value={form.endDate} disabled={sameDate} onChange={(e)=>setForm((f)=>({...f, endDate: e.target.value}))} className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"/>
             </div>
           </div>
 
-          {/* 시간 + 종일 체크박스 */}
+          {/* 시간 + 종일 */}
           <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-gray-800 font-gowun">
-                  시작 시간 (선택)
-                </div>
+                <div className="text-sm font-semibold text-gray-800 font-gowun">시작 시간 (선택)</div>
                 <label className="flex items-center gap-2 text-xs text-gray-600 font-gowun">
-                  <input
-                    type="checkbox"
-                    checked={form.allDay}
-                    onChange={(e) => onToggleAllDay(e.target.checked)}
-                  />
+                  <input type="checkbox" checked={form.allDay} onChange={(e)=>onToggleAllDay(e.target.checked)}/>
                   종일 일정(00:00~23:59)
                 </label>
               </div>
-              <input
-                type="time"
-                value={form.startTime}
-                disabled={form.allDay}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, startTime: e.target.value }))
-                }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"
-              />
+              <input type="time" value={form.startTime} disabled={form.allDay} onChange={(e)=>setForm((f)=>({...f, startTime: e.target.value}))} className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"/>
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-                종료 시간 (선택)
-              </div>
-              <input
-                type="time"
-                value={form.endTime}
-                disabled={form.allDay}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, endTime: e.target.value }))
-                }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"
-              />
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">종료 시간 (선택)</div>
+              <input type="time" value={form.endTime} disabled={form.allDay} onChange={(e)=>setForm((f)=>({...f, endTime: e.target.value}))} className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"/>
             </div>
           </div>
 
           {/* 기타 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-                장소
-              </div>
-              <input
-                value={form.location}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, location: e.target.value }))
-                }
-                placeholder="장소"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
-              />
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">장소</div>
+              <input value={form.location} onChange={(e)=>setForm((f)=>({...f, location: e.target.value}))} placeholder="장소" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-                정원(명)
-              </div>
-              <input
-                type="number"
-                min={0}
-                value={form.capacity}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, capacity: e.target.value }))
-                }
-                placeholder="예: 20"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
-              />
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">정원(명)</div>
+              <input type="number" min={0} value={form.capacity} onChange={(e)=>setForm((f)=>({...f, capacity: e.target.value}))} placeholder="예: 20" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-                준비물
-              </div>
-              <input
-                value={form.materials}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, materials: e.target.value }))
-                }
-                placeholder="예: 교재, 노트"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
-              />
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">준비물</div>
+              <input value={form.materials} onChange={(e)=>setForm((f)=>({...f, materials: e.target.value}))} placeholder="예: 교재, 노트" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-                메모
-              </div>
-              <input
-                value={form.note}
-                onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-                placeholder="추가 메모"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
-              />
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">메모</div>
+              <input value={form.note} onChange={(e)=>setForm((f)=>({...f, note: e.target.value}))} placeholder="추가 메모" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
             </div>
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
-              상세 내용
-            </div>
-            <textarea
-              value={form.description}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, description: e.target.value }))
-              }
-              placeholder="모임에 대한 상세한 설명을 입력하세요"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white min-h-[110px] font-gowun"
-            />
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">상세 내용</div>
+            <textarea value={form.description} onChange={(e)=>setForm((f)=>({...f, description: e.target.value}))} placeholder="모임에 대한 상세한 설명을 입력하세요" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white min-h-[110px] font-gowun"/>
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-gray-50">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun"
-          >
-            취소
-          </button>
-          <button
-            onClick={submit}
-            className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua"
-          >
-            등록
-          </button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun">취소</button>
+          <button onClick={submit} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua">등록</button>
         </div>
       </div>
     </div>
