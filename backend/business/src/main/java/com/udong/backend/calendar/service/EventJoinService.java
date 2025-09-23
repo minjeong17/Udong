@@ -82,7 +82,7 @@ public class EventJoinService {
 
         int nowAttendees = eventMemberRepository.countByEvent_IdAndIsParticipatedTrue(eventId);
 
-//        chatRoomService.addMember("EVENT", eventId, userId);
+        chatRoomService.addMember("EVENT", eventId, userId);
 
         return EventJoinRes.builder()
                 .eventId(eventId)
