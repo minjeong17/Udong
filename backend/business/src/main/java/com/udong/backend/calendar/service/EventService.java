@@ -7,6 +7,9 @@ import com.udong.backend.calendar.dto.EventRes;
 import com.udong.backend.calendar.dto.EventUpdateReq;
 import com.udong.backend.calendar.entity.Event;
 import com.udong.backend.calendar.repository.EventRepository;
+import com.udong.backend.chat.dto.CreateRoomRequest;
+import com.udong.backend.chat.entity.ChatRoom;
+import com.udong.backend.chat.service.ChatRoomService;
 import com.udong.backend.clubs.repository.ClubRepository;
 import com.udong.backend.codes.repository.CodeDetailRepository;
 import com.udong.backend.global.util.SecurityUtils;
@@ -31,6 +34,7 @@ public class EventService {
     private final CodeDetailRepository codes;
     private final EventAuthz authz;
     private final SecurityUtils securityUtils;
+    private final ChatRoomService chatRoomService;
 
     // 추가: 연관관계 주입을 위해
     private final ClubRepository clubRepository;
@@ -95,6 +99,11 @@ public class EventService {
         e.setType(req.getType());
 
         Event saved = events.save(e);
+
+        CreateRoomRequest chatReq = new CreateRoomRequest("EVENT", saved.getId(), saved.getTitle());
+
+        chatRoomService.create(userId, chatReq);
+
         return toRes(saved);
     }
 

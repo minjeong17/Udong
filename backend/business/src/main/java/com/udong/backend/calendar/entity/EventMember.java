@@ -4,6 +4,8 @@ import com.udong.backend.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -44,6 +46,7 @@ public class EventMember {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "event_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_event_member_event"))
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Event event;
 
     /** 참여여부 (TINYINT(1) -> boolean) */
