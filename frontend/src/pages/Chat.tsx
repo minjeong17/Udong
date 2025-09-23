@@ -680,13 +680,16 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
               {!isGlobal && (
                 <div className="border-t border-orange-200 pt-4 space-y-2">
-                  <button
-                    onClick={handleLeaveRoom}
-                    className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
-                  >
-                    <span className="text-gray-700">🚪</span>
-                    <span className="text-gray-700">채팅방 나가기</span>
-                  </button>
+                  {/* ✅ 방장이 아닐 때만 나가기 버튼 표시 */}
+                  {!isRoomOwner && (
+                    <button
+                      onClick={handleLeaveRoom}
+                      className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
+                    >
+                      <span className="text-gray-700">🚪</span>
+                      <span className="text-gray-700">채팅방 나가기</span>
+                    </button>
+                  )}
 
                   {isRoomOwner && (
                     <button

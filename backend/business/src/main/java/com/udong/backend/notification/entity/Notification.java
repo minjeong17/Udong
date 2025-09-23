@@ -34,6 +34,9 @@ public class Notification {
     @Column(name = "target_id", nullable = false)
     private Long targetId; // 알림 클릭 시 이동할 대상의 ID
 
+    @Column(name = "club_id", nullable = false)
+    private Long clubId; // 알림이 발생한 동아리 ID
+
     // Notification이 삭제될 때 관련된 Delivery 정보도 모두 삭제 (Cascade)
     @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<NotificationDelivery> deliveries = new ArrayList<>();

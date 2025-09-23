@@ -32,6 +32,7 @@ public class NotificationService {
                 .createdBy(request.getCreatedBy())
                 .type(request.getType())
                 .targetId(request.getTargetId())
+                .clubId(request.getClubId())
                 .build();
         notificationRepository.save(notification);
 
@@ -57,6 +58,71 @@ public class NotificationService {
     }
 
     /**
+     * 유저별 받은 특정 타입 알림 목록 조회 (페이징)
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationResponse> getNotificationsForUser(Long userId, String type, Pageable pageable) {
+        Page<NotificationDelivery> deliveries;
+
+        if (type == null || type.trim().isEmpty()) {
+            // 타입이 없으면 전체 조회
+            deliveries = notificationDeliveryRepository.findByUserIdWithNotification(userId, pageable);
+        } else {
+            // 특정 타입 조회
+            deliveries = notificationDeliveryRepository.findByUserIdAndNotificationTypeWithNotification(userId, type, pageable);
+        }
+
+        // Entity Page -> DTO Page 변환
+        return deliveries.map(this::convertToNotificationResponse);
+    }
+
+    /**
+     * 특정 동아리의 유저별 받은 알림 목록 조회 (페이징)
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationResponse> getNotificationsForUser(Long userId, Long clubId, Pageable pageable) {
+        Page<NotificationDelivery> deliveries = notificationDeliveryRepository.findByUserIdAndClubIdWithNotification(userId, clubId, pageable);
+
+        // Entity Page -> DTO Page 변환
+        return deliveries.map(this::convertToNotificationResponse);
+    }
+
+    /**
+     * 특정 동아리의 유저별 받은 특정 타입 알림 목록 조회 (페이징)
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationResponse> getNotificationsForUser(Long userId, Long clubId, String type, Pageable pageable) {
+        Page<NotificationDelivery> deliveries;
+
+        if (type == null || type.trim().isEmpty()) {
+            // 타입이 없으면 해당 동아리 전체 조회
+            deliveries = notificationDeliveryRepository.findByUserIdAndClubIdWithNotification(userId, clubId, pageable);
+        } else {
+            // 특정 타입 조회
+            deliveries = notificationDeliveryRepository.findByUserIdAndClubIdAndNotificationTypeWithNotification(userId, clubId, type, pageable);
+        }
+
+        // Entity Page -> DTO Page 변환
+        return deliveries.map(this::convertToNotificationResponse);
+    }
+
+    /**
+     * 유저별 미읽음 알림 개수 조회
+     */
+    @Transactional(readOnly = true)
+    public Long getUnreadNotificationCount(Long userId) {
+        return notificationDeliveryRepository.countByUserIdAndHasReadIsFalse(userId);
+    }
+
+    /**
+     * 특정 동아리의 유저별 미읽음 알림 개수 조회
+     */
+    @Transactional(readOnly = true)
+    public Long getUnreadNotificationCount(Long userId, Long clubId) {
+        return notificationDeliveryRepository.countByUserIdAndClubIdAndHasReadIsFalse(userId, clubId);
+    }
+
+    /**
      * 단일 알림 읽음 처리
      */
     public void markAsRead(Long userId, Long notificationDeliveryId) {
@@ -71,6 +137,13 @@ public class NotificationService {
      */
     public void markAllAsRead(Long userId) {
         notificationDeliveryRepository.readAllByUserId(userId);
+    }
+
+    /**
+     * 특정 동아리의 해당 유저 모든 알림 읽음 처리
+     */
+    public void markAllAsRead(Long userId, Long clubId) {
+        notificationDeliveryRepository.readAllByUserIdAndClubId(userId, clubId);
     }
 
     /**
@@ -91,6 +164,13 @@ public class NotificationService {
      */
     public void deleteAllReadNotifications(Long userId) {
         notificationDeliveryRepository.deleteAllByUserIdAndHasReadIsTrue(userId);
+    }
+
+    /**
+     * 특정 동아리의 읽은 알림 모두 삭제
+     */
+    public void deleteAllReadNotifications(Long userId, Long clubId) {
+        notificationDeliveryRepository.deleteAllByUserIdAndClubIdAndHasReadIsTrue(userId, clubId);
     }
 
     /**

@@ -17,4 +17,5 @@ public class NotificationRequest {
     private String payload;
     private String type; // Enum 대신 String을 사용하셨으므로 String 타입으로 받습니다.
     private Long targetId;
+    private Long clubId; // 알림이 발생한 동아리 ID
 }
