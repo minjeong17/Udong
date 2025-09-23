@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.util.List;
 
 @RestController
@@ -60,6 +61,15 @@ public class ChatRoomController {
     ) {
         ChatParticipantsResponse resp = chatRoomService.getParticipants(chatId);
         return ResponseEntity.ok(ApiResponse.ok(resp));
+    }
+
+    /** 채팅방 나가기 */
+    @DeleteMapping("/{chatId}/leave")
+    public ResponseEntity<ApiResponse<?>> leave(@PathVariable Integer chatId) {
+        System.out.println("leaveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        Integer currentUserId = securityUtils.currentUserId(); // 토큰에서 userId
+        chatRoomService.leave(chatId, currentUserId);
+        return ResponseEntity.ok(ApiResponse.ok("채팅방 나가기 완료"));
     }
 
 }

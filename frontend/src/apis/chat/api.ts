@@ -108,12 +108,20 @@ export const ChatApi = {
 
     const url = `${BASE_URL}${API_PREFIX}/dutchpay/${encodeURIComponent(chatId)}`;
 
-    console.log("URLLLLL ", url);
-
     // ✅ fetchClient가 JSON 파싱/토큰/401재시도 다 처리
     return await fetchClient<ApiResponse<string>>(url, {
       method: "POST",
       body: form,
+      auth: true,
+    });
+  },
+
+  // 채팅방 나가기
+  leaveRoom: async (chatId: number): Promise<void> => {
+    const url = `${BASE_URL}${API_PREFIX}/chat/rooms/${chatId}/leave`;
+    console.log("URLLLLL ", url);
+    await fetchClient<{ success: boolean }>(url, {
+      method: 'DELETE',
       auth: true,
     });
   },
