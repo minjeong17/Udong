@@ -8,8 +8,6 @@ import com.udong.backend.calendar.entity.ConfirmParticipantsRequest;
 import com.udong.backend.calendar.service.EventMemberService;
 import com.udong.backend.calendar.service.EventService;
 import com.udong.backend.calendar.service.EventService;
-import com.udong.backend.chat.dto.ChatParticipantsResponse;
-import com.udong.backend.dutchpay.service.DutchpayService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -29,7 +27,6 @@ public class EventController {
 
     private final EventService service;
     private final EventMemberService eventMemberService;
-    private final DutchpayService dutchpayService;
 
     // 일정 등록
     @PostMapping
