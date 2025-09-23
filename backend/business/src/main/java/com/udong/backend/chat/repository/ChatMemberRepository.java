@@ -3,10 +3,11 @@ package com.udong.backend.chat.repository;
 import com.udong.backend.chat.entity.ChatMember;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface ChatRoomMemberRepository extends JpaRepository<ChatMember, Integer> {
+public interface ChatMemberRepository extends JpaRepository<ChatMember, Integer> {
     boolean existsByChat_IdAndUser_Id(Integer chatId, Integer userId);
     // 특정 채팅방의 멤버 수 조회
     Long countByChatId(Integer chatId);
@@ -27,4 +28,17 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatMember, Inte
         order by m.joinedAt asc
     """)
     List<MemberView> findMemberViewsByChatId(Integer chatId);
+
+    @Query("""
+        select m
+        from ChatMember m
+        join fetch m.user u
+        where m.chat.id = :chatId
+        order by u.id asc
+    """)
+    List<ChatMember> findByChatRoomId(@Param("chatId") Integer chatId);
+
+    /** chat_members 에서 (chat_id, user_id)로 삭제 */
+    int deleteByChat_IdAndUser_Id(Integer chatId, Integer userId);
+
 }

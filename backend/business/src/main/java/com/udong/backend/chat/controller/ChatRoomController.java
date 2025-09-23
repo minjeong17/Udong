@@ -3,6 +3,8 @@ package com.udong.backend.chat.controller;
 import com.udong.backend.chat.dto.ChatParticipantsResponse;
 import com.udong.backend.chat.dto.ChatRoomListItem;
 import com.udong.backend.chat.dto.CreateRoomRequest;
+import com.udong.backend.chat.entity.ChatRoom;
+import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.chat.service.ChatRoomService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.util.List;
 
 @RestController
@@ -20,6 +23,7 @@ public class ChatRoomController {
 
     private final SecurityUtils securityUtils;
     private final ChatRoomService chatRoomService;
+    private final ChatRoomRepository chatRoomRepository;
 
     /** 채팅방 생성 */
     @PostMapping
@@ -58,4 +62,14 @@ public class ChatRoomController {
         ChatParticipantsResponse resp = chatRoomService.getParticipants(chatId);
         return ResponseEntity.ok(ApiResponse.ok(resp));
     }
+
+    /** 채팅방 나가기 */
+    @DeleteMapping("/{chatId}/leave")
+    public ResponseEntity<ApiResponse<?>> leave(@PathVariable Integer chatId) {
+        System.out.println("leaveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        Integer currentUserId = securityUtils.currentUserId(); // 토큰에서 userId
+        chatRoomService.leave(chatId, currentUserId);
+        return ResponseEntity.ok(ApiResponse.ok("채팅방 나가기 완료"));
+    }
+
 }

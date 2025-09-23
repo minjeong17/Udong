@@ -43,4 +43,7 @@ public interface EventMemberRepository extends JpaRepository<EventMember, Intege
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select count(em) from EventMember em where em.event.id = :eventId and em.isParticipated = true")
     long lockAndCountParticipated(@Param("eventId") Integer eventId);
+
+    /** event_members 에서 (event_id, user_id)로 삭제 */
+    int deleteByEvent_IdAndUser_Id(Integer eventId, Integer userId);
 }

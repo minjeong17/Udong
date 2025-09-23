@@ -57,4 +57,13 @@ export interface Participant {
 export interface ChatParticipants {
   chatId: number;
   participants: Participant[];
+  confirmed?: boolean;       
+  confirmedCount?: number;
 }
+
+export type CreateDutchpayPayload = {
+  amount: number;
+  note?: string | null;
+  participantUserIds: number[]; // 최소 1명 이상
+  receipt?: File | Blob | null; // 선택
+};

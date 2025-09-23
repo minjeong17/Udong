@@ -88,12 +88,13 @@ public class EventController {
 
     @PutMapping("/chats/{chatId}/participants/confirm")
     public ResponseEntity<ApiResponse<?>> confirmParticipantsByChatId(
+            @PathVariable Integer clubId,
             @PathVariable Integer chatId,
             @RequestBody ConfirmParticipantsRequest req
     ) {
 
-        eventMemberService.confirmParticipantsByChatId(chatId, req.getUserIds());
-        return ResponseEntity.ok(ApiResponse.ok("참여자 확정 완료"));
+        ChatParticipantsResponse dto = eventMemberService.confirmParticipantsByChatId(chatId, req.getUserIds());
+        return ResponseEntity.ok(ApiResponse.ok(dto));
     }
 
 }

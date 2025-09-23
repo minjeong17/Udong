@@ -37,13 +37,16 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> {
     List<ChatRoomListItem> findMyRoomsInClub(@Param("userId") Integer userId,
                                              @Param("clubId") Integer clubId);
 
-    /**
-     * chat_rooms.id = :id 인 채팅방을 createdBy(User)까지 즉시 로딩해서 가져온다.
-     */
-    @EntityGraph(attributePaths = {"createdBy"})
-    Optional<ChatRoom> findWithCreatorById(Integer id);
-
     @Query("select c from ChatRoom c join fetch c.type where c.id = :chatId")
     Optional<ChatRoom> findByIdWithType(@Param("chatId") Integer chatId);
+
+    @Query("""
+        select cr
+        from ChatRoom cr
+        join fetch cr.createdBy
+        where cr.id = :chatId
+    """)
+    Optional<ChatRoom> findWithCreatorById(@Param("chatId") Integer chatId);
+
 }
 
