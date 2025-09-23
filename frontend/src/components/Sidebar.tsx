@@ -3,6 +3,7 @@ import { useRouter } from '../hooks/useRouter';
 import { useLogout } from '../hooks/useLogout';
 import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
+import { NotificationApi } from '../apis/notification';
 import type { ClubCreateResponse, MascotResponse } from '../apis/clubs/response';
 
 interface SidebarProps {
@@ -21,6 +22,18 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [clubInfo, setClubInfo] = useState<ClubCreateResponse | null>(null);
   const [mascotInfo, setMascotInfo] = useState<MascotResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 미읽음 알림 개수 가져오기
+  const loadUnreadCount = async () => {
+    if (!clubId) return;
+    try {
+      const count = await NotificationApi.getUnreadNotificationCount(clubId);
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('미읽음 개수 로드 실패:', error);
+    }
+  };
 
   // 동아리 정보와 마스코트 정보 가져오기
   useEffect(() => {
@@ -30,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       try {
         setIsLoading(true);
 
-        // 동아리 정보와 마스코트 정보를 병렬로 가져오기
+        // 동아리 정보, 마스코트 정보, 미읽음 개수를 병렬로 가져오기
         const [clubData, mascotData] = await Promise.all([
           ClubApi.getClubDetails(clubId),
           ClubApi.getActiveMascot(clubId)
@@ -38,6 +51,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         setClubInfo(clubData);
         setMascotInfo(mascotData);
+
+        // 미읽음 개수도 로드
+        await loadUnreadCount();
       } catch (error) {
         console.error('Failed to fetch club data:', error);
       } finally {
@@ -136,9 +152,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={onShowNotification}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group relative" title="알림">
             <img src="/images/button/Alarm.png" alt="알림" className="w-14 h-14" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">3</span>
-            </div>
+            {unreadCount > 0 && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-bold">{unreadCount}</span>
+              </div>
+            )}
           </button>
 
           {/* 5. 공금 사용 내역 */}
