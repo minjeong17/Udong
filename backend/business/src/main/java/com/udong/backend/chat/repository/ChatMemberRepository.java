@@ -37,4 +37,8 @@ public interface ChatMemberRepository extends JpaRepository<ChatMember, Integer>
         order by u.id asc
     """)
     List<ChatMember> findByChatRoomId(@Param("chatId") Integer chatId);
+
+    /** chat_members 에서 (chat_id, user_id)로 삭제 */
+    int deleteByChat_IdAndUser_Id(Integer chatId, Integer userId);
+
 }

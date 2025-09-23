@@ -515,10 +515,21 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
     );
   };
 
-  const handleLeaveRoom = () => {
-    if (confirm("정말로 채팅방을 나가시겠습니까?")) {
-      console.log("채팅방 나가기");
-      // 실제로는 라우터로 이동하거나 API 호출
+  const handleLeaveRoom = async () => {
+    if (!selectedChannel) return;
+    if (!confirm("정말로 채팅방을 나가시겠습니까?")) return;
+
+    try {
+      await ChatApi.leaveRoom(selectedChannel);
+      alert("채팅방에서 나갔습니다.");
+
+      // UI 반영 (예: 채널 목록에서 제거)
+      setChannels((prev) => prev.filter((c) => c.id !== selectedChannel));
+      setSelectedChannel(null);
+      setChatMessages([]);
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message ?? "채팅방 나가기 실패");
     }
   };
 
@@ -634,25 +645,27 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                 </button>
               )}
 
-              <div className="border-t border-orange-200 pt-4 space-y-2">
-                <button
-                  onClick={handleLeaveRoom}
-                  className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
-                >
-                  <span className="text-gray-700">🚪</span>
-                  <span className="text-gray-700">채팅방 나가기</span>
-                </button>
-
-                {isRoomOwner && (
+              {!isGlobal && (
+                <div className="border-t border-orange-200 pt-4 space-y-2">
                   <button
-                    onClick={handleDeleteRoom}
-                    className="w-full py-2 px-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
+                    onClick={handleLeaveRoom}
+                    className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
                   >
-                    <span className="text-red-600">🗑️</span>
-                    <span className="text-red-600">채팅방 삭제</span>
+                    <span className="text-gray-700">🚪</span>
+                    <span className="text-gray-700">채팅방 나가기</span>
                   </button>
-                )}
-              </div>
+
+                  {isRoomOwner && (
+                    <button
+                      onClick={handleDeleteRoom}
+                      className="w-full py-2 px-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
+                    >
+                      <span className="text-red-600">🗑️</span>
+                      <span className="text-red-600">채팅방 삭제</span>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

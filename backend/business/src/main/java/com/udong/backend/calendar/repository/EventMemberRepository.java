@@ -25,4 +25,7 @@ public interface EventMemberRepository extends JpaRepository<EventMember, Intege
             "where em.event.id = :eventId and em.user.id in :userIds")
     int markTrueByEventIdAndUserIds(@Param("eventId") Integer eventId,
                                     @Param("userIds") List<Integer> userIds);
+
+    /** event_members 에서 (event_id, user_id)로 삭제 */
+    int deleteByEvent_IdAndUser_Id(Integer eventId, Integer userId);
 }
