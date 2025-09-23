@@ -1,6 +1,7 @@
 package com.udong.backend.shop.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
-import com.udong.backend.shop.dto.ItemResponse;
 import com.udong.backend.shop.dto.UserPointLedgerRequest;
 import com.udong.backend.shop.dto.UserPointLedgerResponse;
 import com.udong.backend.shop.entity.UserPointLedger;
@@ -30,7 +30,7 @@ public class PointController {
 	private final PointService pointService;
 	
 	/**
-     * 동아리 포인트 내역 조회
+     * 동아리내 포인트 내역 조회
      */
     @GetMapping("/{clubId}")
     public ResponseEntity<ApiResponse<List<UserPointLedgerResponse>>> getAllLedgers(@PathVariable("clubId") Integer clubId) {
@@ -40,6 +40,14 @@ public class PointController {
         		.toList();
         
         return ResponseEntity.ok(ApiResponse.ok(ledgers));
+    }
+    
+    @GetMapping("/{clubId}/latest")
+    public ResponseEntity<ApiResponse<Optional<UserPointLedger>>> getLatestLedger(@PathVariable("clubId") Integer clubId) {
+    	Integer userId = securityUtils.currentUserId();
+    	Optional<UserPointLedger> ledger = pointService.getLatest(userId, clubId);
+        
+        return ResponseEntity.ok(ApiResponse.ok(ledger));
     }
 	
 	/**

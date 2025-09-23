@@ -1,6 +1,7 @@
 package com.udong.backend.shop.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 public class PointService {
 	
 	private final PointRepository pointRepository;
+	
+	public Optional<UserPointLedger> getLatest(Integer userId, Integer clubId) {
+		return pointRepository.findTopByUserIdAndClubIdOrderByCreatedAtDesc(userId, clubId);
+	}
 
 	public List<UserPointLedger> getLedgers(Integer userId, Integer clubId) {
         return pointRepository.findByUserIdAndClubId(userId, clubId);

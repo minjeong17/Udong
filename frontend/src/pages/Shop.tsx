@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
 import { useRouter } from '../hooks/useRouter';
+import { ShopApi } from "../apis/shop";
+import type { ItemResponse, InventoryResponse } from "../apis/shop";
+import { useAuthStore } from "../stores/authStore";
 
 /** 텍스트만 링크 (밑줄은 hover 때만) */
 function MyPageTextLink({ onClick, className = "" }: { onClick?: () => void; className?: string }) {
@@ -35,42 +38,10 @@ function PointsBadge({ points, href = "#" }: { points: number; href?: string }) 
       aria-label="마이페이지 포인트 현황으로 이동"
     >
       <CoinIcon />
-      <span className="text-sm font-bold tabular-nums font-jua">{points.toLocaleString()}P</span>
+      <span className="text-sm font-bold tabular-nums font-jua">{(points ?? 0).toLocaleString()}P</span>
     </a>
   );
 }
-
-type Item = {
-  id: string;
-  icon: string;
-  name: string;
-  description: string;
-  price: number;
-  // duration/stock 필드는 더 이상 UI에 노출하지 않음
-  duration?: string;
-  stock?: string;
-};
-
-type InventoryItem = {
-  id: string;
-  icon: string;
-  name: string;
-  quantity: string; // "보유: n개"만 표시
-  expiry?: string;  // 표시 안 함
-};
-
-const SHOP_ITEMS: Item[] = [
-  { id: "vote_plus", icon: "🗳️", name: "추가 투표권", description: "한 번의 투표에서 2표를 행사할 수 있습니다", price: 50 },
-  { id: "fee_discount", icon: "💸", name: "회비 감면권 (10%)", description: "다음 회비 납부 시 10% 감면", price: 120 },
-  { id: "title_king", icon: "🏅", name: "특별 칭호", description: "프로필에 특별 칭호가 표시됩니다", price: 200 },
-  { id: "late_free", icon: "⏰", name: "지각 면제권", description: "지각 1회 면제 처리", price: 150 },
-];
-
-const INITIAL_INVENTORY: InventoryItem[] = [
-  { id: "vote_plus", icon: "🗳️", name: "추가 투표권", quantity: "보유: 2개" },
-  { id: "title_king", icon: "🏅", name: "특별 칭호",   quantity: "보유: 1개" },
-  { id: "late_free",  icon: "⏰", name: "지각 면제권", quantity: "보유: 1개" },
-];
 
 interface ShopProps {
   onNavigateToOnboarding: () => void;
@@ -78,15 +49,76 @@ interface ShopProps {
 
 export default function Shop({ onNavigateToOnboarding }: ShopProps) {
   const { navigate } = useRouter();
-  const [points] = useState(2450);
-  const [inventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
+  const [points, setPoints] = useState(0);
+  const [items, setItems] = useState<ItemResponse[]>([]);
+  const [inventory, setInventory] = useState<InventoryResponse[]>([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const auth = useAuthStore.getState();
+  const clubId = auth?.user?.clubId;
 
-  const handleBuy = (name: string) => {
-    if (window.confirm("정말 구매하시겠습니까??")) {
-      alert(`데모: '${name}' 구매 로직은 백엔드 연동 시 구현하세요.`);
+  const itemIcons: Record<number, string> = {
+    1: "🧪",  // 포션
+    2: "⚔️",  // 검
+    3: "🛡️",  // 방패
+    4: "🔑",  // 열쇠
+    5: "💎",  // 보석
+    6: "📖",  // 책
+    7: "🎯",  // 표적 
+    8: "🔥",  // 불꽃 
+    9: "❄️",  // 얼음 
+    10: "🪙", // 코인
+    11: "🍀", // 클로버 
+    12: "🧲", // 자석 
+  };
+
+  const handleBuy = async (itemId: number, itemName: string) => {
+    if (clubId == null) {
+      alert("클럽 정보가 없습니다. 다시 로그인해주세요.");
+      return;
+    }
+
+    if (!window.confirm(`정말 '${itemName}'을 구매하시겠습니까?`)) return;
+    
+    try {
+      await ShopApi.purchase(clubId, itemId);
+      const [updatedInventory, updatedLedger] = await Promise.all([
+        ShopApi.getInventory(clubId),
+        ShopApi.getPoint(clubId),
+      ]);
+
+      setInventory(updatedInventory);
+      setPoints(updatedLedger.currPoint);
+
+      alert(`[${itemName}] 구매 완료!`);
+
+    } catch (err) {
+      console.error(err);
+      alert("구매에 실패했습니다.");
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        if (clubId == null) {
+          alert("클럽 정보가 없습니다. 다시 로그인해주세요.");
+          return;
+        }
+
+        const [shopItems, myInventory, myLedger] = await Promise.all([
+          ShopApi.getItems(),
+          ShopApi.getInventory(clubId),
+          ShopApi.getPoint(clubId)
+        ]);
+        setItems(shopItems);
+        setInventory(myInventory);
+        setPoints(myLedger.currPoint);
+      } catch (err) {
+        console.error(err);
+        alert("상점 정보를 불러오는 중 오류가 발생했습니다.");
+      }
+    })();
+  }, [clubId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
@@ -109,7 +141,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
         </header>
 
         <div className="px-6 md:px-8 py-6 space-y-8">
-          {/* 아이템 상점: 우측 끝에 2450P 배지 */}
+          {/* 아이템 상점 */}
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -120,14 +152,13 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {SHOP_ITEMS.map((it) => (
+              {items.map((it) => (
                 <div key={it.id} className="group rounded-xl border border-slate-200 hover:border-slate-300 bg-white p-4 transition shadow-sm hover:shadow-md">
                   <div className="flex items-start gap-3">
-                    <div className="text-3xl shrink-0">{it.icon}</div>
+                    <div className="text-3xl shrink-0">{itemIcons[it.id] ?? "❔"}</div>
                     <div className="min-w-0">
                       <h4 className="font-semibold text-slate-800 truncate font-jua">{it.name}</h4>
                       <p className="text-sm text-slate-600 font-gowun">{it.description}</p>
-                      {/* 유효기간/재고 배지 제거됨 */}
                     </div>
                   </div>
 
@@ -135,7 +166,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
                     <div className="text-orange-500 font-bold font-jua">{it.price}P</div>
                     <button
                       className="h-9 px-4 rounded-lg text-sm font-medium bg-orange-400 text-white hover:bg-orange-500 active:translate-y-[1px] transition font-jua"
-                      onClick={() => handleBuy(it.name)}
+                      onClick={() => handleBuy(it.id, it.name)}
                     >
                       구매
                     </button>
@@ -145,7 +176,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
             </div>
           </section>
 
-          {/* 내 아이템: 캡처 스타일 (만료 제거, 보유만 표시) */}
+          {/* 내 아이템 */}
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="mb-1 flex items-center gap-2">
               <span className="text-xl" aria-hidden>📦</span>
@@ -159,11 +190,10 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {inventory.map((inv) => (
                 <div key={inv.id} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
-                  <div className="text-2xl">{inv.icon}</div>
+                  <div className="text-2xl">{itemIcons[inv.itemId] ?? "❔"}</div>
                   <div className="min-w-0">
-                    <div className="font-medium text-slate-800 truncate font-jua">{inv.name}</div>
-                    <div className="text-xs text-slate-500 font-gowun">{inv.quantity}</div>
-                    {/* 만료 정보 제거됨 */}
+                    <div className="font-medium text-slate-800 truncate font-jua">{inv.itemName}</div>
+                    <div className="text-xs text-slate-500 font-gowun">{inv.qty}</div>
                   </div>
                 </div>
               ))}
