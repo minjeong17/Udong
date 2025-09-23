@@ -66,10 +66,17 @@ public class ChatRoomController {
     /** 채팅방 나가기 */
     @DeleteMapping("/{chatId}/leave")
     public ResponseEntity<ApiResponse<?>> leave(@PathVariable Integer chatId) {
-        System.out.println("leaveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
         Integer currentUserId = securityUtils.currentUserId(); // 토큰에서 userId
         chatRoomService.leave(chatId, currentUserId);
         return ResponseEntity.ok(ApiResponse.ok("채팅방 나가기 완료"));
+    }
+
+    /** 채팅방 삭제 */
+    @DeleteMapping("/{chatId}")
+    public ResponseEntity<ApiResponse<?>> deleteRoom(@PathVariable Integer chatId) {
+        Integer currentUserId = securityUtils.currentUserId();
+        chatRoomService.deleteRoom(chatId, currentUserId);
+        return ResponseEntity.ok(ApiResponse.ok("채팅방 삭제 완료"));
     }
 
 }

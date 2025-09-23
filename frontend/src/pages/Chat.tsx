@@ -39,7 +39,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [deadline, setDeadline] = useState("");
   const [options, setOptions] = useState(["", ""]);
-  const [isRoomOwner] = useState(true); // 현재 사용자가 방장인지 확인
+  // const [isRoomOwner] = useState(true); // 현재 사용자가 방장인지 확인
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -185,6 +185,17 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
   const currentChannel = channels.find((c) => c.id === selectedChannel);
   const isGlobal = currentChannel?.typeCode === "GLOBAL";
+
+  const token = localStorage.getItem("accessToken");
+  const payload = token ? parseJwt(token) : null;
+  const myUserId: number | null = payload?.userId
+    ? Number(payload.userId)
+    : null;
+
+  const isRoomOwner =
+    !!currentChannel &&
+    myUserId != null &&
+    currentChannel.createdByUserId === myUserId;
 
   // EVENT에서만 보이고, 참여 인원 확정 후에만 활성
   const isSettlementEnabled =
@@ -533,12 +544,34 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
     }
   };
 
-  const handleDeleteRoom = () => {
+  const handleDeleteRoom = async () => {
+    if (!selectedChannel) return;
+
     if (
-      confirm("정말로 채팅방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")
+      !confirm(
+        "정말로 채팅방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+      )
     ) {
-      console.log("채팅방 삭제");
-      // 실제로는 API 호출 후 라우터로 이동
+      return;
+    }
+
+    try {
+      // WebSocket 먼저 닫기
+      try {
+        wsRef.current?.close();
+      } catch {}
+
+      await ChatApi.deleteRoom(selectedChannel);
+
+      alert("채팅방이 삭제되었습니다.");
+
+      // UI 반영: 삭제된 방을 목록에서 제거 + 선택 해제
+      setChannels((prev) => prev.filter((c) => c.id !== selectedChannel));
+      setSelectedChannel(null);
+      setChatMessages([]);
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message ?? "채팅방 삭제에 실패했습니다.");
     }
   };
 

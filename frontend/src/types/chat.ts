@@ -20,6 +20,7 @@ export interface Channel {
   typeCode: "GLOBAL" | "EVENT";
   targetId: number;
   memberCount: number;
+  createdByUserId: number;
 }
 
 // --- WebSocket 수신/송신 메시지 타입 ---
