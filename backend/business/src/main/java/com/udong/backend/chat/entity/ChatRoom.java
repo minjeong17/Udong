@@ -7,6 +7,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -69,13 +71,21 @@ public class ChatRoom {
     @Column(name = "participants_confirmed_count")
     private Integer participantsConfirmedCount;
 
+    /**
+     * 채팅방에 속한 멤버들 (Cascade + orphanRemoval 적용)
+     */
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMember> members = new ArrayList<>();
+
+    /**
+     * 채팅방에 속한 메시지들 (Cascade + orphanRemoval 적용)
+     */
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMessage> messages = new ArrayList<>();
+
     public void confirmParticipants(int count) {
         this.participantsConfirmed = true;
         this.participantsConfirmedCount = count;
     }
 
-    public void unconfirmParticipants() {
-        this.participantsConfirmed = false;
-        this.participantsConfirmedCount = null;
-    }
 }

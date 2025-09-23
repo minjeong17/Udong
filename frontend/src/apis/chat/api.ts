@@ -9,6 +9,7 @@ const toChannel = (r: ChatRoomApi): Channel => ({
   typeCode: r.typeCode,
   targetId: r.targetId,
   memberCount: r.memberCount,
+  createdByUserId: r.createdByUserId,
 });
 
 function mapParticipant(r: ParticipantRes): Participant {
@@ -116,10 +117,19 @@ export const ChatApi = {
     });
   },
 
-  // 채팅방 나가기
+  // ✅ 채팅방 나가기
   leaveRoom: async (chatId: number): Promise<void> => {
     const url = `${BASE_URL}${API_PREFIX}/chat/rooms/${chatId}/leave`;
     console.log("URLLLLL ", url);
+    await fetchClient<{ success: boolean }>(url, {
+      method: 'DELETE',
+      auth: true,
+    });
+  },
+
+    // ✅ 채팅방 삭제
+  deleteRoom: async (chatId: number): Promise<void> => {
+    const url = `${BASE_URL}${API_PREFIX}/chat/rooms/${chatId}`;
     await fetchClient<{ success: boolean }>(url, {
       method: 'DELETE',
       auth: true,
