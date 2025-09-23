@@ -61,9 +61,13 @@ public class ClubMemberAdminController {
     @PostMapping("/{userId}/role")
     public ResponseEntity<ApiResponse<Void>> transferLeader(
             @PathVariable("clubId") Long clubId,
-            @PathVariable("userId") Integer userId) {
+            @PathVariable("userId") Integer userId,
+            @RequestBody @Valid MemberDtos.TransferLeaderReq req) {
+
         Integer actorId = securityUtils.currentUserId();
-        members.transferLeaderByUserId(clubId, actorId, userId);
+        String newAccountNumber = req.newAccountNumber();
+        members.transferLeaderByUserId(clubId, actorId, userId, newAccountNumber);
+
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 

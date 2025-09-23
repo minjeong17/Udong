@@ -93,6 +93,11 @@ public class User {
         availability.setUser(null);
     }
 
+    public void updateAccount(String accountCipher, short accountKeyVer) {
+        this.accountCipher = accountCipher;
+        this.accountKeyVer = accountKeyVer;
+    }
+
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Event> createdEvents = new ArrayList<>();

@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { MyUnpaidDuesItem } from '../apis/clubdues/response';
+import { UserApi } from '../apis/user/api';
+import { ClubDuesApi } from '../apis/clubdues/api';
+import { useAuthStore } from '../stores/authStore';
+import AccountChangeModal from './AccountChangeModal';
 
 interface DuesPaymentModalProps {
   isOpen: boolean;
@@ -14,36 +18,109 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
   onConfirm,
   duesInfo
 }) => {
+  const clubId = useAuthStore((state) => state.clubId);
   const [hasDiscountCoupon] = useState(false); // 추후 inventory API로 확인
   const [discountAmount, setDiscountAmount] = useState(0); // 추후 계산
-
-  // 추후 user API에서 가져올 계좌 정보 (임시 데이터)
-  const [userAccount] = useState({
-    bankName: 'SSAFY은행',
-    accountNumber: '1023921491924'
+  const [userAccount, setUserAccount] = useState({
+    bankName: '로딩중...',
+    accountNumber: '로딩중...'
   });
+  const [isAccountChangeModalOpen, setIsAccountChangeModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      UserApi.getMyAccount()
+        .then(setUserAccount)
+        .catch(error => {
+          console.error('계좌 정보 조회 실패:', error);
+          setUserAccount({
+            bankName: '계좌 정보 오류',
+            accountNumber: '정보를 불러올 수 없습니다'
+          });
+        });
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const finalAmount = duesInfo.membershipDues - discountAmount;
 
-  const handleConfirm = () => {
-    // 추후 결제 API 연동
-    console.log('결제 정보:', {
-      duesId: duesInfo.duesId,
-      accountInfo: userAccount,
-      originalAmount: duesInfo.membershipDues,
-      discountAmount,
-      finalAmount
-    });
-    onConfirm();
-    onClose();
+  const handleConfirm = async () => {
+    try {
+      const paymentRequest = {
+        originalAmount: duesInfo.membershipDues,
+        discountAmount: discountAmount
+      };
+
+      if (!clubId) {
+        throw new Error('동아리 정보를 찾을 수 없습니다.');
+      }
+
+      const result = await ClubDuesApi.payDues(clubId, duesInfo.duesId, paymentRequest);
+
+      alert(`결제가 완료되었습니다!\n결제 금액: ${result.finalAmount.toLocaleString()}원`);
+      onConfirm();
+      onClose();
+    } catch (error: any) {
+      console.error('결제 실패:', error);
+
+      let errorMessage = '결제에 실패했습니다.';
+
+      // fetchClient에서 이미 파싱된 에러 응답 처리
+      if (error?.data) {
+        errorMessage = error.data;
+      } else if (error?.message) {
+        try {
+          const errorData = JSON.parse(error.message);
+          errorMessage = errorData?.data || errorData?.message || errorMessage;
+        } catch {
+          errorMessage = error.message;
+        }
+      }
+
+      // 특정 에러 메시지에 대한 사용자 친화적 처리
+      if (errorMessage.includes('잔액이 부족')) {
+        errorMessage = '💳 계좌 잔액이 부족합니다.\n계좌에 충분한 금액이 있는지 확인해 주세요.';
+      } else if (errorMessage.includes('계좌번호')) {
+        errorMessage = '🏦 계좌 정보에 문제가 있습니다.\n계좌번호를 다시 확인해 주세요.';
+      } else if (errorMessage.includes('이체')) {
+        errorMessage = '⚠️ ' + errorMessage;
+      }
+
+      alert(errorMessage);
+    }
   };
 
   const handleAccountChange = () => {
-    // 추후 계좌 변경 모달 또는 페이지 이동
-    console.log('계좌 변경 요청');
-    alert('계좌 변경 기능은 추후 구현 예정입니다.');
+    setIsAccountChangeModalOpen(true);
+  };
+
+  const handleAccountUpdate = async (newAccountNumber: string) => {
+    try {
+      await UserApi.updateMyAccount(newAccountNumber);
+      const updatedAccount = await UserApi.getMyAccount();
+      setUserAccount(updatedAccount);
+      alert('계좌가 성공적으로 변경되었습니다.');
+    } catch (error: any) {
+      console.error('계좌 변경 실패:', error);
+
+      let errorMessage = '계좌 변경에 실패했습니다.';
+
+      // fetchClient에서 throw한 에러 메시지 파싱
+      if (error?.message) {
+        try {
+          // JSON 형태의 에러 응답인지 확인
+          const errorData = JSON.parse(error.message);
+          // ApiResponse 구조: { success: false, data: "메시지", status: 400 }
+          errorMessage = errorData?.data || errorData?.message || errorMessage;
+        } catch {
+          // JSON이 아니면 그대로 사용
+          errorMessage = error.message;
+        }
+      }
+
+      alert(errorMessage);
+    }
   };
 
   return (
@@ -222,6 +299,13 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 계좌 변경 모달 */}
+      <AccountChangeModal
+        isOpen={isAccountChangeModalOpen}
+        onClose={() => setIsAccountChangeModalOpen(false)}
+        onConfirm={handleAccountUpdate}
+      />
     </div>
   );
 };

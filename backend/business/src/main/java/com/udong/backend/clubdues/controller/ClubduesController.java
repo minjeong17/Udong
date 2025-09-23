@@ -98,4 +98,16 @@ public class ClubduesController {
         ClubDuesDtos.MyUnpaidDuesResponse response = clubDuesService.getMyUnpaidDues(clubId, currentUserId);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
+
+    // 9. 회비 결제
+    @PostMapping("/{duesId}/pay")
+    public ResponseEntity<ApiResponse<ClubDuesDtos.PayDuesResponse>> payDues(
+            @PathVariable Integer clubId,
+            @PathVariable Integer duesId,
+            @RequestBody ClubDuesDtos.PayDuesRequest request) {
+
+        Integer currentUserId = securityUtils.currentUserId();
+        ClubDuesDtos.PayDuesResponse response = clubDuesService.payDues(clubId, duesId, currentUserId, request);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
 }

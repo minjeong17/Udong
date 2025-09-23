@@ -152,8 +152,10 @@ const fetchClient = async <T>(url: string, options: FetchOptions = {}): Promise<
     throw new Error("FORBIDDEN");
   }
   if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(txt || `HTTP_${res.status}`);
+    const responseText = await res.text().catch(() => "");
+    const error = new Error(responseText || `HTTP_${res.status}`);
+    (error as any).responseText = responseText;
+    throw error;
   }
 
   if (asText) return (await res.text()) as unknown as T;

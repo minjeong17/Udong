@@ -51,12 +51,21 @@ const Header: React.FC<HeaderProps> = ({
               우동 - 우리들의 동아리
             </button>
           </div>
-          <button
-            onClick={onLoginClick}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full font-medium font-gowun transition-colors"
-          >
-            로그인
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={() => handleLogout(onNavigateToOnboarding)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full font-medium font-gowun transition-colors"
+            >
+              로그아웃
+            </button>
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full font-medium font-gowun transition-colors"
+            >
+              로그인
+            </button>
+          )}
         </div>
       </header>
     );

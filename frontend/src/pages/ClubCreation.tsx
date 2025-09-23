@@ -101,6 +101,48 @@ const ClubCreation: React.FC<ClubCreationProps> = ({
     { value: "other", label: "기타" },
   ];
 
+  // 로딩 화면
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#fcf9f5] flex flex-col items-center justify-center relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-orange-200 rounded-full opacity-20 animate-drift"></div>
+          <div className="absolute top-40 right-20 w-24 h-24 bg-yellow-200 rounded-full opacity-25 animate-drift-reverse"></div>
+          <div className="absolute bottom-32 left-20 w-28 h-28 bg-pink-200 rounded-full opacity-15 animate-drift"></div>
+          <div className="absolute bottom-60 right-32 w-20 h-20 bg-blue-200 rounded-full opacity-30 animate-drift-reverse"></div>
+        </div>
+
+        {/* Loading Content */}
+        <div className="relative z-10 text-center">
+          <div className="mb-8">
+            <img
+              src="/images/clubCreating.png"
+              alt="동아리 생성 중"
+              className="w-64 h-64 object-contain mx-auto animate-bounce-slow"
+            />
+          </div>
+
+          <div className="mb-4">
+            <h2 className="text-3xl font-bold text-orange-500 font-jua mb-2">
+              동아리와 마스코트를 생성중입니다
+            </h2>
+            <p className="text-gray-600 font-gowun text-lg">
+              잠시만 기다려주세요...
+            </p>
+          </div>
+
+          {/* Loading Dots Animation */}
+          <div className="flex justify-center space-x-2">
+            <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+            <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+            <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fcf9f5] relative overflow-hidden">
       {/* Animated Background Elements */}

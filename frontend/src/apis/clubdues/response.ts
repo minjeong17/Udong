@@ -74,3 +74,9 @@ export interface MyUnpaidDuesItem {
   membershipDues: number;
   createdAt: string;
 }
+
+// 회비 결제 응답 타입
+export interface PayDuesResponse {
+  duesId: number;
+  finalAmount: number;
+}

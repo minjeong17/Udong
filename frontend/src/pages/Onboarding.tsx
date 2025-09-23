@@ -1,21 +1,14 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Header from '../components/Header';
-import { useAuthStore } from '../stores/authStore';
 
 interface OnboardingProps {
   onNavigateToLogin: () => void;
   onNavigateToClubSelection?: () => void;
 }
 
-const Onboarding: React.FC<OnboardingProps> = ({ onNavigateToLogin, onNavigateToClubSelection }) => {
-  const { isAuthenticated } = useAuthStore();
+const Onboarding: React.FC<OnboardingProps> = ({ onNavigateToLogin}) => {
 
-  // 로그인 상태면 club-selection으로 자동 리다이렉트
-  useEffect(() => {
-    if (isAuthenticated && onNavigateToClubSelection) {
-      onNavigateToClubSelection();
-    }
-  }, [isAuthenticated, onNavigateToClubSelection]);
+  // 온보딩은 로그인 상태와 관계없이 언제든 접근 가능하도록 변경
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100">
       <Header

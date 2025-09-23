@@ -5,6 +5,7 @@ import com.udong.backend.clubs.service.ClubService;
 import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
 import com.udong.backend.users.dto.SignUpRequest;
+import com.udong.backend.users.dto.UpdateAccountRequest;
 import com.udong.backend.users.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,5 +61,25 @@ public class UserController {
         List<ClubDtos.ClubListRes> resList = clubService.getClubsWithMascotByUserId(userId);
 
         return ResponseEntity.ok(ApiResponse.ok(resList));
+    }
+
+    /** 내 계좌 정보 조회 (복호화) */
+    @GetMapping("/me/account")
+    public ResponseEntity<ApiResponse<?>> getMyAccount() {
+        Integer userId = securityUtils.currentUserId();
+
+        var accountInfo = userService.getDecryptedAccountInfo(userId);
+
+        return ResponseEntity.ok(ApiResponse.ok(accountInfo));
+    }
+
+    /** 내 계좌 정보 변경 */
+    @PutMapping("/me/account")
+    public ResponseEntity<ApiResponse<?>> updateMyAccount(@RequestBody UpdateAccountRequest request) {
+        Integer userId = securityUtils.currentUserId();
+
+        userService.updateAccount(userId, request.getAccountNumber());
+
+        return ResponseEntity.ok(ApiResponse.ok("계좌 정보가 변경되었습니다"));
     }
 }

@@ -22,6 +22,24 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   const clubId = useAuthStore((state) => state.clubId);
   const myRole = useAuthStore((state) => state.myRole);
 
+  // 카테고리 매핑
+  const categories = [
+    { value: "sports", label: "운동/스포츠" },
+    { value: "hobby", label: "취미/여가" },
+    { value: "study", label: "학습/스터디" },
+    { value: "volunteer", label: "봉사/사회활동" },
+    { value: "culture", label: "문화/예술" },
+    { value: "technology", label: "기술/IT" },
+    { value: "language", label: "언어/외국어" },
+    { value: "other", label: "기타" },
+  ];
+
+  // 카테고리 변환 함수
+  const getCategoryLabel = (categoryValue: string): string => {
+    const category = categories.find(cat => cat.value === categoryValue);
+    return category ? category.label : categoryValue;
+  };
+
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showMascotModal, setShowMascotModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -101,9 +119,18 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   };
 
   // 결제 완료 핸들러
-  const handlePaymentComplete = () => {
-    // 추후 결제 API 연동 후 미납 회비 목록 새로고침
-    console.log('결제 완료 - 추후 API 연동');
+  const handlePaymentComplete = async () => {
+    if (!clubId) return;
+
+    try {
+      // 미납 회비 목록 새로고침
+      const unpaidDuesData = await ClubDuesApi.getMyUnpaidDues(clubId);
+      setUnpaidDues(unpaidDuesData);
+    } catch (error) {
+      console.error('Failed to refresh unpaid dues:', error);
+      // 실패 시 빈 목록으로 설정
+      setUnpaidDues({ unpaidDuesList: [] });
+    }
   };
 
   return (
@@ -150,7 +177,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                     <div className="flex items-center gap-2">
                       <h1 className="text-lg font-semibold text-gray-700 font-jua">{clubInfo.name}</h1>
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs font-gowun">
-                        {clubInfo.category}
+                        {getCategoryLabel(clubInfo.category)}
                       </span>
                     </div>
                     <p className="text-gray-600 font-jua">

@@ -9,6 +9,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import com.udong.backend.global.exception.TransferException;
 
 import java.util.stream.Collectors;
 
@@ -36,6 +37,12 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value()); // ✅ 캐스팅 대신 valueOf
         String message = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
         return ResponseEntity.status(status).body(ApiResponse.error(status.value(), message));
+    }
+
+    // 3-1) 이체 관련 예외 처리
+    @ExceptionHandler(TransferException.class)
+    public ResponseEntity<ApiResponse<?>> handleTransferException(TransferException ex) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
     // 4) 기타 모든 예외 (마지막 그물망)

@@ -1,5 +1,7 @@
 package com.udong.backend.fin.client;
 
+import com.udong.backend.fin.dto.FinHeader;
+import com.udong.backend.fin.util.FinHeaderFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -44,6 +46,47 @@ public class FinApiClient {
         Object uk = (res == null) ? null : res.get("userKey"); // 응답 키 이름 문서대로
         if (uk == null) throw new IllegalStateException("userKey 응답이 없습니다.");
         return String.valueOf(uk);
+    }
+
+    /** 계좌 유효성 검증 */
+    public boolean validateAccount(String userKey, String accountNumber) {
+        FinHeader header = FinHeaderFactory.create(
+                "inquireDemandDepositAccount",
+                "00100",  // institutionCode 고정
+                "001",    // fintechAppNo 고정
+                apiKey,
+                userKey
+        );
+
+        Map<String, Object> body = Map.of(
+                "Header", header,
+                "accountNo", accountNumber
+        );
+
+        try {
+            client().post()
+                    .uri("/edu/demandDeposit/inquireDemandDepositAccount")
+                    .bodyValue(body)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, r -> {
+                        // 400번대 에러는 계좌가 존재하지 않는 것으로 처리
+                        return r.bodyToMono(String.class).map(msg ->
+                                new RuntimeException("Account not found"));
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, r -> {
+                        // 500번대 에러는 서버 오류
+                        return r.bodyToMono(String.class).map(msg ->
+                                new RuntimeException("Server error: " + msg));
+                    })
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block();
+
+            // 200 응답이 오면 계좌가 존재
+            return true;
+        } catch (Exception e) {
+            // 400 응답이나 기타 오류 시 계좌가 존재하지 않음
+            return false;
+        }
     }
 
     /** 공통 POST 호출 */
