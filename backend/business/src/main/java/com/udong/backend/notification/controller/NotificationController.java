@@ -32,16 +32,29 @@ public class NotificationController {
     }
 
     /**
-     * 유저별 받은 알림 조회
-     * GET /api/v1/me/notifications
+     * 유저별 받은 알림 조회 (타입 필터링 지원)
+     * GET /api/v1/me/notifications?clubId={clubId}&type={type}
      */
     @GetMapping("/me/notifications")
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getMyNotifications(
+            @RequestParam Long clubId,
+            @RequestParam(required = false) String type,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long currentUserId = securityUtils.currentUserId().longValue();
-        Page<NotificationResponse> response = notificationService.getNotificationsForUser(currentUserId, pageable);
+        Page<NotificationResponse> response = notificationService.getNotificationsForUser(currentUserId, clubId, type, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    /**
+     * 내 미읽음 알림 총 개수 조회
+     * GET /api/v1/me/notifications/unread-count?clubId={clubId}
+     */
+    @GetMapping("/me/notifications/unread-count")
+    public ResponseEntity<ApiResponse<Long>> getUnreadNotificationCount(@RequestParam Long clubId) {
+        Long currentUserId = securityUtils.currentUserId().longValue();
+        Long unreadCount = notificationService.getUnreadNotificationCount(currentUserId, clubId);
+        return ResponseEntity.ok(ApiResponse.ok(unreadCount));
     }
 
     /**
@@ -60,13 +73,13 @@ public class NotificationController {
 
     /**
      * 모든 알림 읽음 처리
-     * PATCH /api/v1/notifications/read-all
+     * PATCH /api/v1/notifications/read-all?clubId={clubId}
      */
     @PatchMapping("/notifications/read-all")
-    public ResponseEntity<ApiResponse<String>> readAllNotifications() {
+    public ResponseEntity<ApiResponse<String>> readAllNotifications(@RequestParam Long clubId) {
 
         Long currentUserId = securityUtils.currentUserId().longValue();
-        notificationService.markAllAsRead(currentUserId);
+        notificationService.markAllAsRead(currentUserId, clubId);
 
         return ResponseEntity.ok(ApiResponse.ok("모든 알림을 읽음 처리했습니다."));
     }
@@ -87,13 +100,13 @@ public class NotificationController {
 
     /**
      * 읽은 알림 모두 삭제
-     * DELETE /api/v1/me/notifications/read
+     * DELETE /api/v1/me/notifications/read?clubId={clubId}
      */
     @DeleteMapping("/me/notifications/read")
-    public ResponseEntity<ApiResponse<String>> deleteAllReadNotifications() {
+    public ResponseEntity<ApiResponse<String>> deleteAllReadNotifications(@RequestParam Long clubId) {
 
         Long currentUserId = securityUtils.currentUserId().longValue();
-        notificationService.deleteAllReadNotifications(currentUserId);
+        notificationService.deleteAllReadNotifications(currentUserId, clubId);
 
         return ResponseEntity.ok(ApiResponse.ok("읽은 알림을 모두 삭제했습니다."));
     }
