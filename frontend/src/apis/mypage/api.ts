@@ -2,8 +2,6 @@
 import fetchClient, { BASE_URL, API_PREFIX } from "../fetchClient";
 import type { ApiResponse, MyPageResponse } from "./response";
 
-const BASE = `${BASE_URL}${API_PREFIX}/mypage`;
-
 export const MyPageApi = {
   /** 마이페이지 조회 (유저×클럽 단위) */
   async getMyPage(clubId: number): Promise<MyPageResponse> {
