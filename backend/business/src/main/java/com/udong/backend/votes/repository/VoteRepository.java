@@ -13,6 +13,10 @@ import java.util.Optional;
 @Repository
 public interface VoteRepository extends JpaRepository<Vote, Integer> {
 
+    // 동아리 내 사용자가 속한 채팅방의 투표 목록 조회
+    @Query("SELECT v FROM Vote v JOIN v.chatRoom.members cm WHERE v.club.id = :clubId AND cm.user.id = :userId ORDER BY v.createdAt DESC")
+    List<Vote> findByClubAndUserMembership(@Param("clubId") Integer clubId, @Param("userId") Integer userId);
+
     // 채팅방의 투표 목록 조회 (생성일시 내림차순)
     @Query("SELECT v FROM Vote v WHERE v.chatRoom.id = :chatRoomId ORDER BY v.createdAt DESC")
     List<Vote> findByChatRoomIdOrderByCreatedAtDesc(@Param("chatRoomId") Integer chatRoomId);

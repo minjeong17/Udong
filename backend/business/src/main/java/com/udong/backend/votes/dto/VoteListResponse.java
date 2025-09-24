@@ -20,6 +20,7 @@ public class VoteListResponse {
     private LocalDateTime createdAt;
     private Integer createdBy;
     private String createdByName;
+    private Integer clubId;
     private Boolean isExpired;
     private Boolean canParticipate;
     private Boolean hasParticipated;
