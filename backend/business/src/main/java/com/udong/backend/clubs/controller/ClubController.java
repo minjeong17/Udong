@@ -50,7 +50,7 @@ public class ClubController {
 
 
     @GetMapping("/{clubId}")
-    public ResponseEntity<ApiResponse<Res>> get(@PathVariable Integer clubId){
+    public ResponseEntity<ApiResponse<Res>> get(@PathVariable("clubId") Integer clubId){
         Club c = clubs.get(clubId);
         String masked = clubs.getMaskedAccount(clubId);
 
@@ -63,7 +63,7 @@ public class ClubController {
     }
 
     @PutMapping("/{clubId}")
-    public ResponseEntity<ApiResponse<Res>> update(@PathVariable Integer clubId, @RequestBody @Valid UpdateReq req){
+    public ResponseEntity<ApiResponse<Res>> update(@PathVariable("clubId") Integer clubId, @RequestBody @Valid UpdateReq req){
         Club c = clubs.update(clubId, req.name(), req.category(), req.description());
         String masked = clubs.getMaskedAccount(clubId);
 
@@ -76,13 +76,13 @@ public class ClubController {
     }
 
     @DeleteMapping("/{clubId}")
-    public ResponseEntity<ApiResponse<String>> delete(@PathVariable Integer clubId){
+    public ResponseEntity<ApiResponse<String>> delete(@PathVariable("clubId") Integer clubId){
         clubs.delete(clubId);
         return ResponseEntity.ok(ApiResponse.ok("deleted"));
     }
 
     @PostMapping("/{clubId}/invite-code:reissue")
-    public ResponseEntity<ApiResponse<InviteCodeRes>> reissue(@PathVariable Integer clubId){
+    public ResponseEntity<ApiResponse<InviteCodeRes>> reissue(@PathVariable("clubId") Integer clubId){
         String code = clubs.reissueInviteCode(clubId);
         return ResponseEntity.ok(ApiResponse.ok(new InviteCodeRes(code)));
     }

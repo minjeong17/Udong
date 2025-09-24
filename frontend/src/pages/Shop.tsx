@@ -111,7 +111,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
         ]);
         setItems(shopItems);
         setInventory(myInventory);
-        setPoints(myLedger.currPoint);
+        setPoints(myLedger?.currPoint ?? 0);
       } catch (err) {
         console.error(err);
         alert("상점 정보를 불러오는 중 오류가 발생했습니다.");

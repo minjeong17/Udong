@@ -429,6 +429,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
               <div className="flex justify-end gap-4 pt-6 border-t border-orange-200">
                 <button
                   type="button"
+                  disabled={loading}
                   className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-200 font-jua"
                   onClick={() => setShowPlanModal(false)}
                 >
