@@ -25,15 +25,6 @@ interface UserProfile {
   points: number;
 }
 
-interface ItemHistory {
-  id: number;
-  type: "구매" | "사용";
-  title: string;
-  date: string; // 2024-01-25
-  time: string; // 20:10
-  points?: number; // 차감된 포인트 (구매 시만)
-}
-
 export default function MyPage({ onNavigateToOnboarding }: MyPageProps) {
   const { navigate } = useRouter();
 
