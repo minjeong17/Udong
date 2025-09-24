@@ -589,10 +589,10 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             </div>
 
             {selectedChannel && (
-            <div className="p-4 border-t border-orange-200">
+            <div className="p-4 border-t border-orange-200 space-y-3">
               <button
                 onClick={() => setShowVoteModal(true)}
-                className="flex items-center justify-center w-full px-4 py-3 mb-3 font-semibold text-white transition-all duration-200 bg-orange-400 shadow-md rounded-xl hover:bg-orange-500 hover:shadow-lg font-jua" // 버튼 자체를 중앙 정렬
+                className="flex items-center justify-center w-full px-4 py-3 font-semibold text-white transition-all duration-200 bg-orange-400 shadow-md rounded-xl hover:bg-orange-500 hover:shadow-lg font-jua"
               >
                 <span className="inline-flex items-center justify-center gap-2 leading-none">
                   <span className="text-xl leading-none">🗳️</span>
@@ -649,8 +649,6 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   )}
                 </div>
               )}
-            </div>
-            )}
           </div>
 
           {/* 채팅 메인 */}
