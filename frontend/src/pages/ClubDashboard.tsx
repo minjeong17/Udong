@@ -7,8 +7,10 @@ import { useRouter } from '../hooks/useRouter';
 import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
 import { ClubDuesApi } from '../apis/clubdues';
+import { PointsApi } from '../apis/points';
 import type { ClubCreateResponse, MascotResponse } from '../apis/clubs/response';
 import type { MyUnpaidDuesResponse, MyUnpaidDuesItem } from '../apis/clubdues/response';
+import type { UserPointLedgerResponse } from '../apis/points/response';
 
 interface ClubDashboardProps {
   onNavigateToOnboarding: () => void;
@@ -49,6 +51,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   const [clubInfo, setClubInfo] = useState<ClubCreateResponse | null>(null);
   const [mascotInfo, setMascotInfo] = useState<MascotResponse | null>(null);
   const [unpaidDues, setUnpaidDues] = useState<MyUnpaidDuesResponse | null>(null);
+  const [clubPoints, setClubPoints] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
 
   // 동아리 정보와 마스코트 정보 가져오기
@@ -59,14 +62,16 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
       try {
         setIsLoading(true);
 
-        // 동아리 정보와 마스코트 정보를 병렬로 가져오기
-        const [clubData, mascotData] = await Promise.all([
+        // 동아리 정보, 마스코트 정보, 동아리 포인트를 병렬로 가져오기
+        const [clubData, mascotData, clubPointsData] = await Promise.all([
           ClubApi.getClubDetails(clubId),
-          ClubApi.getActiveMascot(clubId)
+          ClubApi.getActiveMascot(clubId),
+          PointsApi.getClubPoints(clubId)
         ]);
 
         setClubInfo(clubData);
         setMascotInfo(mascotData);
+        setClubPoints(clubPointsData);
 
         // 미납 회비 정보는 별도로 가져오기 (실패해도 다른 데이터에 영향 없음)
         try {
@@ -93,18 +98,25 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   }, [clubId]);
 
   const handleMascotChange = async (mascotId: number): Promise<void> => {
+    if (!clubId) {
+      throw new Error('클럽 정보를 찾을 수 없습니다.');
+    }
+
     try {
-      // TODO: 실제 API 호출로 교체
-      // await fetch('/api/clubs/mascot', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ mascotId, clubId: 'current-club-id' })
-      // });
+      // 실제 API 호출
+      await ClubApi.activateMascot(clubId, mascotId);
 
-      // 임시 시뮬레이션
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      // 성공 시 현재 마스코트 ID 업데이트
       setCurrentMascotId(mascotId);
+
+      // 마스코트 정보도 새로고침
+      try {
+        const updatedMascot = await ClubApi.getActiveMascot(clubId);
+        setMascotInfo(updatedMascot);
+      } catch (error) {
+        console.error('마스코트 정보 새로고침 실패:', error);
+      }
+
       console.log('마스코트 변경 성공:', mascotId);
     } catch (error) {
       console.error('마스코트 변경 실패:', error);
@@ -263,23 +275,32 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
               <h2 className="text-lg font-semibold text-gray-700 font-jua mb-2 pt-14">
                 {clubInfo?.name || '동아리'}
               </h2>
-              <div className="text-2xl font-bold text-orange-500 font-jua mb-3">2450p</div>
+              <div className="text-2xl font-bold text-orange-500 font-jua mb-3">
+                {clubPoints}p
+              </div>
               <div className="w-20 h-2 bg-orange-200 rounded-full">
-                <div className="w-16 h-2 bg-orange-500 rounded-full"></div>
+                <div
+                  className="h-2 bg-orange-500 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min((clubPoints % 1000) / 1000 * 100, 100)}%`
+                  }}
+                ></div>
               </div>
 
-              {/* 마스코트 변경 버튼 - 원형 카드의 오른쪽 하단 */}
-              <button
-                onClick={() => setShowMascotModal(true)}
-                className="absolute bottom-28 right-12 w-12 h-12 bg-gradient-to-br from-green-100 to-lime-100 hover:from-green-200 hover:to-lime-200 rounded-full shadow-lg border-2 border-white hover:border-green-200 flex items-center justify-center transition-all duration-300 transform hover:scale-110 group"
-                title="마스코트 변경"
-              >
-                <img
-                  src="/images/button/masChange.png"
-                  alt="마스코트 변경"
-                  className="w-16 h-16 object-contain"
-                />
-              </button>
+              {/* 마스코트 변경 버튼 - LEADER, MANAGER만 표시 */}
+              {(myRole === 'LEADER' || myRole === 'MANAGER') && (
+                <button
+                  onClick={() => setShowMascotModal(true)}
+                  className="absolute bottom-28 right-12 w-12 h-12 bg-gradient-to-br from-green-100 to-lime-100 hover:from-green-200 hover:to-lime-200 rounded-full shadow-lg border-2 border-white hover:border-green-200 flex items-center justify-center transition-all duration-300 transform hover:scale-110 group"
+                  title="마스코트 변경"
+                >
+                  <img
+                    src="/images/button/masChange.png"
+                    alt="마스코트 변경"
+                    className="w-16 h-16 object-contain"
+                  />
+                </button>
+              )}
             </div>
 
             {/* 동아리 전체 채팅방 - 중앙 위쪽, 매우 가깝게 */}
@@ -292,7 +313,10 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 전체 채팅방
               </h3>
               <button
-                onClick={() => navigate('chat')}
+                onClick={() => {
+                  localStorage.setItem('autoSelectRoom', 'global');
+                  navigate('chat');
+                }}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full font-jua transition-colors text-sm">
                 입장하기
               </button>

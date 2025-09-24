@@ -270,6 +270,18 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
         const rooms = await ChatApi.getRoomsByClub(clubId); // clubId = 4
         console.log("채팅방 목록:", rooms);
         setChannels(rooms); // rooms는 Channel[] 타입
+
+        // 채널 목록을 불러온 후 자동 선택 확인
+        const autoSelectRoom = localStorage.getItem('autoSelectRoom');
+        if (autoSelectRoom === 'global') {
+          // GLOBAL 채팅방을 찾아서 자동 선택
+          const globalRoom = rooms.find(room => room.typeCode === 'GLOBAL');
+          if (globalRoom) {
+            setSelectedChannel(globalRoom.id);
+          }
+          // 한 번 사용한 후 제거
+          localStorage.removeItem('autoSelectRoom');
+        }
       } catch (err) {
         console.error("채팅방 목록 불러오기 실패:", err);
       }

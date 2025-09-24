@@ -3,6 +3,8 @@ import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
 import { useRouter } from '../hooks/useRouter';
 import { ShopApi } from "../apis/shop";
+import { ClubApi } from "../apis/clubs";
+import { InventoryApi } from "../apis/inventory";
 import type { ItemResponse, InventoryResponse } from "../apis/shop";
 import { useAuthStore } from "../stores/authStore";
 
@@ -53,13 +55,15 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
   const [items, setItems] = useState<ItemResponse[]>([]);
   const [inventory, setInventory] = useState<InventoryResponse[]>([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showMascotRerollModal, setShowMascotRerollModal] = useState(false);
+  const [isRerolling, setIsRerolling] = useState(false);
   const clubId = useAuthStore((state) => state.clubId);
 
   const itemIcons: Record<number, string> = {
-    1: "🧪",  // 포션
-    2: "⚔️",  // 검
-    3: "🛡️",  // 방패
-    4: "🔑",  // 열쇠
+    1: "🎫",  // 회비 감면권
+    2: "✅",  // 검
+    3: "🔄",  // 방패
+    4: "🐻",  // 열쇠
     5: "💎",  // 보석
     6: "📖",  // 책
     7: "🎯",  // 표적 
@@ -77,7 +81,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
     }
 
     if (!window.confirm(`정말 '${itemName}'을 구매하시겠습니까?`)) return;
-    
+
     try {
       await ShopApi.purchase(clubId, itemId);
       const [updatedInventory, updatedLedger] = await Promise.all([
@@ -88,11 +92,50 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
       setInventory(updatedInventory);
       setPoints(updatedLedger.currPoint);
 
-      alert(`[${itemName}] 구매 완료!`);
+      alert(`[${itemName}] 구매 완룼!`);
 
     } catch (err) {
       console.error(err);
       alert("구매에 실패했습니다.");
+    }
+  };
+
+  const handleUseItem = async (itemId: number) => {
+    if (clubId == null) {
+      alert("클럽 정보가 없습니다. 다시 로그인해주세요.");
+      return;
+    }
+
+    if (itemId === 3) { // 마스코트 리롤권
+      setShowMascotRerollModal(true);
+    }
+  };
+
+  const handleConfirmReroll = async () => {
+    if (clubId == null) return;
+
+    try {
+      setIsRerolling(true);
+
+      // 마스코트 리롤 실행
+      await ClubApi.rerollMascot(clubId);
+      // 아이템 소모
+      await InventoryApi.useItem(clubId, 3);
+
+      // 인벤토리 업데이트
+      const updatedInventory = await ShopApi.getInventory(clubId);
+      setInventory(updatedInventory);
+
+      setIsRerolling(false);
+      setShowMascotRerollModal(false);
+
+      // 완료 메시지와 대시보드 이동
+      alert("완료되었습니다. 메인화면에서 변경해보세요.");
+      navigate('club-dashboard');
+    } catch (err) {
+      console.error(err);
+      setIsRerolling(false);
+      alert("마스코트 생성에 실패했습니다.");
     }
   };
 
@@ -188,12 +231,21 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {inventory.map((inv) => (
-                <div key={inv.id} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
+                <div key={inv.id} className="relative flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
                   <div className="text-2xl">{itemIcons[inv.itemId] ?? "❔"}</div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium text-slate-800 truncate font-jua">{inv.itemName}</div>
-                    <div className="text-xs text-slate-500 font-gowun">{inv.qty}</div>
+                    <div className="text-xs text-slate-500 font-gowun">{inv.qty}개 보유</div>
                   </div>
+
+                  {inv.itemId === 3 && inv.qty > 0 && (
+                    <button
+                      onClick={() => handleUseItem(inv.itemId)}
+                      className="absolute top-2 right-2 h-7 px-2 rounded-md text-xs font-medium bg-purple-400 text-white hover:bg-purple-500 active:translate-y-[1px] transition font-jua"
+                    >
+                      사용
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -208,6 +260,56 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
         onClose={() => setShowNotificationModal(false)}
         onNavigateToOnboarding={onNavigateToOnboarding}
       />
+
+      {/* Mascot Reroll Modal */}
+      {showMascotRerollModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 w-[400px] relative">
+            {!isRerolling ? (
+              // 확인 단계
+              <>
+                <div className="text-center pt-6 pb-4">
+                  <div className="text-4xl mb-4">🎭</div>
+                  <h2 className="text-xl font-bold text-gray-700 font-jua mb-2">마스코트 리롤권 사용</h2>
+                  <p className="text-sm text-gray-600 font-gowun px-6">
+                    마스코트 리롤권을 사용하시겠습니까?<br/>
+                    마스코트 리롤권은 한 장 소모되고 메인 대시보드에서 새로운 마스코트로 변경할 수 있습니다.
+                  </p>
+                </div>
+                <div className="px-6 py-4 flex gap-3 justify-center">
+                  <button
+                    onClick={() => setShowMascotRerollModal(false)}
+                    className="bg-gray-300 text-gray-700 rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-gray-400 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleConfirmReroll}
+                    className="bg-purple-500 text-white rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-purple-600 transition-colors"
+                  >
+                    확인
+                  </button>
+                </div>
+              </>
+            ) : (
+              // 로딩 단계
+              <div className="text-center py-8">
+                <div className="mb-4">
+                  <img
+                    src="/images/MascotReroll.png"
+                    alt="마스코트 생성 중"
+                    className="w-32 h-32 mx-auto object-contain animate-bounce"
+                  />
+                </div>
+                <h2 className="text-xl font-bold text-gray-700 font-jua mb-2">마스코트 생성 중입니다...</h2>
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

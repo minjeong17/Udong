@@ -20,6 +20,8 @@ import com.udong.backend.users.repository.UserRepository;
 import com.udong.backend.dutchpay.dto.FinTransferRequest;
 import com.udong.backend.dutchpay.dto.FinTransferResponse;
 import com.udong.backend.global.exception.TransferException;
+import com.udong.backend.shop.dto.UserPointLedgerRequest;
+import com.udong.backend.shop.service.PointService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ public class ClubDuesService {
     private final UserRepository userRepository;
     private final AccountCrypto accountCrypto;
     private final FinApiClient finApiClient;
+    private final PointService pointService;
 
     @Value("${finapi.institution-code:00100}")
     private String institutionCode;
@@ -104,6 +107,7 @@ public class ClubDuesService {
                     .payload(String.format("새로운 회비 요청이 생성되었습니다. 금액: %,d원", request.membershipDues()))
                     .type("DUE_OPEN")
                     .targetId(savedDues.getId().longValue())
+                    .clubId(clubId.longValue())
                     .build();
 
             notificationService.createAndSendNotification(notificationRequest);
@@ -260,6 +264,7 @@ public class ClubDuesService {
                     .payload(String.format("%d회차 회비가 납부되지 않았습니다.", clubDues.getDuesNo()))
                     .type("DUE_OPEN")
                     .targetId(duesId.longValue())
+                    .clubId(clubId.longValue())
                     .build();
 
             notificationService.createAndSendNotification(notificationRequest);
@@ -389,6 +394,20 @@ public class ClubDuesService {
         // 8) 납부 상태 업데이트 (미납 → 납부완료)
         duesStatus.setDuesStatus((byte) 1);
         clubDuesStatusRepository.save(duesStatus);
+
+        // 9) 포인트 주기 (회비 납부 보상으로 100포인트)
+        try {
+            UserPointLedgerRequest pointRequest = UserPointLedgerRequest.builder()
+                    .clubId(clubId)
+                    .delta(100)
+                    .codeName("DUES_PAYMENT")
+                    .memo("회비 납부 보상")
+                    .build();
+            pointService.addPoints(currentUserId, pointRequest);
+        } catch (Exception e) {
+            // 포인트 지급 실패해도 회비 납부는 성공으로 처리
+            System.err.println("Failed to give points for dues payment: " + e.getMessage());
+        }
 
         return ClubDuesDtos.PayDuesResponse.builder()
                 .duesId(duesId)

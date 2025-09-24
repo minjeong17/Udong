@@ -16,6 +16,7 @@ import com.udong.backend.global.util.SecurityUtils;
 import com.udong.backend.shop.dto.UserPointLedgerRequest;
 import com.udong.backend.shop.dto.UserPointLedgerResponse;
 import com.udong.backend.shop.entity.UserPointLedger;
+import com.udong.backend.shop.entity.ClubPointsLedger;
 import com.udong.backend.shop.service.PointService;
 
 import jakarta.validation.Valid;
@@ -68,6 +69,15 @@ public class PointController {
         Integer userId = securityUtils.currentUserId();
         UserPointLedger ledger = pointService.usePoints(userId, req);
         return ResponseEntity.ok(ApiResponse.ok(UserPointLedgerResponse.from(ledger)));
+    }
+
+    /**
+     * 동아리 포인트 조회
+     */
+    @GetMapping("/club/{clubId}")
+    public ResponseEntity<ApiResponse<Integer>> getClubPoints(@PathVariable("clubId") Integer clubId) {
+        Integer clubPoints = pointService.getClubPoints(clubId.longValue());
+        return ResponseEntity.ok(ApiResponse.ok(clubPoints));
     }
 }
 	

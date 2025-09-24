@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { MyUnpaidDuesItem } from '../apis/clubdues/response';
 import { UserApi } from '../apis/user/api';
 import { ClubDuesApi } from '../apis/clubdues/api';
+import { InventoryApi } from '../apis/inventory';
+import type { InventoryResponse } from '../apis/inventory/response';
 import { useAuthStore } from '../stores/authStore';
 import AccountChangeModal from './AccountChangeModal';
 
@@ -19,8 +21,8 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
   duesInfo
 }) => {
   const clubId = useAuthStore((state) => state.clubId);
-  const [hasDiscountCoupon] = useState(false); // 추후 inventory API로 확인
-  const [discountAmount, setDiscountAmount] = useState(0); // 추후 계산
+  const [inventory, setInventory] = useState<InventoryResponse[]>([]);
+  const [useDiscountCoupon, setUseDiscountCoupon] = useState(false);
   const [userAccount, setUserAccount] = useState({
     bankName: '로딩중...',
     accountNumber: '로딩중...'
@@ -28,33 +30,53 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
   const [isAccountChangeModalOpen, setIsAccountChangeModalOpen] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      UserApi.getMyAccount()
-        .then(setUserAccount)
-        .catch(error => {
-          console.error('계좌 정보 조회 실패:', error);
-          setUserAccount({
-            bankName: '계좌 정보 오류',
-            accountNumber: '정보를 불러올 수 없습니다'
-          });
+    if (isOpen && clubId) {
+      // 계좌 정보와 인벤토리 정보를 병렬로 조회
+      Promise.all([
+        UserApi.getMyAccount(),
+        InventoryApi.getUserInventory(clubId)
+      ]).then(([accountData, inventoryData]) => {
+        setUserAccount(accountData);
+        setInventory(inventoryData);
+      }).catch(error => {
+        console.error('정보 조회 실패:', error);
+        setUserAccount({
+          bankName: '계좌 정보 오류',
+          accountNumber: '정보를 불러올 수 없습니다'
         });
+        setInventory([]);
+      });
     }
-  }, [isOpen]);
+  }, [isOpen, clubId]);
 
   if (!isOpen) return null;
 
+  // 회비 감면권 보유 수량 계산 (itemName에 '회비감면권' 또는 '감면권'이 포함된 아이템)
+  const discountCouponItem = inventory.find(item =>
+    item.itemName.includes('회비감면권') || item.itemName.includes('감면권')
+  );
+  const discountCouponCount = discountCouponItem?.qty || 0;
+  const hasDiscountCoupon = discountCouponCount > 0;
+
+  // 10% 할인 계산
+  const discountAmount = useDiscountCoupon ? Math.floor(duesInfo.membershipDues * 0.1) : 0;
   const finalAmount = duesInfo.membershipDues - discountAmount;
 
   const handleConfirm = async () => {
     try {
+      if (!clubId) {
+        throw new Error('동아리 정보를 찾을 수 없습니다.');
+      }
+
+      // 감면권 사용 시 아이템 사용 API 호출
+      if (useDiscountCoupon && discountCouponItem) {
+        await InventoryApi.useItem(clubId, discountCouponItem.itemId);
+      }
+
       const paymentRequest = {
         originalAmount: duesInfo.membershipDues,
         discountAmount: discountAmount
       };
-
-      if (!clubId) {
-        throw new Error('동아리 정보를 찾을 수 없습니다.');
-      }
 
       const result = await ClubDuesApi.payDues(clubId, duesInfo.duesId, paymentRequest);
 
@@ -172,7 +194,7 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                   <span className="font-medium text-green-700 font-gowun">회비 감면권 보유</span>
                 </div>
                 <div className="text-sm text-green-600 font-gowun">
-                  사용 가능한 감면권: 2개 (각 1,000원 할인)
+                  사용 가능한 감면권: {discountCouponCount}개 (10% 할인)
                 </div>
               </div>
 
@@ -182,8 +204,8 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                     type="radio"
                     name="discount"
                     value="none"
-                    checked={discountAmount === 0}
-                    onChange={() => setDiscountAmount(0)}
+                    checked={!useDiscountCoupon}
+                    onChange={() => setUseDiscountCoupon(false)}
                     className="text-orange-500"
                   />
                   <span className="font-gowun text-sm">감면권 사용 안함</span>
@@ -192,23 +214,14 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                   <input
                     type="radio"
                     name="discount"
-                    value="1000"
-                    checked={discountAmount === 1000}
-                    onChange={() => setDiscountAmount(1000)}
+                    value="use"
+                    checked={useDiscountCoupon}
+                    onChange={() => setUseDiscountCoupon(true)}
                     className="text-orange-500"
                   />
-                  <span className="font-gowun text-sm">감면권 1개 사용 (1,000원 할인)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="discount"
-                    value="2000"
-                    checked={discountAmount === 2000}
-                    onChange={() => setDiscountAmount(2000)}
-                    className="text-orange-500"
-                  />
-                  <span className="font-gowun text-sm">감면권 2개 사용 (2,000원 할인)</span>
+                  <span className="font-gowun text-sm">
+                    감면권 1개 사용 (10% 할인 - {Math.floor(duesInfo.membershipDues * 0.1).toLocaleString()}원 할인)
+                  </span>
                 </label>
               </div>
             </div>

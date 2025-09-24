@@ -125,14 +125,25 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
   const totalCount = currentDuesStatus?.totalMembers || 0;
 
   const handlePaymentCollection = async (amount: number, selectedUserIds?: number[]) => {
-    if (!clubId) return;
+    if (!clubId) {
+      console.error('clubId가 없습니다:', clubId);
+      return;
+    }
+
+    console.log('회비 수금 요청 시작:', { clubId, amount, selectedUserIds });
 
     try {
       setLoading(true);
-      const newDues = await ClubDuesApi.createDues(clubId, {
+
+      const requestPayload = {
         membershipDues: amount,
         selectedUserIds
-      });
+      };
+
+      console.log('API 요청 데이터:', requestPayload);
+
+      const newDues = await ClubDuesApi.createDues(clubId, requestPayload);
+      console.log('API 응답 데이터:', newDues);
 
       // 회비 목록 새로고침
       const updatedDuesList = await ClubDuesApi.getDuesList(clubId);
@@ -141,10 +152,33 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
       // 새로 생성된 회차로 설정
       setActiveCollection(newDues.duesNo);
 
-      console.log('새로운 회비 수금 시작:', newDues);
+      console.log('새로운 회비 수금 시작 완료:', newDues);
+      alert('회비 수금 요청이 생성되었습니다!');
     } catch (error) {
       console.error('회비 수금 생성 실패:', error);
-      alert('회비 수금 생성에 실패했습니다.');
+
+      // 에러 정보 더 자세히 출력
+      if (error instanceof Error) {
+        console.error('에러 메시지:', error.message);
+        console.error('에러 스택:', error.stack);
+      }
+
+      // 서버 응답에서 에러 메시지 추출
+      let errorMessage = '회비 수금 생성에 실패했습니다.';
+      if ((error as any)?.responseText) {
+        try {
+          const errorData = JSON.parse((error as any).responseText);
+          if (errorData?.data) {
+            errorMessage = errorData.data;
+          }
+        } catch {
+          errorMessage = (error as any).responseText;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }

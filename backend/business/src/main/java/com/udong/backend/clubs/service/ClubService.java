@@ -11,6 +11,8 @@ import com.udong.backend.clubs.repository.MembershipRepository;
 import com.udong.backend.codes.entity.CodeDetail;
 import com.udong.backend.codes.repository.CodeDetailRepository;
 import com.udong.backend.global.config.AccountCrypto;
+import com.udong.backend.shop.entity.ClubPointsLedger;
+import com.udong.backend.shop.repository.ClubPointsLedgerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,7 @@ public class ClubService {
     private final MembershipRepository membershipRepository;
     private final MascotService mascotService;
     private final ChatRoomService chatRoomService;
+    private final ClubPointsLedgerRepository clubPointsLedgerRepository;
 
     private final String GLOBAL_CODE = "GLOBAL";
     private final String GLOBAL_CHATROOM_NAME = "전체 채팅방";
@@ -69,6 +72,9 @@ public class ClubService {
         );
 
         mascotService.reroll(saved.getId(),new MascotCreateReq(saved.getCategory(), null));
+
+        // ClubPointsLedger 초기화
+        clubPointsLedgerRepository.save(ClubPointsLedger.createZero(saved.getId().longValue()));
 
         chatRoomService.create(saved.getLeaderUserId(),new CreateRoomRequest(GLOBAL_CODE,saved.getId(),GLOBAL_CHATROOM_NAME));
         return saved;

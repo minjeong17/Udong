@@ -111,5 +111,32 @@ export const ClubApi = {
       auth: true
     });
     return response.data.code;
+  },
+
+  rerollMascot: async (clubId: number): Promise<MascotResponse> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/mascot-create`;
+    const response = await fetchClient<{success: boolean, data: MascotResponse}>(url, {
+      method: 'POST',
+      body: JSON.stringify({}),
+      auth: true
+    });
+    return response.data;
+  },
+
+  getMascotList: async (clubId: number, page = 0, size = 10): Promise<{content: MascotResponse[], totalElements: number}> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/mascots?page=${page}&size=${size}`;
+    const response = await fetchClient<{success: boolean, data: {content: MascotResponse[], totalElements: number}}>(url, {
+      method: 'GET',
+      auth: true
+    });
+    return response.data;
+  },
+
+  activateMascot: async (clubId: number, mascotId: number): Promise<void> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/mascots/${mascotId}/activate`;
+    await fetchClient<{success: boolean, data: string}>(url, {
+      method: 'POST',
+      auth: true
+    });
   }
 };
