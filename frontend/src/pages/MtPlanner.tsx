@@ -41,7 +41,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
     try {
       // API 호출
       const result: MtPlannerResponse = await MtPlannerApi.generatePlan(formData);
-
+      console.log("API 응답:", result);
       setMtPlan(result);
       setShowPlanModal(false);
     } catch (error: any) {
@@ -429,7 +429,6 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
               <div className="flex justify-end gap-4 pt-6 border-t border-orange-200">
                 <button
                   type="button"
-                  disabled={loading}
                   className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-200 font-jua"
                   onClick={() => setShowPlanModal(false)}
                 >
@@ -437,10 +436,11 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-bold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2 font-jua"
+                  disabled={loading}
+                  className={`px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-bold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2 font-jua ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <span>✨</span>
-                  <span>MT 계획 생성</span>
+                  <span>{loading ? "생성 중..." : "MT 계획 생성"}</span>
                 </button>
               </div>
             </form>

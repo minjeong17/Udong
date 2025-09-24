@@ -1,5 +1,6 @@
 package com.udong.backend.mt.controller;
 
+import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.mt.dto.MtPlannerDtos;
 import com.udong.backend.mt.service.MtPlannerService;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,8 @@ public class MtPlannerController {
     private final MtPlannerService planner;
 
     @PostMapping("/plan")
-    public ResponseEntity<MtPlannerDtos.Res> plan(@RequestBody MtPlannerDtos.Req req) {
-        return ResponseEntity.ok(planner.generate(req));
+    public ResponseEntity<ApiResponse<MtPlannerDtos.Res>> plan(@RequestBody MtPlannerDtos.Req req) {
+        return ResponseEntity.ok(ApiResponse.ok(planner.generate(req)));
     }
 }
 

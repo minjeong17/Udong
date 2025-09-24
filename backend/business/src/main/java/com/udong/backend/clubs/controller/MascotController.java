@@ -19,7 +19,7 @@ public class MascotController {
 
     /** 현재 활성 마스코트 조회 */
     @GetMapping("/mascot")
-    public ResponseEntity<ApiResponse<MascotDtos.Res>> active(@PathVariable Integer clubId) {
+    public ResponseEntity<ApiResponse<MascotDtos.Res>> active(@PathVariable("clubId") Integer clubId) {
         MascotDtos.Res body = mascots.getActive(clubId);
         return ResponseEntity.ok(ApiResponse.ok(body));  // 없으면 data=null
     }
@@ -27,7 +27,7 @@ public class MascotController {
     /** 마스코트 생성(=reroll) — 바디는 선택적 */
     @PostMapping("/mascot-create")
     public ResponseEntity<ApiResponse<MascotDtos.Res>> create(
-            @PathVariable Integer clubId,
+            @PathVariable("clubId") Integer clubId,
             @RequestBody(required = false) MascotCreateReq req
     ) {
         var m = mascots.reroll(clubId, req);
@@ -38,7 +38,7 @@ public class MascotController {
     /** 마스코트 목록 페이징 조회(최신순) */
     @GetMapping("/mascots")
     public ResponseEntity<ApiResponse<Page<MascotDtos.Res>>> list(
-            @PathVariable Integer clubId,
+            @PathVariable("clubId") Integer clubId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -49,8 +49,8 @@ public class MascotController {
     /** 특정 마스코트 단건 조회 */
     @GetMapping("/mascots/{mascotId}")
     public ResponseEntity<ApiResponse<MascotDtos.Res>> get(
-            @PathVariable Integer clubId,
-            @PathVariable Integer mascotId
+            @PathVariable("clubId") Integer clubId,
+            @PathVariable("mascotId") Integer mascotId
     ) {
         MascotDtos.Res body = mascots.getDto(clubId, mascotId);
         return ResponseEntity.ok(ApiResponse.ok(body));
@@ -59,8 +59,8 @@ public class MascotController {
     /** 특정 마스코트를 활성 마스코트로 지정 */
     @PostMapping("/mascots/{mascotId}/activate") // ← 콜론 대신 세그먼트 분리
     public ResponseEntity<ApiResponse<String>> activate(
-            @PathVariable Integer clubId,
-            @PathVariable Integer mascotId
+            @PathVariable("clubId") Integer clubId,
+            @PathVariable("mascotId") Integer mascotId
     ) {
         mascots.activate(clubId, mascotId);
         return ResponseEntity.ok(ApiResponse.ok("activated"));
