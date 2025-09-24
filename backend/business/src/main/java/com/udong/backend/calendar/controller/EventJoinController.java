@@ -34,11 +34,11 @@ public class EventJoinController {
 //        return ResponseEntity.ok(eventJoinService.leave(clubId, eventId));
 //    }
 
-//    @GetMapping("/participants")
-//    public ResponseEntity<List<EventParticipantRes>> participants(
-//            @PathVariable Long clubId,
-//            @PathVariable Long eventId
-//    ) {
-//        return ResponseEntity.ok(eventJoinService.list(clubId, eventId));
-//    }
+    @GetMapping("/participants")
+    public ResponseEntity<List<EventParticipantRes>> participants(
+            @PathVariable Long clubId,
+            @PathVariable Long eventId
+    ) {
+        return ResponseEntity.ok(eventJoinService.list(clubId, eventId));
+    }
 }

@@ -6,6 +6,8 @@ import com.udong.backend.calendar.dto.EventListItemRes;
 import com.udong.backend.calendar.dto.EventRes;
 import com.udong.backend.calendar.dto.EventUpdateReq;
 import com.udong.backend.calendar.entity.Event;
+import com.udong.backend.calendar.entity.EventMember;
+import com.udong.backend.calendar.repository.EventMemberRepository;
 import com.udong.backend.calendar.repository.EventRepository;
 import com.udong.backend.chat.dto.CreateRoomRequest;
 import com.udong.backend.chat.entity.ChatRoom;
@@ -39,6 +41,7 @@ public class EventService {
     // 추가: 연관관계 주입을 위해
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
+    private final EventMemberRepository eventMemberRepository;
 
     private Integer currentUserId() {
         return securityUtils.currentUserId();
@@ -100,6 +103,23 @@ public class EventService {
 
         Event saved = events.save(e);
 
+        // 이미 row가 있으면 participated=true 로
+        EventMember em = eventMemberRepository.findByEvent_IdAndUser_Id(saved.getId(), userId)
+                .orElseGet(() -> EventMember.builder()
+                        .event(saved)
+                        .user(user)
+                        .isParticipated(false)
+                        .build());
+
+        // 정원 체크 (동시성 고려해서 락 버전 추천)
+        long attendees = eventMemberRepository.lockAndCountParticipated(saved.getId());
+        Short capacity = saved.getCapacity();
+        if (capacity != null && attendees >= capacity) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "정원이 가득 찼습니다.");
+        }
+
+        em.setParticipated(true);
+        eventMemberRepository.save(em);
 
         CreateRoomRequest chatReq = new CreateRoomRequest("EVENT", saved.getId(), saved.getTitle());
 

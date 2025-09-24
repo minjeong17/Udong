@@ -362,10 +362,9 @@ function FeedbackDialog({
   ========================================= */
 const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigateToOnboarding }) => {
   const router = useContext(RouterContext);
-    if (!router) {
-    // router가 null인 경우 예외 처리
+  if (!router) {
     console.error("RouterContext is not provided.");
-    return <div>라우팅 오류가 발생했습니다.</div>; // 또는 적절한 대체 UI
+    return <div>라우팅 오류가 발생했습니다.</div>;
   }
   const { navigate } = router;
   const { user, clubId, myRole } = useAuthStore();
@@ -396,6 +395,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
   const [editOpen, setEditOpen] = useState(false);
   const [joinConfirmOpen, setJoinConfirmOpen] = useState(false);
 
+  // ★ 참여자 상태 (목록/로딩/에러)
   const calStart = startOfCalendar(cursor);
   const calEnd = endOfCalendar(cursor);
   const days = useMemo(() => {
@@ -520,16 +520,28 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
   };
 
   const openDayModal = (d: Date) => { setSelected(d); setDayModalDate(d); setDayModalOpen(true); };
+
+  // ★ 상세 열기: 참여자 목록도 동시 로드 + 인원 반영
   const openEventModal = async (ev: EventItem) => {
-    setEventModalItem(ev); setEventModalOpen(true);
+    setEventModalItem(ev);
+    setEventModalOpen(true);
     if (!clubId) return;
     try {
       const full = await CalendarApi.getOne(clubId, Number(ev.id));
       const mapped = mapListItem(full);
       setEventModalItem((prev) => prev ? { ...prev, ...mapped } : mapped);
     } catch {}
+
+    const list = await CalendarJoinApi.participants(clubId, Number(ev.id));
+    const joined = list.filter((p) => p.participated);
+    setEventModalItem((prev) =>
+      prev ? { ...prev, attendees: joined.length } : prev
+    );
+
   };
-  const canEdit = (ev: EventItem | null) => !!ev && currentUserId != null && String(ev.createdById ?? "") === String(currentUserId);
+
+  const canEdit = (ev: EventItem | null) =>
+    !!ev && currentUserId != null && String(ev.createdById ?? "") === String(currentUserId);
 
   /* =========================================
     Render
@@ -721,6 +733,8 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                   const isSel = selected && isSameDay(selected, d);
                   if (!(ev.category in catColor)) return null;
                   const color = catColor[ev.category as Category];
+                  const hasCap = typeof ev.capacity === "number";
+                  const hasAtt = typeof ev.attendees === "number";
                   return (
                     <button
                       key={ev.id}
@@ -741,7 +755,9 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
                           <span className="inline-flex items-center gap-1 font-gowun"><Clock className="w-3.5 h-3.5"/>{formatWhen(ev)}</span>
                           {ev.location && <span className="inline-flex items-center gap-1 font-gowun"><Pin className="w-3.5 h-3.5"/>{ev.location}</span>}
-                          {typeof ev.attendees === "number" && ev.capacity && <span className="font-gowun">{ev.attendees}/{ev.capacity}명</span>}
+                          {/* 참석 수 표기: 정원 있으면 A/B, 없으면 A명 */}
+                          {hasAtt && hasCap && <span className="font-gowun">{ev.attendees}/{ev.capacity}명</span>}
+                          {hasAtt && !hasCap && <span className="font-gowun">{ev.attendees}명</span>}
                           {ev.note && <span className="text-gray-500 font-gowun">· {ev.note}</span>}
                         </div>
                       </div>
@@ -771,6 +787,8 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                 {(byDay.get(ymd(dayModalDate)) ?? []).map((ev) => {
                   if (!(ev.category in catColor)) return null;
                   const color = catColor[ev.category as Category];
+                  const hasCap = typeof ev.capacity === "number";
+                  const hasAtt = typeof ev.attendees === "number";
                   return (
                     <button
                       key={`${ev.id}-${ev.sliceDate}`}
@@ -780,11 +798,12 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${color.bg} ${color.text} ring-1 ${color.ring}`}>{ev.category}</span>
                         <div className="font-semibold text-gray-900 font-jua">{ev.title}</div>
+                        {hasAtt && hasCap && <span className="ml-auto text-xs text-gray-600 font-gowun">{ev.attendees}/{ev.capacity}명</span>}
+                        {hasAtt && !hasCap && <span className="ml-auto text-xs text-gray-600 font-gowun">{ev.attendees}명</span>}
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
                         <span className="inline-flex items-center gap-1 font-gowun"><Clock className="w-4 h-4"/>{ev.timeLabel}</span>
                         {ev.location && <span className="inline-flex items-center gap-1 font-gowun"><Pin className="w-4 h-4"/>{ev.location}</span>}
-                        {typeof ev.attendees === "number" && ev.capacity && <span>{ev.attendees}/{ev.capacity}명</span>}
                         {ev.note && <span className="text-gray-600 font-gowun">· {ev.note}</span>}
                       </div>
                     </button>
@@ -832,18 +851,16 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                     <dd className="text-sm text-gray-900 font-jua">{eventModalItem.location ?? "미정"}</dd>
                   </div>
 
+                  {/* 참가 인원 */}
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
                     <dt className="text-sm text-gray-500 font-gowun">참가 인원</dt>
                     <dd className="text-sm text-gray-900 font-jua">
-                      {typeof eventModalItem.attendees === "number" && eventModalItem.capacity
+                      {typeof eventModalItem.attendees === "number" && typeof eventModalItem.capacity === "number"
                         ? `${eventModalItem.attendees}/${eventModalItem.capacity}명`
-                        : "미정"}
+                        : typeof eventModalItem.attendees === "number"
+                          ? `${eventModalItem.attendees}명`
+                          : "미정"}
                     </dd>
-                  </div>
-
-                  <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                    <dt className="text-sm text-gray-500 font-gowun">준비물</dt>
-                    <dd className="text-sm text-gray-900 font-jua">{eventModalItem.materials ?? "-"}</dd>
                   </div>
 
                   <div className="grid grid-cols-[120px,1fr] items-start gap-4">
@@ -857,6 +874,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                 </dl>
               </div>
 
+              {/* 하단 액션 */}
               <div className="flex items-center justify-between gap-2 px-6 py-4 border-t bg-gray-50">
                 <div className="flex gap-2">
                   {canEdit(eventModalItem) && (
@@ -883,9 +901,27 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setEventModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua">닫기</button>
-                  <button onClick={() => setJoinConfirmOpen(true)} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua">
-                    참여신청
-                  </button>
+
+                  {/* ★ 정원 초과 시 참여신청 비활성화 */}
+                  {(() => {
+                    const cap = typeof eventModalItem.capacity === "number" ? eventModalItem.capacity : undefined;
+                    const att = typeof eventModalItem.attendees === "number" ? eventModalItem.attendees : 0;
+                    const isFull = cap != null && att >= cap;
+                    return (
+                      <button
+                        onClick={() => setJoinConfirmOpen(true)}
+                        disabled={isFull}
+                        className={`px-4 py-2 rounded-lg text-white font-semibold text-sm font-jua ${
+                          isFull
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-orange-500 hover:bg-orange-600"
+                        }`}
+                        title={isFull ? "정원이 가득 찼습니다" : "이 이벤트에 참여 신청합니다"}
+                      >
+                        {isFull ? "정원 마감" : "참여신청"}
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -918,8 +954,6 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
                 } as any);
                 setFeedback({ title: "완료", message: "이벤트가 등록되고 단톡방이 생성되었습니다!!" });
                 setFeedbackOpen(true);
-                // alert("이벤트가 등록되고 단톡방이 생성되었습니다!!");
-
                 setCreateOpen(false);
                 refreshMonth();
               } catch (e) {
@@ -987,7 +1021,23 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigate
             eventItem={eventModalItem}
             clubId={clubId ?? null}
             onJoined={(res) => {
-              setEventModalItem((e) => e ? { ...e, attendees: res.attendees, capacity: res.capacity ?? e.capacity } : e);
+              // 상세 모달 카드 갱신
+              setEventModalItem((e) =>
+                e ? { ...e, attendees: res.attendees, capacity: res.capacity ?? e.capacity } : e
+              );
+              // 우측 리스트(월 이벤트)도 갱신
+              const targetId = eventModalItem.id;
+              setEvents((prev) =>
+                prev.map((ev) =>
+                  String(ev.id) === String(targetId)
+                    ? {
+                        ...ev,
+                        attendees: res.attendees,
+                        capacity: res.capacity ?? ev.capacity,
+                      }
+                    : ev
+                )
+              );
             }}
             onShowFeedback={showFeedback}
             onNavigateToChat={() => navigate("chat")}
@@ -1184,18 +1234,6 @@ function EventFormModal({
               <input type="number" min={0} value={form.capacity} onChange={(e)=>setForm((f)=>({...f, capacity: e.target.value}))} placeholder="예: 20" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">준비물</div>
-              <input value={form.materials} onChange={(e)=>setForm((f)=>({...f, materials: e.target.value}))} placeholder="예: 교재, 노트" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">메모</div>
-              <input value={form.note} onChange={(e)=>setForm((f)=>({...f, note: e.target.value}))} placeholder="추가 메모" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
-            </div>
-          </div>
-
           <div>
             <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">상세 내용</div>
             <textarea value={form.description} onChange={(e)=>setForm((f)=>({...f, description: e.target.value}))} placeholder="모임에 대한 상세한 설명을 입력하세요" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white min-h-[110px] font-gowun"/>
