@@ -105,6 +105,13 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       alert("마감일을 선택해주세요.");
       return;
     }
+    // 마감일이 현재 시간보다 이후인지 검증
+    const deadlineDate = new Date(deadline);
+    const now = new Date();
+    if (deadlineDate <= now) {
+      alert("마감일은 현재 시간보다 이후여야 합니다.");
+      return;
+    }
     if (opts.length < 2) {
       alert("선택지는 최소 2개 이상이어야 합니다.");
       return;
@@ -114,8 +121,8 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       title: voteTitle.trim(),
       description: voteDescription.trim() || undefined,
       allowMultiple,
-      // <input type="datetime-local"> 값을 ISO8601 문자열로 변환
-      deadline: new Date(deadline).toISOString(),
+      // <input type="datetime-local"> 값을 백엔드가 기대하는 LocalDateTime 형식으로 변환
+      deadline: new Date(deadline).toISOString().slice(0, 19),
       options: opts,
     };
 
@@ -673,6 +680,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               ))}
             </div>
 
+            {selectedChannel && (
             <div className="p-4 border-t border-orange-200">
               <button
                 onClick={() => setShowVoteModal(true)}
@@ -749,6 +757,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                 </div>
               )}
             </div>
+            )}
           </div>
 
           {/* 채팅 메인 */}
