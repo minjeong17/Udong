@@ -73,21 +73,6 @@ const isSameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-/* ===== 에러 파서 강화 (여기부터 교체 포인트) ===== */
-function extractErrorPayload(err: unknown): any {
-  const respData = (err as any)?.response?.data;
-  if (respData !== undefined) return respData;
-
-  if (err && typeof err === "object") return err;
-
-  const msg = (err as any)?.message ?? err;
-  if (typeof msg === "string") {
-    try { return JSON.parse(msg); } catch {}
-    return { message: msg };
-  }
-  return undefined;
-}
-
 /** 문자열이면 JSON 파싱 시도 */
 function parseMaybeJsonString(s?: unknown) {
   if (typeof s !== "string") return null;
