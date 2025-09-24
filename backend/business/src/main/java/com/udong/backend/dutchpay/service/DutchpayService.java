@@ -115,10 +115,13 @@ public class DutchpayService {
 
         for (Integer uid : uniqueUserIds) {
             User userRef = em.getReference(User.class, uid);
+
+            boolean isPaid = (uid == createdByUserId);  // 정산을 만든 사람은 isPaid(true)
+
             dutchpay.addParticipant(
                     DutchpayParticipant.builder()
                             .user(userRef)
-                            .isPaid(false)
+                            .isPaid(isPaid)
                             .build()
             );
         }
@@ -130,22 +133,8 @@ public class DutchpayService {
      * 현재 사용자(userId)가 '참여자'로 포함된 정산 목록을 status로 필터링해서 반환
      * status:  "open" | "completed"
      */
-    public List<DutchpayListResponse> findByUserAndStatus(Integer userId, String status) {
-        if (status == null || status.isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "status 파라미터는 필수입니다."
-            );
-        }
-
-        List<DutchpayListResponse> entities;
-        String s = status.toLowerCase(Locale.ROOT).trim();
-        return switch (s) {
-            case "open"      -> dutchpayRepository.findSummaryByUserAndStatus(userId, false);
-            case "completed" -> dutchpayRepository.findSummaryByUserAndStatus(userId, true);
-            default -> throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "status는 open 또는 completed만 허용됩니다."
-            );
-        };
+    public List<DutchpayListResponse> findByUser(Integer userId, Integer clubId) {
+        return dutchpayRepository.findSummaryByUserIdAndClubId(userId, clubId);
     }
 
     public DutchpayDetailResponse getDetail(Integer dutchpayId) {
@@ -167,6 +156,7 @@ public class DutchpayService {
                 .note(d.getNote())
                 .createdAt(d.getCreatedAt())
                 .createdBy(d.getCreatedBy().getName())
+                .createdUserId(d.getCreatedBy().getId())
                 .isDone(d.isDone())
                 .s3Key(d.getS3Key())
                 .imageUrl(d.getImageUrl())

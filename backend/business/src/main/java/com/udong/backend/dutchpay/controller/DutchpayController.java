@@ -46,13 +46,12 @@ public class DutchpayController {
         return ResponseEntity.ok(ApiResponse.ok("정산 생성 완료"));
     }
 
-    /** 내 정산 목록 조회: GET /api/v1/dutchpay?status=open,completed */
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<DutchpayListResponse>>> getMyDutchpays(
-            @RequestParam(name = "status", required = false) String status) {
+    /** 내 정산 목록 조회: GET /api/v1/dutchpay */
+    @GetMapping("/{clubId}")
+    public ResponseEntity<ApiResponse<List<DutchpayListResponse>>> getMyDutchpays(@PathVariable Integer clubId) {
         Integer userId = securityUtils.currentUserId();
 
-        List<DutchpayListResponse> list = dutchpayService.findByUserAndStatus(userId, status);
+        List<DutchpayListResponse> list = dutchpayService.findByUser(userId, clubId);
 
         return ResponseEntity.ok(ApiResponse.ok(list));
     }
