@@ -8,6 +8,7 @@ import type {
   WsChatOut,
   UIMsg,
   Participant,
+  CreateVoteRequest,
 } from "../types/chat";
 import { ChatApi } from "../apis/chat";
 import { parseJwt } from "../utils/jwt";
@@ -80,7 +81,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
     setOptions(newOptions);
   };
 
-  const handleCreateVote = () => {
+  const [isCreatingVote, setIsCreatingVote] = useState(false);
+
+  const handleCreateVote = async () => {
     console.log("투표 생성:", {
       title: voteTitle,
       description: voteDescription,
@@ -88,12 +91,55 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       deadline,
       options: options.filter((opt) => opt.trim() !== ""),
     });
-    setShowVoteModal(false);
-    setVoteTitle("");
-    setVoteDescription("");
-    setAllowMultiple(false);
-    setDeadline("");
-    setOptions(["", ""]);
+    if (!selectedChannel) {
+      alert("채팅방을 먼저 선택해주세요.");
+      return;
+    }
+
+    const opts = options.map((o) => o.trim()).filter(Boolean);
+    if (!voteTitle.trim()) {
+      alert("투표 제목을 입력해주세요.");
+      return;
+    }
+    if (!deadline) {
+      alert("마감일을 선택해주세요.");
+      return;
+    }
+    if (opts.length < 2) {
+      alert("선택지는 최소 2개 이상이어야 합니다.");
+      return;
+    }
+
+    const payload: CreateVoteRequest = {
+      title: voteTitle.trim(),
+      description: voteDescription.trim() || undefined,
+      allowMultiple,
+      // <input type="datetime-local"> 값을 ISO8601 문자열로 변환
+      deadline: new Date(deadline).toISOString(),
+      options: opts,
+    };
+
+    try {
+      setIsCreatingVote(true);
+      console.log(payload);
+      await ChatApi.createVote(selectedChannel, payload); // ✅ API 호출
+      alert("투표가 생성되었습니다.");
+
+      // 입력값 초기화 + 모달 닫기
+      setShowVoteModal(false);
+      setVoteTitle("");
+      setVoteDescription("");
+      setAllowMultiple(false);
+      setDeadline("");
+      setOptions(["", ""]);
+    } catch (e: any) {
+      console.error(e);
+      alert(
+        e?.message ?? "투표 생성에 실패했습니다. 잠시 후 다시 시도해주세요."
+      );
+    } finally {
+      setIsCreatingVote(false);
+    }
   };
 
   const [isCreatingSettlement, setIsCreatingSettlement] = useState(false);
@@ -1399,13 +1445,14 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               <button
                 onClick={handleCreateVote}
                 disabled={
+                  isCreatingVote ||
                   !voteTitle.trim() ||
                   !deadline ||
                   options.filter((opt) => opt.trim()).length < 2
                 }
                 className="flex-1 py-3 px-4 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
               >
-                생성
+                {isCreatingVote ? "생성 중…" : "생성"}
               </button>
             </div>
           </div>

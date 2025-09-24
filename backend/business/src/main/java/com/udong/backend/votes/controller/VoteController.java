@@ -61,6 +61,8 @@ public class VoteController {
         Integer userId = securityUtils.currentUserId();
         VoteResponse vote = voteService.createVote(chatRoomId, request, userId);
 
+        System.out.println(userId);
+
         return ResponseEntity.ok(ApiResponse.ok(vote));
     }
 

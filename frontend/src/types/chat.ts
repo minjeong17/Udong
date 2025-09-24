@@ -68,3 +68,12 @@ export type CreateDutchpayPayload = {
   participantUserIds: number[]; // 최소 1명 이상
   receipt?: File | Blob | null; // 선택
 };
+
+export interface CreateVoteRequest {
+  title: string;
+  description?: string;
+  allowMultiple: boolean;
+  /** ISO8601 (ex. 2025-09-26T08:05:00.000Z) */
+  deadline: string;
+  options: string[];
+}

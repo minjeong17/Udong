@@ -1,6 +1,7 @@
 import fetchClient, { BASE_URL, API_PREFIX } from "../fetchClient";
 import type { ApiResponse, ChatRoomApi, ChatMessageApi, Channel, ChatParticipantsResponse, ParticipantRes } from "./response";
-import type { ChatParticipants, CreateDutchpayPayload, Participant } from "../../types/chat";
+import type { ChatParticipants, CreateDutchpayPayload, CreateVoteRequest, Participant } from "../../types/chat";
+import { toVoteCreateApiRequest, type VoteCreateApiRequest } from "./request";
 
 // mapper: 백 응답(ChatRoomApi) → 프론트 Channel
 const toChannel = (r: ChatRoomApi): Channel => ({
@@ -120,7 +121,6 @@ export const ChatApi = {
   // ✅ 채팅방 나가기
   leaveRoom: async (chatId: number): Promise<void> => {
     const url = `${BASE_URL}${API_PREFIX}/chat/rooms/${chatId}/leave`;
-    console.log("URLLLLL ", url);
     await fetchClient<{ success: boolean }>(url, {
       method: 'DELETE',
       auth: true,
@@ -133,6 +133,18 @@ export const ChatApi = {
     await fetchClient<{ success: boolean }>(url, {
       method: 'DELETE',
       auth: true,
+    });
+  },
+
+  // ✅ 투표 생성 (200~299면 성공으로 간주, 반환값 없음)
+  async createVote(chatRoomId: number, ui: CreateVoteRequest): Promise<void> {
+    const url = `${BASE_URL}${API_PREFIX}/chat-rooms/${chatRoomId}/votes`;
+    const payload: VoteCreateApiRequest = toVoteCreateApiRequest(ui);
+
+    await fetchClient<ApiResponse<unknown>>(url, {
+      method: "POST",
+      auth: true,
+      body: JSON.stringify(payload),
     });
   },
 
