@@ -276,6 +276,31 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
     })();
   }, []);
 
+  // ✅ 채널 목록이 로딩되면 sessionStorage의 focusChatId로 자동 선택
+  useEffect(() => {
+    if (channels.length === 0) return;
+
+    const raw = sessionStorage.getItem("focusChatId");
+    if (!raw) return;
+
+    const focusId = Number(raw);
+    const exists = Number.isFinite(focusId) && channels.some(c => c.id === focusId);
+
+    if (exists) {
+      setSelectedChannel(focusId);
+
+      // (선택) 리스트에서 해당 카드로 스크롤
+      requestAnimationFrame(() => {
+        const el = document.querySelector<HTMLElement>(`[data-chat-id="${focusId}"]`);
+        el?.scrollIntoView({ block: "center" });
+      });
+    }
+
+    // 한 번 쓰고 지움
+    sessionStorage.removeItem("focusChatId");
+  }, [channels]);
+
+
   //  WebSocket 연결 (방 선택 시)
   useEffect(() => {
     if (!selectedChannel) return;
@@ -652,6 +677,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               {channels.map((channel) => (
                 <div
                   key={channel.id}
+                  data-chat-id={channel.id}
                   className={`p-3 rounded-xl cursor-pointer transition-all ${
                     selectedChannel === channel.id
                       ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-md"
@@ -737,15 +763,6 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     </button>
                   )}
 
-                  {isRoomOwner && (
-                    <button
-                      onClick={handleDeleteRoom}
-                      className="w-full py-2 px-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
-                    >
-                      <span className="text-red-600">🗑️</span>
-                      <span className="text-red-600">채팅방 삭제</span>
-                    </button>
-                  )}
                 </div>
               )}
             </div>
