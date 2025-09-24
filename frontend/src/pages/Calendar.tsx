@@ -1,5 +1,5 @@
 // src/pages/Calendar.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import NotificationModal from "../components/NotificationModal";
 import {
@@ -10,19 +10,19 @@ import {
   toIsoDateTime,
 } from "../apis/calendar";
 import { useAuthStore } from "../stores/authStore";
+import { RouterContext } from "../hooks/useRouter";
 
-/* =========================
-   Types
-   ========================= */
-type Role = "member" | "officer" | "president";
+/* =========================================
+  Types
+  ========================================= */
+type Role = "LEADER" | "MANAGER" | "MEMBER";
 type Category = "정모" | "번개모임" | "MT";
 
-/** 단일 이벤트(UI용) */
 type EventItem = {
   id: string | number;
   title: string;
-  date: string;       // YYYY-MM-DD (start)
-  endDate?: string;   // YYYY-MM-DD (end; 없으면 date와 동일)
+  date: string;       // YYYY-MM-DD
+  endDate?: string;   // YYYY-MM-DD
   time?: string;      // HH:mm
   endTime?: string;   // HH:mm
   allDay?: boolean;
@@ -35,18 +35,18 @@ type EventItem = {
   description?: string;
   createdById?: string | number;
 };
+
 type ViewMode = "month" | "year" | "decade";
 
-/** 렌더링용 날짜 슬라이스 */
 type DaySlice = EventItem & {
   sliceDate: string; // YYYY-MM-DD
   sliceKind: "single" | "start" | "middle" | "end";
-  timeLabel: string; // 칩에 표시할 시간 문구
+  timeLabel: string;
 };
 
-/* =========================
-   Utils
-   ========================= */
+/* =========================================
+  Utils
+  ========================================= */
 const pad = (n: number) => String(n).padStart(2, "0");
 const ymd = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -65,7 +65,7 @@ const startOfCalendar = (d: Date) => {
 const endOfCalendar = (d: Date) => {
   const start = startOfCalendar(d);
   const end = new Date(start);
-  end.setDate(start.getDate() + (6 * 7 - 1)); // 42칸
+  end.setDate(start.getDate() + (6 * 7 - 1));
   return end;
 };
 const isSameDay = (a: Date, b: Date) =>
@@ -73,32 +73,82 @@ const isSameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-/* =========================
-   Labels
-   ========================= */
-const korWeek = ["일", "월", "화", "수", "목", "금", "토"];
+/** 문자열이면 JSON 파싱 시도 */
+function parseMaybeJsonString(s?: unknown) {
+  if (typeof s !== "string") return null;
+  try { return JSON.parse(s); } catch { return null; }
+}
+/** HTTP 상태코드 추출(axios, fetch, 커스텀 throw, JSON문자열 모두 대응) */
+function getHttpStatus(err: unknown): number | undefined {
+  const any = err as any;
+  // axios 스타일
+  if (typeof any?.response?.status === "number") return any.response.status;
+  if (typeof any?.response?.data?.status === "number") return any.response.data.status;
+
+  // fetch/커스텀
+  if (typeof any?.status === "number") return any.status;
+
+  // message나 data가 JSON 문자열인 케이스
+  const fromMsg = parseMaybeJsonString(any?.message);
+  if (typeof fromMsg?.status === "number") return fromMsg.status;
+
+  const fromData = parseMaybeJsonString(any?.response?.data);
+  if (typeof fromData?.status === "number") return fromData.status;
+
+  return undefined;
+}
+
+/** 사용자용 메시지 추출 */
+function getBackendMessage(err: unknown): string | undefined {
+  const any = err as any;
+
+  // axios: { data }
+  const data = any?.response?.data ?? any?.data ?? any;
+  // 1) 객체 형태
+  if (typeof data === "object" && data) {
+    if (typeof data.data === "string") return data.data;       // { success:false, data:"메시지", status:409 }
+    if (typeof data.message === "string") return data.message; // { message:"..." }
+  }
+  // 2) 서버가 문자열(JSON텍스트)로 준 경우
+  if (typeof data === "string") {
+    const parsed = parseMaybeJsonString(data);
+    if (parsed) {
+      if (typeof parsed.data === "string") return parsed.data;
+      if (typeof parsed.message === "string") return parsed.message;
+    }
+    return data; // 그냥 일반 문자열
+  }
+  // 3) Error.message가 JSON 텍스트인 경우
+  if (typeof any?.message === "string") {
+    const parsed = parseMaybeJsonString(any.message);
+    if (parsed) {
+      if (typeof parsed.data === "string") return parsed.data;
+      if (typeof parsed.message === "string") return parsed.message;
+    }
+  }
+  return undefined;
+}
+/* ===== 에러 파서 강화 끝 ===== */
+
+/* =========================================
+  Labels & Visual
+  ========================================= */
+const korWeek = ["일","월","화","수","목","금","토"];
 const monthNames = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 const monthLabel = (d: Date) => `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
 const yearLabel = (d: Date) => `${d.getFullYear()}년`;
 const decadeStart = (year: number) => Math.floor(year / 10) * 10;
 
-/* =========================
-   Visual map
-   ========================= */
-const catColor: Record<
-  Category,
-  { bg: string; text: string; ring: string; left: string }
-> = {
-  정모:     { bg: "bg-blue-50",   text: "text-blue-700",   ring: "ring-blue-200",   left: "before:bg-blue-500" },
-  번개모임: { bg: "bg-amber-50",  text: "text-amber-700",  ring: "ring-amber-200",  left: "before:bg-amber-500" },
-  MT:      { bg: "bg-purple-50", text: "text-purple-700", ring: "ring-purple-200", left: "before:bg-purple-500" },
+const catColor: Record<Category, { bg: string; text: string; ring: string; left: string }> = {
+  정모:     { bg: "bg-blue-50",   text: "text-blue-700",  ring: "ring-blue-200",  left: "before:bg-blue-500" },
+  번개모임: { bg: "bg-amber-50",  text: "text-amber-700", ring: "ring-amber-200", left: "before:bg-amber-500" },
+  MT:       { bg: "bg-purple-50", text: "text-purple-700", ring: "ring-purple-200", left: "before:bg-purple-500" },
 };
 
-/* =========================
-   Icons (IconProps로 안전하게)
-   ========================= */
-type IconProps = React.ComponentPropsWithoutRef<'svg'>;
-
+/* =========================================
+  Icons
+  ========================================= */
+type IconProps = React.ComponentPropsWithoutRef<"svg">;
 const ChevronLeft: React.FC<IconProps> = (p) => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...p}>
     <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
@@ -122,31 +172,22 @@ const Pin: React.FC<IconProps> = (p) => (
   </svg>
 );
 
-/* =========================
-   Props
-   ========================= */
-interface CalendarProps {
-  onNavigateToOnboarding: () => void;
-}
-
-/* =========================================================
-   Helpers (BE ↔ UI 매핑)
-   ========================================================= */
+/* =========================================
+  BE ↔ UI 매핑
+  ========================================= */
 const toDateOnly = (iso?: string | null) => (iso ? iso.slice(0, 10) : "");
 const toHm = (iso?: string | null) => (iso ? iso.slice(11, 16) : undefined);
-
 const mapListItem = (d: any): EventItem => {
   const start = String(d.startAt ?? "");
   const end = String(d.endAt ?? start);
   const startDate = toDateOnly(start);
   const endDate = toDateOnly(end);
   const isAllDay = toHm(start) === "00:00" && toHm(end) === "23:59";
-
   return {
     id: d.id,
     title: d.title,
     date: startDate,
-    endDate: endDate,
+    endDate,
     time: isAllDay ? undefined : toHm(start),
     endTime: isAllDay ? undefined : toHm(end),
     allDay: isAllDay,
@@ -158,44 +199,209 @@ const mapListItem = (d: any): EventItem => {
   };
 };
 
-/* =========================
-   Component
-   ========================= */
-const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
+/* =========================================
+  Modals
+  ========================================= */
+function JoinConfirmModal({
+  open, onClose, eventItem, onJoined, clubId,
+  onShowFeedback, onNavigateToChat,
+}: {
+  open: boolean;
+  onClose: () => void;
+  eventItem: EventItem;
+  onJoined: (res: { attendees?: number; capacity?: number }) => void;
+  clubId: number | null;
+  onShowFeedback: (title: string, message: string, actions?: Array<{ label: string; onClick: () => void; tone?: "primary" | "default" }>) => void;
+  onNavigateToChat: () => void;
+}) {
+  const [submitting, setSubmitting] = useState(false);
+
+  const doJoin = async () => {
+    if (!clubId) {
+      onShowFeedback("오류", "클럽 정보가 없습니다.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await CalendarJoinApi.join(clubId, Number(eventItem.id));
+      onJoined({ attendees: res.attendees, capacity: res.capacity });
+
+      // ★ 응답에서 chatId 후보들 확인 후 저장 (Chat.tsx에서 읽어 포커스)
+      const chatId = res.roomId;
+      if (chatId) {
+        sessionStorage.setItem("focusChatId", String(chatId));
+      }
+
+      onShowFeedback(
+        "참여 신청 완료",
+        "참여 신청이 완료되었습니다.\n바로 채팅방으로 이동하시겠습니까?",
+        [
+          { label: "나중에", onClick: () => {}, tone: "default" },
+          { label: "채팅방으로 이동", onClick: onNavigateToChat, tone: "primary" },
+        ]
+      );
+      onClose();
+    } catch (err) {
+      const status = getHttpStatus(err);
+      const serverMsg = getBackendMessage(err);
+
+      if (status === 409) {
+        onShowFeedback("알림", "이미 행사에 참여했습니다.");
+      } else if (status === 404 || status === 400) {
+        onShowFeedback("알림", "채팅방을 찾을 수 없습니다.");
+      } else if (serverMsg) {
+        onShowFeedback("오류", serverMsg);
+      } else {
+        onShowFeedback("오류", "참여 신청 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) return null;
+
+  const whenText = (() => {
+    const s = parseYMD(eventItem.date);
+    const e = parseYMD(eventItem.endDate ?? eventItem.date);
+    const left = `${s.getFullYear()}. ${s.getMonth() + 1}. ${s.getDate()}.`;
+    const same = isSameDay(s, e);
+    if (eventItem.allDay) {
+      return same ? `${left} 종일`
+                 : `${left} ~ ${e.getFullYear()}. ${e.getMonth() + 1}. ${e.getDate()}. 종일`;
+    }
+    if (same) {
+      if (eventItem.time && eventItem.endTime) return `${left} ${eventItem.time} ~ ${eventItem.endTime}`;
+      if (eventItem.time) return `${left} ${eventItem.time}`;
+      if (eventItem.endTime) return `${left} ~ ${eventItem.endTime}`;
+      return `${left} 시간 미정`;
+    }
+    const right = `${e.getFullYear()}. ${e.getMonth() + 1}. ${e.getDate()}.`;
+    const timeLeft = eventItem.time ? `${eventItem.time} ~` : "시작 ~";
+    const timeRight = eventItem.endTime ? ` ${eventItem.endTime}` : "";
+    return `${left} ${timeLeft}  ${right}${timeRight}`;
+  })();
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <div className="text-lg font-bold text-gray-900 font-jua">참여 신청 확인</div>
+          <button onClick={onClose} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="space-y-1">
+            <div className="text-sm text-gray-500 font-gowun">이벤트</div>
+            <div className="text-base font-semibold text-gray-900 font-jua">{eventItem.title}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-sm text-gray-500 font-gowun">일시</div>
+            <div className="text-sm text-gray-900 font-gowun">{whenText}</div>
+          </div>
+          {eventItem.description && (
+            <div className="space-y-1">
+              <div className="text-sm text-gray-500 font-gowun">설명</div>
+              <div className="text-sm text-gray-800 whitespace-pre-wrap font-gowun">{eventItem.description}</div>
+            </div>
+          )}
+          <div className="pt-2 text-[15px] font-jua">정말 참여하시겠습니까?</div>
+        </div>
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-gray-50">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun" disabled={submitting}>취소</button>
+          <button onClick={doJoin} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua disabled:opacity-60" disabled={submitting}>
+            {submitting ? "처리 중..." : "참여하기"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeedbackDialog({
+  open, title, message, onClose, actions,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  onClose: () => void;
+  actions?: Array<{ label: string; onClick: () => void; tone?: "primary" | "default" }>;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="px-6 py-4 border-b">
+          <div className="text-lg font-bold text-gray-900 font-jua">{title}</div>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm text-gray-800 whitespace-pre-line font-gowun">{message}</p>
+        </div>
+        <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun">닫기</button>
+          {actions?.map((a, i) => (
+            <button
+              key={i}
+              onClick={a.onClick}
+              className={`px-4 py-2 rounded-lg text-sm font-jua ${
+                a.tone === "primary"
+                  ? "bg-orange-500 hover:bg-orange-600 text-white"
+                  : "border border-gray-300 bg-white hover:bg-gray-100"
+              }`}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================
+  Component
+  ========================================= */
+const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({ onNavigateToOnboarding }) => {
+  const router = useContext(RouterContext);
+    if (!router) {
+    // router가 null인 경우 예외 처리
+    console.error("RouterContext is not provided.");
+    return <div>라우팅 오류가 발생했습니다.</div>; // 또는 적절한 대체 UI
+  }
+  const { navigate } = router;
   const { user, clubId, myRole } = useAuthStore();
   const currentUserId = user?.id;
-  const role: Role =
-    myRole === "PRESIDENT" ? "president" : myRole === "OFFICER" ? "officer" : "member";
+  const role: Role = myRole === "LEADER" ? "LEADER" : myRole === "MANAGER" ? "MANAGER" : "MEMBER";
 
+  // 피드백 다이얼로그 상태
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedback, setFeedback] = useState<{ title: string; message: string; actions?: Array<{ label: string; onClick: () => void; tone?: "primary" | "default" }> }>({ title: "", message: "" });
+  const showFeedback = (title: string, message: string, actions?: Array<{ label: string; onClick: () => void; tone?: "primary" | "default" }>) => {
+    setFeedback({ title, message, actions });
+    setFeedbackOpen(true);
+  };
+
+  // 캘린더 상태
   const [events, setEvents] = useState<EventItem[]>([]);
-
-  // Calendar state
   const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
   const [view, setView] = useState<ViewMode>("month");
   const [selected, setSelected] = useState<Date | null>(new Date());
 
-  // Modals
+  // 모달 상태
   const [dayModalOpen, setDayModalOpen] = useState(false);
   const [dayModalDate, setDayModalDate] = useState<Date | null>(null);
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [eventModalItem, setEventModalItem] = useState<EventItem | null>(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [joinConfirmOpen, setJoinConfirmOpen] = useState(false);
 
-  // Month range
   const calStart = startOfCalendar(cursor);
   const calEnd = endOfCalendar(cursor);
-
-  // Month grid days
   const days = useMemo(() => {
     const out: Date[] = [];
     const d = new Date(calStart);
-    while (d <= calEnd) {
-      out.push(new Date(d));
-      d.setDate(d.getDate() + 1);
-    }
+    while (d <= calEnd) { out.push(new Date(d)); d.setDate(d.getDate() + 1); }
     return out;
   }, [calStart.getTime(), calEnd.getTime()]);
 
@@ -207,107 +413,66 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
     try {
       const list = await CalendarApi.getMonth({ clubId, year, month });
       setEvents(list.map(mapListItem));
-    } catch (e) {
-      console.error("getMonth failed", e);
-    }
+    } catch (e) { console.error("getMonth failed", e); }
   };
+  useEffect(() => { refreshMonth(); /* eslint-disable-next-line */ }, [clubId, cursor]);
 
-  useEffect(() => {
-    refreshMonth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clubId, cursor]);
-
-  // 현재 달에 걸친 이벤트만 필터링(다중일정 포함)
+  // 현재 달 이벤트
   const monthEvents = useMemo(() => {
-    const y = cursor.getFullYear();
-    const m = cursor.getMonth();
+    const y = cursor.getFullYear(); const m = cursor.getMonth();
     const monthStart = new Date(y, m, 1).getTime();
     const monthEnd = new Date(y, m + 1, 0).getTime();
-
     return events
       .filter((e) => {
         const s = parseYMD(e.date).getTime();
         const eEnd = parseYMD(e.endDate ?? e.date).getTime();
         return !(eEnd < monthStart || s > monthEnd);
       })
-      .sort(
-        (a, b) =>
-          parseYMD(a.date).getTime() - parseYMD(b.date).getTime() ||
-          (a.time ?? "99:99").localeCompare(b.time ?? "99:99"),
+      .sort((a, b) =>
+        parseYMD(a.date).getTime() - parseYMD(b.date).getTime() ||
+        (a.time ?? "99:99").localeCompare(b.time ?? "99:99")
       );
   }, [cursor, events]);
 
-  // 이벤트 → 날짜별 슬라이스로 확장
+  // 이벤트 → 날짜별 슬라이스
   const expandEventToSlices = (ev: EventItem): DaySlice[] => {
     const start = parseYMD(ev.date);
     const end = parseYMD(ev.endDate ?? ev.date);
+    const same = (a: Date, b: Date) => isSameDay(a, b);
     const slices: DaySlice[] = [];
-
-    const same = (a: Date, b: Date) =>
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate();
-
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const cur = new Date(d);
-      const first = same(cur, start);
-      const last = same(cur, end);
-      const kind: DaySlice["sliceKind"] =
-        first && last ? "single" : first ? "start" : last ? "end" : "middle";
-
-      const timeLabel = ev.allDay
-        ? "종일"
-        : kind === "single"
-        ? ev.time && ev.endTime
-          ? `${ev.time} ~ ${ev.endTime}`
-          : ev.time
-          ? ev.time
-          : ev.endTime
-          ? ev.endTime
-          : "시간 미정"
-        : kind === "start"
-        ? ev.time
-          ? `${ev.time} ~`
-          : "시작"
-        : kind === "end"
-        ? ev.endTime
-          ? `~ ${ev.endTime}`
-          : "종료"
-        : "종일";
-
-      slices.push({
-        ...ev,
-        sliceDate: ymd(cur),
-        sliceKind: kind,
-        timeLabel,
-      });
+      const first = same(cur, start); const last = same(cur, end);
+      const kind: DaySlice["sliceKind"] = first && last ? "single" : first ? "start" : last ? "end" : "middle";
+      const timeLabel =
+        ev.allDay ? "종일" :
+        kind === "single"
+          ? ev.time && ev.endTime ? `${ev.time} ~ ${ev.endTime}` : ev.time ?? ev.endTime ?? "시간 미정"
+          : kind === "start" ? (ev.time ? `${ev.time} ~` : "시작")
+          : kind === "end"   ? (ev.endTime ? `~ ${ev.endTime}` : "종료")
+          : "종일";
+      slices.push({ ...ev, sliceDate: ymd(cur), sliceKind: kind, timeLabel });
     }
     return slices;
   };
 
-  // 날짜별 map (슬라이스 기준)
+  // 날짜별 map
   const byDay = useMemo(() => {
     const map = new Map<string, DaySlice[]>();
     for (const ev of monthEvents) {
-      const slices = expandEventToSlices(ev);
-      for (const s of slices) {
+      for (const s of expandEventToSlices(ev)) {
         const arr = map.get(s.sliceDate) ?? [];
         arr.push(s);
         map.set(s.sliceDate, arr);
       }
     }
     for (const arr of map.values()) {
-      arr.sort((a, b) => {
-        if ((a.allDay ?? false) !== (b.allDay ?? false)) {
-          return a.allDay ? -1 : 1;
-        }
-        return (a.time ?? "99:99").localeCompare(b.time ?? "99:99");
-      });
+      arr.sort((a, b) => (a.allDay ? -1 : 1) - (b.allDay ? -1 : 1) || (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
     }
     return map;
   }, [monthEvents]);
 
-  // Right list scroll sync
+  // 우측 리스트 스크롤 동기화
   const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!selected || !listRef.current) return;
@@ -316,65 +481,47 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
     if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [selected]);
 
-  // Keyboard shortcuts
+  // 키보드 단축키
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
-        setCursor((c) =>
-          view === "month" ? new Date(c.getFullYear(), c.getMonth() - 1, 1)
-          : view === "year" ? new Date(c.getFullYear() - 1, c.getMonth(), 1)
-          : new Date(c.getFullYear() - 10, c.getMonth(), 1)
-        );
+        setCursor((c) => view === "month" ? new Date(c.getFullYear(), c.getMonth()-1, 1)
+                               : view === "year" ? new Date(c.getFullYear()-1, c.getMonth(), 1)
+                               : new Date(c.getFullYear()-10, c.getMonth(), 1));
       } else if (e.key === "ArrowRight") {
-        setCursor((c) =>
-          view === "month" ? new Date(c.getFullYear(), c.getMonth() + 1, 1)
-          : view === "year" ? new Date(c.getFullYear() + 1, c.getMonth(), 1)
-          : new Date(c.getFullYear() + 10, c.getMonth(), 1)
-        );
+        setCursor((c) => view === "month" ? new Date(c.getFullYear(), c.getMonth()+1, 1)
+                               : view === "year" ? new Date(c.getFullYear()+1, c.getMonth(), 1)
+                               : new Date(c.getFullYear()+10, c.getMonth(), 1));
       } else if (e.key === "Home" || e.key.toLowerCase() === "t") {
-        setCursor(startOfMonth(new Date()));
-        setView("month");
+        setCursor(startOfMonth(new Date())); setView("month");
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [view]);
 
-  // Helpers
+  // 시간 포맷
   const formatWhen = (ev: EventItem) => {
     const s = parseYMD(ev.date);
     const e = parseYMD(ev.endDate ?? ev.date);
     const left = `${s.getFullYear()}. ${s.getMonth() + 1}. ${s.getDate()}.`;
     const same = isSameDay(s, e);
-
-    if (ev.allDay) {
-      return same
-        ? `${left} 종일`
-        : `${left} ~ ${e.getFullYear()}. ${e.getMonth() + 1}. ${e.getDate()}. 종일`;
-    }
-
+    if (ev.allDay) return same ? `${left} 종일` : `${left} ~ ${e.getFullYear()}. ${e.getMonth() + 1}. ${e.getDate()}. 종일`;
     if (same) {
       if (ev.time && ev.endTime) return `${left} ${ev.time} ~ ${ev.endTime}`;
       if (ev.time) return `${left} ${ev.time}`;
       if (ev.endTime) return `${left} ~ ${ev.endTime}`;
       return `${left} 시간 미정`;
     }
-
     const right = `${e.getFullYear()}. ${e.getMonth() + 1}. ${e.getDate()}.`;
     const timeLeft = ev.time ? `${ev.time} ~` : "시작 ~";
     const timeRight = ev.endTime ? ` ${ev.endTime}` : "";
     return `${left} ${timeLeft}  ${right}${timeRight}`;
   };
 
-  const openDayModal = (d: Date) => {
-    setSelected(d);
-    setDayModalDate(d);
-    setDayModalOpen(true);
-  };
+  const openDayModal = (d: Date) => { setSelected(d); setDayModalDate(d); setDayModalOpen(true); };
   const openEventModal = async (ev: EventItem) => {
-    setEventModalItem(ev);
-    setEventModalOpen(true);
-    // 필요 시 단건으로 createdBy 등을 보강
+    setEventModalItem(ev); setEventModalOpen(true);
     if (!clubId) return;
     try {
       const full = await CalendarApi.getOne(clubId, Number(ev.id));
@@ -382,16 +529,14 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
       setEventModalItem((prev) => prev ? { ...prev, ...mapped } : mapped);
     } catch {}
   };
+  const canEdit = (ev: EventItem | null) => !!ev && currentUserId != null && String(ev.createdById ?? "") === String(currentUserId);
 
-  const canEdit = (ev: EventItem | null) =>
-    !!ev && currentUserId != null && String(ev.createdById ?? "") === String(currentUserId);
-
-  /* =========================
-     Render
-     ========================= */
+  /* =========================================
+    Render
+    ========================================= */
   return (
     <div className="min-h-screen bg-[#fcf9f5] relative overflow-hidden">
-      {/* Animated Background Elements */}
+      {/* 배경 장식 */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-20 left-10 w-32 h-32 bg-orange-200 rounded-full opacity-20 animate-drift"></div>
         <div className="absolute top-40 right-20 w-24 h-24 bg-yellow-200 rounded-full opacity-25 animate-drift-reverse"></div>
@@ -409,6 +554,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
         />
 
         <main className="flex-1 px-6 py-2 bg-gradient-to-br from-orange-50 via-white to-orange-100">
+          {/* 헤더 */}
           <div className="mb-2">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-extrabold text-gray-900 font-jua">일정 관리</h1>
@@ -417,15 +563,19 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-[1fr,380px] gap-4 items-start">
-            {/* Left: Calendar */}
+            {/* 좌측: 캘린더 */}
             <section className="bg-white/80 backdrop-blur rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden min-h-[calc(100vh-220px)] flex flex-col">
-              {/* header */}
+              {/* 캘린더 헤더 */}
               <div className="flex items-center justify-between px-4 py-2 border-b bg-gradient-to-r from-white to-gray-50">
                 <div className="flex items-center gap-2">
                   <button onClick={() => setCursor(c => new Date(c.getFullYear(), c.getMonth()-1, 1))} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100" aria-label="이전">
                     <ChevronLeft className="w-5 h-5 text-gray-600"/>
                   </button>
-                  <button onClick={() => setView(v => v==="month"?"year":v==="year"?"decade":"month")} className="px-2 py-1 rounded-lg text-lg font-bold tracking-tight text-gray-900 hover:bg-gray-100 font-jua" title="클릭: 월 ↔ 연 ↔ 십년">
+                  <button
+                    onClick={() => setView(v => v==="month"?"year":v==="year"?"decade":"month")}
+                    className="px-2 py-1 rounded-lg text-lg font-bold tracking-tight text-gray-900 hover:bg-gray-100 font-jua"
+                    title="클릭: 월 ↔ 연 ↔ 십년"
+                  >
                     {view==="month"
                       ? monthLabel(cursor)
                       : view==="year"
@@ -435,7 +585,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                   <button onClick={() => setCursor(c => new Date(c.getFullYear(), c.getMonth()+1, 1))} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100" aria-label="다음">
                     <ChevronRight className="w-5 h-5 text-gray-600"/>
                   </button>
-                  <span className="ml-2 text-xs text-gray-500 font-gowun">단축키: 월 · 연 이동( ←/→ ) | 오늘 ( T / Home )</span>
+                  <span className="ml-2 text-xs text-gray-500 font-gowun">단축키: 월·연 이동(←/→) | 오늘(T/Home)</span>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -454,7 +604,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                 </div>
               </div>
 
-              {/* body */}
+              {/* 본문(월/연/십년) */}
               {view === "month" && (
                 <>
                   <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-4 pt-1 font-gowun">
@@ -471,7 +621,6 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                         const sel = selected && isSameDay(selected, d);
                         const weekend = d.getDay() === 0 || d.getDay() === 6;
                         const isToday = isSameDay(d, new Date());
-
                         return (
                           <div
                             key={idx}
@@ -487,9 +636,8 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                             </div>
                             <div className="absolute left-2 right-2 top-6 space-y-1">
                               {preview.map((ev) => {
-                                // Add check for valid category
                                 const color = ev.category in catColor ? catColor[ev.category] : null;
-                                if (!color) return null; // Handle case where category is not in map
+                                if (!color) return null;
                                 const label = `${ev.title} • ${ev.timeLabel}${ev.location ? ` • ${ev.location}` : ""}`;
                                 return (
                                   <button
@@ -506,10 +654,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                                 );
                               })}
                               {more > 0 && (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); openDayModal(d); }}
-                                  className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left font-gowun"
-                                >
+                                <button onClick={(e) => { e.stopPropagation(); openDayModal(d); }} className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left font-gowun">
                                   +{more}개 더 보기
                                 </button>
                               )}
@@ -563,7 +708,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
               })()}
             </section>
 
-            {/* Right: list */}
+            {/* 우측: 리스트 */}
             <aside className="bg-white/80 backdrop-blur rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden min-h-[calc(100vh-220px)] flex flex-col">
               <div className="flex items-center justify-between px-6 py-4 border-b">
                 <div className="text-base font-semibold text-gray-900 font-jua">이번 달 일정</div>
@@ -574,7 +719,6 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                 {monthEvents.map((ev) => {
                   const d = parseYMD(ev.date);
                   const isSel = selected && isSameDay(selected, d);
-                  // Add a check to ensure ev.category is a valid key for catColor
                   if (!(ev.category in catColor)) return null;
                   const color = catColor[ev.category as Category];
                   return (
@@ -625,7 +769,6 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {(byDay.get(ymd(dayModalDate)) ?? []).map((ev) => {
-                  // Add a check to ensure ev.category is a valid key for catColor
                   if (!(ev.category in catColor)) return null;
                   const color = catColor[ev.category as Category];
                   return (
@@ -728,7 +871,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                             setEventModalOpen(false);
                             refreshMonth();
                           } catch (e) {
-                            alert("삭제 실패");
+                            showFeedback("오류", "삭제 실패");
                           }
                         }}
                         className="px-3 py-2 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 text-sm font-jua"
@@ -740,18 +883,7 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setEventModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-jua">닫기</button>
-                  <button
-                    onClick={async () => {
-                      if (!clubId) return;
-                      try {
-                        const res = await CalendarJoinApi.join(clubId, Number(eventModalItem.id));
-                        setEventModalItem((e) => e ? { ...e, attendees: res.attendees, capacity: res.capacity ?? e.capacity } : e);
-                      } catch (e) {
-                        alert("참여 신청 실패");
-                      }
-                    }}
-                    className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua"
-                  >
+                  <button onClick={() => setJoinConfirmOpen(true)} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua">
                     참여신청
                   </button>
                 </div>
@@ -766,16 +898,12 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
             title="새 일정 등록"
             onClose={() => setCreateOpen(false)}
             onSubmit={async (form) => {
-              if (!clubId) { alert("클럽 정보가 없습니다."); return; }
-              // 단일/다중일정 검증
-              const s = parseYMD(form.startDate);
-              const e = parseYMD(form.endDate);
-              if (e < s) { alert("종료 날짜가 시작 날짜보다 앞설 수 없습니다."); return; }
+              if (!clubId) { showFeedback("오류", "클럽 정보가 없습니다."); return; }
+              const s = parseYMD(form.startDate); const e = parseYMD(form.endDate);
+              if (e < s) { showFeedback("오류", "종료 날짜가 시작 날짜보다 앞설 수 없습니다."); return; }
               if (!form.allDay && form.startDate === form.endDate && form.startTime && form.endTime && form.startTime > form.endTime) {
-                alert("종료 시간이 시작 시간보다 빠릅니다."); return;
+                showFeedback("오류", "종료 시간이 시작 시간보다 빠릅니다."); return;
               }
-
-              // API 전송
               const startAt = toIsoDateTime(form.startDate, form.allDay ? "00:00" : (form.startTime || "00:00"));
               const endAt   = toIsoDateTime(form.endDate,   form.allDay ? "23:59" : (form.endTime   || "23:59"));
               try {
@@ -785,14 +913,18 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                   place: form.location || "",
                   capacity: form.capacity ? Number(form.capacity) : undefined,
                   expectedCost: undefined,
-                  startAt,
-                  endAt,
+                  startAt, endAt,
                   type: uiToEventType(form.category as Category),
                 } as any);
+                setFeedback({ title: "완료", message: "이벤트가 등록되고 단톡방이 생성되었습니다!!" });
+                setFeedbackOpen(true);
+                // alert("이벤트가 등록되고 단톡방이 생성되었습니다!!");
+
                 setCreateOpen(false);
                 refreshMonth();
-              } catch (err) {
-                alert("일정 등록 실패");
+              } catch (e) {
+                const serverMsg = getBackendMessage(e);
+                showFeedback("오류", serverMsg || "일정 등록 실패");
               }
             }}
             role={role}
@@ -818,7 +950,12 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
             }}
             onClose={() => setEditOpen(false)}
             onSubmit={async (form) => {
-              if (!clubId) return;
+              if (!clubId) { showFeedback("오류", "클럽 정보가 없습니다."); return; }
+              const s = parseYMD(form.startDate); const e = parseYMD(form.endDate);
+              if (e < s) { showFeedback("오류", "종료 날짜가 시작 날짜보다 앞설 수 없습니다."); return; }
+              if (!form.allDay && form.startDate === form.endDate && form.startTime && form.endTime && form.startTime > form.endTime) {
+                showFeedback("오류", "종료 시간이 시작 시간보다 빠릅니다."); return;
+              }
               const startAt = toIsoDateTime(form.startDate, form.allDay ? "00:00" : (form.startTime || "00:00"));
               const endAt   = toIsoDateTime(form.endDate,   form.allDay ? "23:59" : (form.endTime   || "23:59"));
               try {
@@ -828,20 +965,43 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
                   place: form.location || "",
                   capacity: form.capacity ? Number(form.capacity) : undefined,
                   expectedCost: undefined,
-                  startAt,
-                  endAt,
+                  startAt, endAt,
                 } as any);
                 setEditOpen(false);
                 setEventModalOpen(false);
                 refreshMonth();
               } catch (e) {
-                alert("수정 실패");
+                const serverMsg = getBackendMessage(e);
+                showFeedback("오류", serverMsg || "수정 실패");
               }
             }}
             role={role}
           />
         )}
 
+        {/* ===== Join Confirm / Feedback ===== */}
+        {joinConfirmOpen && eventModalOpen && eventModalItem && (
+          <JoinConfirmModal
+            open={joinConfirmOpen}
+            onClose={() => setJoinConfirmOpen(false)}
+            eventItem={eventModalItem}
+            clubId={clubId ?? null}
+            onJoined={(res) => {
+              setEventModalItem((e) => e ? { ...e, attendees: res.attendees, capacity: res.capacity ?? e.capacity } : e);
+            }}
+            onShowFeedback={showFeedback}
+            onNavigateToChat={() => navigate("chat")}
+          />
+        )}
+        <FeedbackDialog
+          open={feedbackOpen}
+          title={feedback.title}
+          message={feedback.message}
+          actions={feedback.actions}
+          onClose={() => setFeedbackOpen(false)}
+        />
+
+        {/* ===== Notification ===== */}
         <NotificationModal
           isOpen={showNotificationModal}
           onClose={() => setShowNotificationModal(false)}
@@ -852,9 +1012,9 @@ const Calendar: React.FC<CalendarProps> = ({ onNavigateToOnboarding }) => {
   );
 };
 
-/* =========================================================
-   EventFormModal: 일정 등록/수정 공용 모달
-   ========================================================= */
+/* =========================================
+  EventFormModal
+  ========================================= */
 type FormShape = {
   category: Category | "";
   title: string;
@@ -871,11 +1031,7 @@ type FormShape = {
 };
 
 function EventFormModal({
-  title,
-  onClose,
-  onSubmit,
-  initial,
-  role,
+  title, onClose, onSubmit, initial, role,
 }: {
   title: string;
   onClose: () => void;
@@ -899,54 +1055,41 @@ function EventFormModal({
     note: initial?.note ?? "",
   });
 
-  const [sameDate, setSameDate] = useState<boolean>(
-    (initial?.startDate ?? today) === (initial?.endDate ?? today)
-  );
+  const [sameDate, setSameDate] = useState<boolean>((initial?.startDate ?? today) === (initial?.endDate ?? today));
+  useEffect(() => { if (sameDate) setForm((f) => ({ ...f, endDate: f.startDate })); }, [sameDate]);
+  useEffect(() => { if (sameDate) setForm((f) => ({ ...f, endDate: f.startDate })); }, [form.startDate]);
 
-  useEffect(() => {
-    if (sameDate) setForm((f) => ({ ...f, endDate: f.startDate }));
-  }, [sameDate]);
-  useEffect(() => {
-    if (sameDate) setForm((f) => ({ ...f, endDate: f.startDate }));
-  }, [form.startDate]);
-
-  const canUseAdminCategory = role === "officer" || role === "president";
-
-  const categoryOptions: Array<{
-    key: Category;
-    label: string;
-    desc: string;
-    emoji: string;
-    adminOnly?: boolean;
-  }> = [
+  const canUseAdminCategory = role === "LEADER" || role === "MANAGER";
+  const categoryOptions: Array<{ key: Category; label: string; desc: string; emoji: string; adminOnly?: boolean }> = [
     { key: "번개모임", label: "번개모임", desc: "즉석 모임", emoji: "⚡" },
-    { key: "정모", label: "정모", desc: "정기 모임", emoji: "📅", adminOnly: true },
-    { key: "MT", label: "MT", desc: "멤버십 트레이닝", emoji: "🏔️", adminOnly: true },
+    { key: "정모",   label: "정모",   desc: "정기 모임", emoji: "📅", adminOnly: true },
+    { key: "MT",     label: "MT",     desc: "멤버십 트레이닝", emoji: "🏔️", adminOnly: true },
   ];
 
   const pickCategory = (c: Category, adminOnly?: boolean) => {
-    if (adminOnly && !canUseAdminCategory) {
-      alert("관리자 전용 카테고리입니다. (회장/임원만 가능)");
-      return;
-    }
+    if (adminOnly && !canUseAdminCategory) return alert("관리자 전용 카테고리입니다. (회장/임원만 가능)");
     setForm((f) => ({ ...f, category: c }));
   };
-
-  // 종일 토글: 00:00 ~ 23:59
   const onToggleAllDay = (checked: boolean) => {
-    if (checked) {
-      setForm((f) => ({ ...f, allDay: true, startTime: "00:00", endTime: "23:59" }));
-    } else {
-      setForm((f) => ({ ...f, allDay: false }));
-    }
+    setForm((f) => checked ? { ...f, allDay: true, startTime: "00:00", endTime: "23:59" } : { ...f, allDay: false });
   };
 
   const submit = () => {
-    if (!form.category) return alert("카테고리를 선택하세요.");
-    if (!form.title.trim()) return alert("모임 제목을 입력하세요.");
-    if (!form.startDate || !form.endDate) return alert("날짜를 입력하세요.");
+    if (!form.category) {
+      alert("카테고리를 선택하세요.");
+      return;
+    }
+    if (!form.title.trim()) {
+      alert("모임 제목을 입력하세요.");
+      return;
+    }
+    if (!form.startDate || !form.endDate) {
+      alert("날짜를 입력하세요.");
+      return;
+    }
     if (!form.allDay && form.startDate === form.endDate && form.startTime && form.endTime && form.startTime > form.endTime) {
-      return alert("종료 시간이 시작 시간보다 빠릅니다.");
+      alert("종료 시간이 시작 시간보다 빠릅니다.");
+      return;
     }
     onSubmit(form);
   };
@@ -954,13 +1097,11 @@ function EventFormModal({
   return (
     <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="w-full max-w-screen-lg max-h-[90vh] bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div className="text-lg font-bold text-gray-900 font-jua">{title}</div>
           <button onClick={onClose} className="w-9 h-9 grid place-items-center rounded-lg hover:bg-gray-100">✕</button>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* 카테고리 */}
           <div>
@@ -993,20 +1134,13 @@ function EventFormModal({
           {/* 제목 */}
           <div>
             <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">모임 제목 *</div>
-            <input
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              placeholder="모임 제목을 입력하세요"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
-            />
+            <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="모임 제목을 입력하세요" className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
           </div>
 
-          {/* 날짜 + 동일 날짜 */}
+          {/* 날짜 */}
           <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-4">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-gray-800 font-gowun">시작 날짜 *</div>
-              </div>
+              <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-800 font-gowun">시작 날짜 *</div></div>
               <input type="date" value={form.startDate} onChange={(e)=>setForm((f)=>({...f, startDate: e.target.value}))} className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"/>
             </div>
             <div>
@@ -1021,7 +1155,7 @@ function EventFormModal({
             </div>
           </div>
 
-          {/* 시간 + 종일 */}
+          {/* 시간 */}
           <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-4">
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -1068,7 +1202,6 @@ function EventFormModal({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-gray-50">
           <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun">취소</button>
           <button onClick={submit} className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm font-jua">등록</button>

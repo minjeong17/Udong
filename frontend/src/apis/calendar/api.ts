@@ -127,7 +127,7 @@ export const CalendarJoinApi = {
   async join(clubId: number, eventId: number) {
     const url = withBase(`/clubs/${clubId}/events/${eventId}/join`);
     const raw = await fetchClient<any>(url, { method: 'POST' });
-    return unwrap<{ eventId: number; userId: number; participated: true; attendees: number; capacity?: number }>(raw);
+    return unwrap<{ eventId: number; userId: number; participated: true; attendees: number; capacity?: number; roomId: number }>(raw);
   },
   async leave(clubId: number, eventId: number) {
     const url = withBase(`/clubs/${clubId}/events/${eventId}/join`);
