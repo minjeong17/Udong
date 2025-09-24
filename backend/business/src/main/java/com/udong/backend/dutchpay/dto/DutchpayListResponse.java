@@ -17,6 +17,7 @@ public class DutchpayListResponse {
     private Long participantCount;    // (select count(...)) -> Long !!!
     private Integer eventId;          // e.id
     private String eventTitle;        // e.title
+    private Boolean isDone;
 
     // JPQL constructor expression과 "완전히" 동일한 시그니처
     public DutchpayListResponse(
@@ -26,7 +27,8 @@ public class DutchpayListResponse {
             Integer amount,
             Long participantCount,   // <-- Long이어야 함
             Integer eventId,
-            String eventTitle
+            String eventTitle,
+            Boolean isDone
     ) {
         this.id = id;
         this.createdAt = createdAt;
@@ -35,5 +37,6 @@ public class DutchpayListResponse {
         this.participantCount = (participantCount == null) ? 0L : participantCount;
         this.eventId = eventId;
         this.eventTitle = eventTitle;
+        this.isDone = isDone;
     }
 }
