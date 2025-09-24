@@ -53,8 +53,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
   const [items, setItems] = useState<ItemResponse[]>([]);
   const [inventory, setInventory] = useState<InventoryResponse[]>([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const auth = useAuthStore.getState();
-  const clubId = auth?.user?.clubId;
+  const clubId = useAuthStore((state) => state.clubId);
 
   const itemIcons: Record<number, string> = {
     1: "🧪",  // 포션
@@ -112,7 +111,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
         ]);
         setItems(shopItems);
         setInventory(myInventory);
-        setPoints(myLedger.currPoint);
+        setPoints(myLedger?.currPoint ?? 0);
       } catch (err) {
         console.error(err);
         alert("상점 정보를 불러오는 중 오류가 발생했습니다.");
