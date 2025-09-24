@@ -1,6 +1,7 @@
 package com.udong.backend.votes.entity;
 
 import com.udong.backend.chat.entity.ChatRoom;
+import com.udong.backend.clubs.entity.Club;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,6 +18,10 @@ public class Vote {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "club_id")
+    private Club club; // 동아리
 
     @Column(nullable = false, length = 100)
     private String title; // 투표 제목

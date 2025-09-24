@@ -21,9 +21,10 @@ public class VoteResponse {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private Integer createdBy;
-    private String createdByName; // 생성자 이름 (김민수)
+    private String createdByName;
     private Integer chatRoomId;
     private String chatRoomName;
+    private Integer clubId;
     private Boolean isExpired;
     private Boolean canParticipate;
     private Boolean hasParticipated; // 현재 사용자가 참여했는지 여부

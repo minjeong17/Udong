@@ -36,7 +36,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   const [settlementAmount, setSettlementAmount] = useState("");
   const [settlementReceipt, setSettlementReceipt] = useState<File | null>(null);
   const [settlementMemo, setSettlementMemo] = useState("");
-  const [settlementParticipants, setSettlementParticipants] = useState<string[]>([]);
+  const [settlementParticipants, setSettlementParticipants] = useState<
+    string[]
+  >([]);
   const [voteTitle, setVoteTitle] = useState("");
   const [voteDescription, setVoteDescription] = useState("");
   const [allowMultiple, setAllowMultiple] = useState(false);
@@ -53,7 +55,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   // 참여자 모달용
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
-  const [participantsError, setParticipantsError] = useState<string | null>(null);
+  const [participantsError, setParticipantsError] = useState<string | null>(
+    null
+  );
 
   // 더미 멤버(초기 선택값)
   const chatMembers = [
@@ -91,6 +95,13 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       alert("마감일을 선택해주세요.");
       return;
     }
+    // 마감일이 현재 시간보다 이후인지 검증
+    const deadlineDate = new Date(deadline);
+    const now = new Date();
+    if (deadlineDate <= now) {
+      alert("마감일은 현재 시간보다 이후여야 합니다.");
+      return;
+    }
     if (opts.length < 2) {
       alert("선택지는 최소 2개 이상이어야 합니다.");
       return;
@@ -100,7 +111,8 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       title: voteTitle.trim(),
       description: voteDescription.trim() || undefined,
       allowMultiple,
-      deadline: new Date(deadline).toISOString(),
+      // <input type="datetime-local"> 값을 백엔드가 기대하는 LocalDateTime 형식으로 변환
+      deadline: new Date(deadline).toISOString().slice(0, 19),
       options: opts,
     };
 
@@ -116,7 +128,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       setOptions(["", ""]);
     } catch (e: any) {
       console.error(e);
-      alert(e?.message ?? "투표 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      alert(
+        e?.message ?? "투표 생성에 실패했습니다. 잠시 후 다시 시도해주세요."
+      );
     } finally {
       setIsCreatingVote(false);
     }
@@ -198,10 +212,14 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   // 사용자 정보
   const token = localStorage.getItem("accessToken");
   const payload = token ? parseJwt(token) : null;
-  const myUserId: number | null = payload?.userId ? Number(payload.userId) : null;
+  const myUserId: number | null = payload?.userId
+    ? Number(payload.userId)
+    : null;
 
   const isRoomOwner =
-    !!currentChannel && myUserId != null && currentChannel.createdByUserId === myUserId;
+    !!currentChannel &&
+    myUserId != null &&
+    currentChannel.createdByUserId === myUserId;
 
   // EVENT에서만 보이고, 참여 인원 확정 후에만 활성
   const isSettlementEnabled =
@@ -235,25 +253,8 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
   // focusChatId 자동 선택
   useEffect(() => {
-    if (channels.length === 0) return;
-    const raw = sessionStorage.getItem("focusChatId");
-    if (!raw) return;
-
-    const focusId = Number(raw);
-    const exists = Number.isFinite(focusId) && channels.some((c) => c.id === focusId);
-    if (exists) {
-      setSelectedChannel(focusId);
-      requestAnimationFrame(() => {
-        const el = document.querySelector<HTMLElement>(`[data-chat-id="${focusId}"]`);
-        el?.scrollIntoView({ block: "center" });
-      });
-    }
-    sessionStorage.removeItem("focusChatId");
-  }, [channels]);
-
-  // WebSocket 연결 (방 선택 시)
-  useEffect(() => {
     if (!selectedChannel) return;
+
     let closedByEffect = false;
 
     (async () => {
@@ -262,7 +263,10 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
         setChatMessages([]);
 
         const base = new URL(import.meta.env.VITE_API_BASE_URL);
-        const WS_BASE = (base.protocol === "https:" ? "wss://" : "ws://") + base.host;
+        const WS_BASE =
+          (base.protocol === "https:" ? "wss://" : "ws://") + base.host;
+
+        // const WS_BASE = (location.protocol === "https:" ? "wss://" : "ws://") + (import.meta.env.VITE_API_HOST ?? "localhost:8080");
 
         const token = localStorage.getItem("accessToken");
         const url = `${WS_BASE}/api/ws/chat?roomId=${selectedChannel}${
@@ -274,7 +278,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
         } catch {}
 
         const payload = token ? parseJwt(token) : null;
-        const myUserId: number | null = payload?.userId ? Number(payload?.userId) : null;
+        const myUserId: number | null = payload?.userId
+          ? Number(payload?.userId)
+          : null;
 
         const history = await ChatApi.getRecentMessages(selectedChannel, 50);
         setChatMessages(
@@ -287,7 +293,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               minute: "2-digit",
             }),
             isOwn: h.senderUserId === myUserId,
-          })),
+          }))
         );
 
         const ws = new WebSocket(url);
@@ -308,14 +314,17 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             setChatMessages((prev) => [
               ...prev,
               {
-                id: data.messageId ? String(data.messageId) : `local-${Date.now()}`,
+                id: data.messageId
+                  ? String(data.messageId)
+                  : `local-${Date.now()}`,
                 user: data.senderName ?? "익명",
                 message: data.content,
                 timestamp: new Date(data.createdAt).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
                 }),
-                isOwn: myUserId != null ? data.senderUserId === myUserId : false,
+                isOwn:
+                  myUserId != null ? data.senderUserId === myUserId : false,
               },
             ]);
           } catch (e) {
@@ -373,9 +382,13 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
         setSettlementParticipants(ids);
 
         setIsParticipantsConfirmed(!!resp.confirmed);
-        setConfirmedCount(resp.confirmed ? resp.confirmedCount ?? 0 : ids.length);
+        setConfirmedCount(
+          resp.confirmed ? resp.confirmedCount ?? 0 : ids.length
+        );
       } catch (e: any) {
-        setParticipantsError(e?.message ?? "참여자 정보를 불러오지 못했습니다.");
+        setParticipantsError(
+          e?.message ?? "참여자 정보를 불러오지 못했습니다."
+        );
       } finally {
         setParticipantsLoading(false);
       }
@@ -457,7 +470,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   // 선택/확정 토글
   const handleMemberToggle = (memberId: string) => {
     setSelectedMembers((prev) =>
-      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId],
+      prev.includes(memberId)
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId]
     );
   };
 
@@ -469,7 +484,13 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
     try {
       setIsConfirming(true);
 
-      const ids = selectedMembers.map((s) => Number(s)).filter((n) => Number.isFinite(n));
+      // string[] -> number[]
+      const ids = selectedMembers
+        .map((s) => Number(s))
+        .filter((n) => Number.isFinite(n));
+
+      console.log("idddd ", ids, selectedChannel);
+
       const auth = useAuthStore.getState();
       const clubId = auth?.clubId;
       if (clubId == null) return;
@@ -494,7 +515,9 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   };
   const handleSettlementParticipantToggle = (memberId: string) => {
     setSettlementParticipants((prev) =>
-      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId],
+      prev.includes(memberId)
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId]
     );
   };
 
@@ -521,7 +544,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   };
 
   return (
-    <div className="h-dvh overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="overflow-hidden h-dvh bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="flex h-full">
         {/* Left Sidebar (앱 공통) */}
         <Sidebar
@@ -529,58 +552,53 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
           onShowNotification={() => setShowNotificationModal(true)}
         />
 
-        {/* Main */}
-        <div className="flex-1 h-full flex min-h-0">
+        {/* 메인 콘텐츠 */}
+        <div className="flex flex-1 h-full min-h-0">
           {/* 채널 사이드바 */}
-          <div className="w-80 h-full bg-white border-r border-orange-200 shadow-lg flex flex-col">
-            {/* 고정 헤더 */}
-            <div className="p-6 border-b border-orange-200 shrink-0">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-800 font-jua">채팅</h2>
+          <div className="h-full overflow-y-auto bg-white border-r border-orange-200 shadow-lg w-80">
+            <div className="p-6 border-b border-orange-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-800 font-jua">
+                  채팅
+                </h2>
               </div>
             </div>
-
-            {/* 본문 컨테이너 */}
-            <div className="p-4 flex-1 flex flex-col min-h-0">
-              {/* 채팅방 리스트: 고정/반응형 높이 + 내부 스크롤 */}
-              <div className="space-y-2 pr-1 h-[clamp(18rem,50vh,32rem)] overflow-y-auto rounded-xl">
-                {channels.map((channel) => (
-                  <div
-                    key={channel.id}
-                    data-chat-id={channel.id}
-                    className={`p-3 rounded-xl cursor-pointer transition-all ${
-                      selectedChannel === channel.id
-                        ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-md"
-                        : "bg-orange-50 text-gray-700 hover:bg-orange-100"
-                    }`}
-                    onClick={() => setSelectedChannel(channel.id)}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-semibold font-jua"># {channel.name}</div>
-                        <div className="font-semibold font-jua">인원 : {channel.memberCount}</div>
+            <div className="p-4 space-y-2">
+              {channels.map((channel) => (
+                <div
+                  key={channel.id}
+                  className={`p-3 rounded-xl cursor-pointer transition-all ${
+                    selectedChannel === channel.id
+                      ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-md"
+                      : "bg-orange-50 text-gray-700 hover:bg-orange-100"
+                  }`}
+                  onClick={() => setSelectedChannel(channel.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold font-jua">
+                        # {channel.name}
+                      </div>
+                      <div className="font-semibold font-jua">
+                        인원 : {channel.memberCount}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
 
-              {/* 구분선 */}
-              <div className="my-4 border-t border-orange-200" />
-
-              {/* 버튼 영역: 채널 선택 시에만 표시 */}
-              {selectedChannel && (
-                <div className="space-y-3">
-                  {/* 투표 생성 */}
-                  <button
-                    onClick={() => setShowVoteModal(true)}
-                    className="w-full bg-orange-400 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-500 transition-all duration-200 shadow-md hover:shadow-lg font-jua flex items-center justify-center"
-                  >
-                    <span className="inline-flex items-center justify-center gap-2 leading-none">
-                      <span className="text-xl leading-none">🗳️</span>
-                      <span className="leading-none">투표 생성</span>
-                    </span>
-                  </button>
+            {selectedChannel && (
+            <div className="p-4 border-t border-orange-200 space-y-3">
+              <button
+                onClick={() => setShowVoteModal(true)}
+                className="flex items-center justify-center w-full px-4 py-3 font-semibold text-white transition-all duration-200 bg-orange-400 shadow-md rounded-xl hover:bg-orange-500 hover:shadow-lg font-jua"
+              >
+                <span className="inline-flex items-center justify-center gap-2 leading-none">
+                  <span className="text-xl leading-none">🗳️</span>
+                  <span className="leading-none">투표 생성</span>
+                </span>
+              </button>
 
                   {/* EVENT 전용: 실제 참여 인원 체크 */}
                   {!isGlobal && (
@@ -623,7 +641,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   {!isGlobal && !isRoomOwner && (
                     <button
                       onClick={handleLeaveRoom}
-                      className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 font-jua"
+                      className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
                     >
                       <span className="text-gray-700">🚪</span>
                       <span className="text-gray-700">채팅방 나가기</span>
@@ -631,23 +649,29 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   )}
                 </div>
               )}
-            </div>
           </div>
 
           {/* 채팅 메인 */}
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex flex-col flex-1 min-h-0">
             {/* 헤더 */}
-            <div className="shrink-0 p-6 bg-white border-b border-orange-200 shadow-sm">
-              <div className="flex justify-between items-center">
+            <div className="p-6 bg-white border-b border-orange-200 shadow-sm shrink-0">
+              <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800 font-jua">
                     {selectedChannel
-                      ? `# ${channels.find((c) => c.id === selectedChannel)?.name}`
+                      ? `# ${
+                          channels.find((c) => c.id === selectedChannel)?.name
+                        }`
                       : "채팅"}
                   </h1>
                   {selectedChannel && (
                     <p className="text-gray-600 font-gowun">
-                      인원 {channels.find((c) => c.id === selectedChannel)?.memberCount}명
+                      인원{" "}
+                      {
+                        channels.find((c) => c.id === selectedChannel)
+                          ?.memberCount
+                      }
+                      명
                     </p>
                   )}
                 </div>
@@ -657,7 +681,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   <div className="flex gap-2">
                     <button
                       onClick={openParticipantsModal}
-                      className="px-4 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-700 hover:bg-orange-200 transition-colors text-sm font-medium font-jua"
+                      className="flex items-center justify-center h-10 px-4 text-sm font-medium text-orange-700 transition-colors bg-orange-100 rounded-full hover:bg-orange-200 font-jua"
                       aria-haspopup="dialog"
                     >
                       참여자 보기
@@ -669,22 +693,34 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
             {/* 본문 */}
             {!selectedChannel ? (
-              <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-orange-50 to-white">
+              <div className="flex items-center justify-center flex-1 bg-gradient-to-b from-orange-50 to-white">
                 <div className="text-center text-gray-500">
-                  <div className="text-5xl mb-3">💬</div>
-                  <div className="text-xl font-jua mb-1">채팅방을 선택하세요</div>
-                  <div className="font-gowun">왼쪽 목록에서 채팅방을 선택하면 대화가 표시됩니다.</div>
+                  <div className="mb-3 text-5xl">💬</div>
+                  <div className="mb-1 text-xl font-jua">
+                    채팅방을 선택하세요
+                  </div>
+                  <div className="font-gowun">
+                    왼쪽 목록에서 채팅방을 선택하면 대화가 표시됩니다.
+                  </div>
                 </div>
               </div>
             ) : (
               <>
-                <div className="flex-1 min-h-0 overflow-y-auto p-6 bg-gradient-to-b from-orange-50 to-white scroll-smooth">
+                {/* ▼ 기존 메시지 영역 그대로 */}
+                <div className="flex-1 min-h-0 p-6 overflow-y-auto bg-gradient-to-b from-orange-50 to-white scroll-smooth">
                   <div className="space-y-4">
                     {chatMessages.map((msg) => (
                       <div key={msg.id} className="w-full mb-3">
-                        <div className={`flex w-full ${msg.isOwn ? "justify-end" : "justify-start"} gap-3`}>
+                        <div
+                          className={`flex w-full ${
+                            msg.isOwn ? "justify-end" : "justify-start"
+                          } gap-3`}
+                        >
+                          {/* 왼쪽 아바타는 상대 글일 때만 */}
                           {!msg.isOwn && (
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                            <div
+                              className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-sm font-semibold text-white rounded-full bg-gradient-to-br from-orange-400 to-orange-600"
+                            >
                               {twoLetters(msg.user)}
                             </div>
                           )}
@@ -692,8 +728,12 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                           <div className="max-w-[70%]">
                             {!msg.isOwn && (
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-semibold text-gray-800 font-jua">{msg.user}</span>
-                                <span className="text-xs text-gray-500 font-gowun">{msg.timestamp}</span>
+                                <span className="font-semibold text-gray-800 font-jua">
+                                  {msg.user}
+                                </span>
+                                <span className="text-xs text-gray-500 font-gowun">
+                                  {msg.timestamp}
+                                </span>
                               </div>
                             )}
 
@@ -714,7 +754,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                             </div>
 
                             {msg.isOwn && (
-                              <div className="text-xs text-gray-500 mt-1 font-gowun text-right">
+                              <div className="mt-1 text-xs text-right text-gray-500 font-gowun">
                                 {msg.timestamp}
                               </div>
                             )}
@@ -727,16 +767,19 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                 </div>
 
                 {/* 입력창 */}
-                <div className="shrink-0 p-6 bg-white border-t border-orange-200">
+                <div className="p-6 bg-white border-t border-orange-200 shrink-0">
                   <form onSubmit={handleSendMessage}>
-                    <div className="flex gap-3 items-center">
-                      <div className="flex-1 relative">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-1">
                         <input
                           type="text"
-                          className="w-full px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 pr-20"
+                          className="w-full px-4 py-3 pr-20 border border-orange-200 bg-orange-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300"
                           placeholder={
                             selectedChannel
-                              ? `# ${channels.find((c) => c.id === selectedChannel)?.name}에 메시지 보내기...`
+                              ? `# ${
+                                  channels.find((c) => c.id === selectedChannel)
+                                    ?.name
+                                }에 메시지 보내기...`
                               : "채팅방을 선택하면 메시지를 보낼 수 있어요"
                           }
                           value={message}
@@ -747,7 +790,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                       <button
                         type="submit"
                         disabled={!selectedChannel || !message.trim()}
-                        className="px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-500 hover:to-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
+                        className="px-6 py-3 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl hover:from-orange-500 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
                       >
                         전송
                       </button>
@@ -762,32 +805,41 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
       {/* 실제 참여 인원 체크 모달 */}
       {showMemberCheckModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-400 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-lg">👥</span>
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-400 rounded-xl">
+                  <span className="text-lg text-white">👥</span>
                 </div>
-                <h2 className="text-xl font-bold text-gray-800 font-jua">실제 참여 인원 체크</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">
+                  실제 참여 인원 체크
+                </h2>
               </div>
               <button
                 onClick={handleCancelMemberCheck}
-                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 transition-colors"
+                className="flex items-center justify-center w-8 h-8 text-gray-600 transition-colors bg-gray-100 rounded-full hover:bg-gray-200"
               >
                 ✕
               </button>
             </div>
 
             <div className="p-6">
-              <p className="text-gray-600 mb-4 font-gowun">정산에 참여할 실제 인원을 선택해주세요.</p>
+              <p className="mb-4 text-gray-600 font-gowun">
+                정산에 참여할 실제 인원을 선택해주세요.
+              </p>
 
               {participantsLoading && (
-                <div className="text-center text-gray-500 py-4 font-gowun">불러오는 중…</div>
+                <div className="py-4 text-center text-gray-500 font-gowun">
+                  불러오는 중…
+                </div>
               )}
 
               {participantsError && !participantsLoading && (
-                <div className="p-3 mb-4 bg-red-50 text-red-700 rounded-lg font-gowun">{participantsError}</div>
+                <div className="p-3 mb-4 text-red-700 rounded-lg bg-red-50 font-gowun">
+                  {participantsError}
+                </div>
               )}
 
               {!participantsLoading && (
@@ -795,7 +847,10 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   {(participants ?? []).map((member) => {
                     const id = String(member.id);
                     return (
-                      <div key={id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <div
+                        key={id}
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                      >
                         <input
                           type="checkbox"
                           id={`member-${id}`}
@@ -803,37 +858,44 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                           onChange={() => handleMemberToggle(id)}
                           className="w-5 h-5 text-blue-500 rounded focus:ring-blue-400"
                         />
-                        <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        <div className="flex items-center justify-center w-10 h-10 text-sm font-semibold text-white bg-orange-400 rounded-full">
                           {twoLetters(member.name)}
                         </div>
-                        <label htmlFor={`member-${id}`} className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun">
+                        <label
+                          htmlFor={`member-${id}`}
+                          className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
+                        >
                           {member.name}
                         </label>
                       </div>
                     );
                   })}
                   {participants.length === 0 && (
-                    <div className="text-center text-gray-400 py-6 font-gowun">참여자가 없습니다.</div>
+                    <div className="py-6 text-center text-gray-400 font-gowun">
+                      참여자가 없습니다.
+                    </div>
                   )}
                 </div>
               )}
 
-              <div className="mt-4 p-3 bg-blue-50 rounded-xl">
-                <p className="text-blue-800 font-semibold font-jua">선택된 인원: {selectedMembers.length}명</p>
+              <div className="p-3 mt-4 bg-blue-50 rounded-xl">
+                <p className="font-semibold text-blue-800 font-jua">
+                  선택된 인원: {selectedMembers.length}명
+                </p>
               </div>
             </div>
 
             <div className="flex gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={handleCancelMemberCheck}
-                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
+                className="flex-1 px-4 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
               >
                 취소
               </button>
               <button
                 onClick={handleConfirmParticipants}
                 disabled={selectedMembers.length === 0 || isConfirming}
-                className="flex-1 py-3 px-4 bg-blue-400 hover:bg-blue-500 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
+                className="flex-1 px-4 py-3 font-semibold text-white transition-all duration-200 bg-blue-400 hover:bg-blue-500 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-jua"
               >
                 {isConfirming ? "확정 중…" : "확정"}
               </button>
@@ -844,18 +906,21 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
       {/* 정산 생성 모달 */}
       {showSettlementModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-400 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-lg">💰</span>
+                <div className="flex items-center justify-center w-10 h-10 bg-green-400 rounded-xl">
+                  <span className="text-lg text-white">💰</span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 font-jua">정산 생성</h2>
+                <h2 className="text-2xl font-bold text-gray-800 font-jua">
+                  정산 생성
+                </h2>
               </div>
               <button
                 onClick={() => setShowSettlementModal(false)}
-                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 transition-colors"
+                className="flex items-center justify-center w-8 h-8 text-gray-600 transition-colors bg-gray-100 rounded-full hover:bg-gray-200"
               >
                 ✕
               </button>
@@ -863,35 +928,55 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">정산 받을 총 금액 *</label>
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  정산 받을 총 금액 *
+                </label>
                 <div className="relative">
                   <input
                     type="number"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-400 transition-colors pr-12"
+                    className="w-full px-4 py-3 pr-12 transition-colors border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-400"
                     placeholder="150000"
                     value={settlementAmount}
                     onChange={(e) => setSettlementAmount(e.target.value)}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium font-jua">원</span>
+                  <span className="absolute font-medium text-gray-500 -translate-y-1/2 right-4 top-1/2 font-jua">
+                    원
+                  </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">영수증 *</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-green-400 transition-colors">
-                  <input type="file" accept="image/*" onChange={handleReceiptChange} className="hidden" id="receipt-upload" />
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  영수증 *
+                </label>
+                <div className="p-6 text-center transition-colors border-2 border-gray-300 border-dashed rounded-xl hover:border-green-400">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleReceiptChange}
+                    className="hidden"
+                    id="receipt-upload"
+                  />
                   <label htmlFor="receipt-upload" className="cursor-pointer">
                     {settlementReceipt ? (
                       <div className="space-y-2">
-                        <div className="text-green-600 text-2xl">📄</div>
-                        <div className="text-green-700 font-medium font-gowun">{settlementReceipt.name}</div>
-                        <div className="text-sm text-gray-500 font-gowun">클릭하여 다른 파일 선택</div>
+                        <div className="text-2xl text-green-600">📄</div>
+                        <div className="font-medium text-green-700 font-gowun">
+                          {settlementReceipt.name}
+                        </div>
+                        <div className="text-sm text-gray-500 font-gowun">
+                          클릭하여 다른 파일 선택
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="text-gray-400 text-2xl">📷</div>
-                        <div className="text-gray-600 font-gowun">영수증 이미지를 업로드하세요</div>
-                        <div className="text-sm text-gray-500 font-gowun">JPG, PNG 파일만 가능</div>
+                        <div className="text-2xl text-gray-400">📷</div>
+                        <div className="text-gray-600 font-gowun">
+                          영수증 이미지를 업로드하세요
+                        </div>
+                        <div className="text-sm text-gray-500 font-gowun">
+                          JPG, PNG 파일만 가능
+                        </div>
                       </div>
                     )}
                   </label>
@@ -899,37 +984,52 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">정산 참여 인원</label>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  정산 참여 인원
+                </label>
+                <div className="space-y-2 overflow-y-auto max-h-40">
                   {participants
                     .filter((m) => selectedMembers.includes(String(m.id)))
                     .map((m) => {
                       const id = String(m.id);
                       return (
-                        <div key={id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <div
+                          key={id}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                        >
                           <input
                             type="checkbox"
                             id={`settlement-${id}`}
                             checked={settlementParticipants.includes(id)}
-                            onChange={() => handleSettlementParticipantToggle(id)}
+                            onChange={() =>
+                              handleSettlementParticipantToggle(id)
+                            }
                             className="w-5 h-5 text-green-500 rounded focus:ring-green-400"
                           />
-                          <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                          <div className="flex items-center justify-center w-10 h-10 text-sm font-semibold text-white bg-orange-400 rounded-full">
                             {twoLetters(m.name)}
                           </div>
-                          <label htmlFor={`settlement-${id}`} className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun">
+                          <label
+                            htmlFor={`settlement-${id}`}
+                            className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
+                          >
                             {m.name}
                           </label>
                         </div>
                       );
                     })}
                 </div>
-                <div className="mt-2 p-3 bg-green-50 rounded-xl">
-                  <p className="text-green-800 font-semibold font-jua">
+                <div className="p-3 mt-2 bg-green-50 rounded-xl">
+                  <p className="font-semibold text-green-800 font-jua">
                     선택된 인원: {settlementParticipants.length}명
                     {settlementAmount && settlementParticipants.length > 0 && (
                       <span className="ml-2 text-sm">
-                        (1인당 {Math.ceil(Number(settlementAmount) / settlementParticipants.length).toLocaleString()}원)
+                        (1인당{" "}
+                        {Math.ceil(
+                          Number(settlementAmount) /
+                            settlementParticipants.length
+                        ).toLocaleString()}
+                        원)
                       </span>
                     )}
                   </p>
@@ -937,22 +1037,36 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               </div>
 
               {settlementAmount && settlementParticipants.length > 0 && (
-                <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                  <div className="font-semibold text-green-800 mb-2 font-jua">정산 정보 미리보기</div>
+                <div className="p-4 border border-green-200 bg-green-50 rounded-xl">
+                  <div className="mb-2 font-semibold text-green-800 font-jua">
+                    정산 정보 미리보기
+                  </div>
                   <div className="space-y-1 text-sm text-green-700 font-gowun">
                     <div>
-                      총 금액: <span className="font-semibold">{Number(settlementAmount).toLocaleString()}원</span>
+                      총 금액:{" "}
+                      <span className="font-semibold">
+                        {Number(settlementAmount).toLocaleString()}원
+                      </span>
                     </div>
                     <div>
-                      참여 인원: <span className="font-semibold">{settlementParticipants.length}명</span>
+                      참여 인원:{" "}
+                      <span className="font-semibold">
+                        {settlementParticipants.length}명
+                      </span>
                     </div>
                     <div>
                       1인당 금액:{" "}
                       <span className="font-semibold">
-                        {Math.ceil(Number(settlementAmount) / settlementParticipants.length).toLocaleString()}원
+                        {Math.ceil(
+                          Number(settlementAmount) /
+                            settlementParticipants.length
+                        ).toLocaleString()}
+                        원
                       </span>
                     </div>
-                    {settlementReceipt && <div>영수증: {settlementReceipt.name}</div>}
+                    {settlementReceipt && (
+                      <div>영수증: {settlementReceipt.name}</div>
+                    )}
                     {settlementMemo && <div>메모: {settlementMemo}</div>}
                   </div>
                 </div>
@@ -962,7 +1076,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             <div className="flex gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowSettlementModal(false)}
-                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
+                className="flex-1 px-4 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
               >
                 취소
               </button>
@@ -974,7 +1088,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   !settlementReceipt ||
                   settlementParticipants.length === 0
                 }
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
+                className="flex-1 px-4 py-3 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-jua"
               >
                 {isCreatingSettlement ? "생성 중…" : "생성"}
               </button>
@@ -985,53 +1099,76 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
       {/* 참여자 보기 모달 */}
       {showParticipantsModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+            {/* 헤더 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-400 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-lg">👥</span>
+                <div className="flex items-center justify-center w-10 h-10 bg-orange-400 rounded-xl">
+                  <span className="text-lg text-white">👥</span>
                 </div>
-                <h2 className="text-xl font-bold text-gray-800 font-jua">참여자</h2>
+                <h2 className="text-xl font-bold text-gray-800 font-jua">
+                  참여자
+                </h2>
               </div>
               <button
                 onClick={() => setShowParticipantsModal(false)}
-                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 transition-colors"
+                className="flex items-center justify-center w-8 h-8 text-gray-600 transition-colors bg-gray-100 rounded-full hover:bg-gray-200"
               >
                 ✕
               </button>
             </div>
 
             <div className="p-6">
-              {participantsLoading && <div className="text-center text-gray-500 py-6 font-gowun">불러오는 중…</div>}
+              {participantsLoading && (
+                <div className="py-6 text-center text-gray-500 font-gowun">
+                  불러오는 중…
+                </div>
+              )}
+
               {participantsError && !participantsLoading && (
-                <div className="p-3 mb-4 bg-red-50 text-red-700 rounded-lg font-gowun">{participantsError}</div>
+                <div className="p-3 mb-4 text-red-700 rounded-lg bg-red-50 font-gowun">
+                  {participantsError}
+                </div>
               )}
 
               {!participantsLoading && !participantsError && (
                 <>
                   <div className="mt-1 mb-3 text-sm text-gray-600">
-                    총 <span className="font-semibold font-jua">{participants?.length ?? 0}</span>명
+                    총{" "}
+                    <span className="font-semibold font-jua">
+                      {participants?.length ?? 0}
+                    </span>
+                    명
                   </div>
 
                   <ul className="divide-y">
                     {(participants ?? []).map((p) => (
                       <li key={p.id} className="flex items-center gap-3 p-3">
-                        <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        {/* 아바타(이니셜) */}
+                        <div className="flex items-center justify-center w-10 h-10 text-sm font-semibold text-white bg-orange-400 rounded-full">
                           {twoLetters(p.name)}
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-gray-800 font-gowun">{p.name}</div>
+                          <div className="font-medium text-gray-800 font-gowun">
+                            {p.name}
+                          </div>
                         </div>
+
+                        {/* 방장 뱃지 */}
                         {p.isOwner && (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium">방장</span>
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium">
+                            방장
+                          </span>
                         )}
                       </li>
                     ))}
                   </ul>
 
                   {participants && participants.length === 0 && (
-                    <div className="text-center text-gray-400 py-6 font-gowun">참여자가 없습니다.</div>
+                    <div className="py-6 text-center text-gray-400 font-gowun">
+                      참여자가 없습니다.
+                    </div>
                   )}
                 </>
               )}
@@ -1040,7 +1177,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             <div className="p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowParticipantsModal(false)}
-                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
+                className="w-full px-4 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
               >
                 닫기
               </button>
@@ -1051,13 +1188,16 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
       {/* 투표 생성 모달 */}
       {showVoteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-800 font-jua">투표 생성</h2>
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800 font-jua">
+                투표 생성
+              </h2>
               <button
                 onClick={() => setShowVoteModal(false)}
-                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 transition-colors"
+                className="flex items-center justify-center w-8 h-8 text-gray-600 transition-colors bg-gray-100 rounded-full hover:bg-gray-200"
               >
                 ✕
               </button>
@@ -1065,10 +1205,12 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">투표 제목 *</label>
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  투표 제목 *
+                </label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 transition-colors"
+                  className="w-full px-4 py-3 transition-colors border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400"
                   placeholder="투표 제목을 입력하세요"
                   value={voteTitle}
                   onChange={(e) => setVoteTitle(e.target.value)}
@@ -1076,9 +1218,11 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">설명</label>
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  설명
+                </label>
                 <textarea
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 transition-colors resize-none"
+                  className="w-full px-4 py-3 transition-colors border-2 border-gray-200 resize-none rounded-xl focus:outline-none focus:border-orange-400"
                   rows={3}
                   placeholder="투표에 대한 설명을 입력하세요 (선택사항)"
                   value={voteDescription}
@@ -1088,8 +1232,12 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
               <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl">
                 <div>
-                  <div className="font-semibold text-gray-800 font-jua">다중 투표 허용</div>
-                  <div className="text-sm text-gray-600 font-gowun">참여자가 여러 선택지를 선택할 수 있습니다</div>
+                  <div className="font-semibold text-gray-800 font-jua">
+                    다중 투표 허용
+                  </div>
+                  <div className="text-sm text-gray-600 font-gowun">
+                    참여자가 여러 선택지를 선택할 수 있습니다
+                  </div>
                 </div>
                 <button
                   onClick={() => setAllowMultiple(!allowMultiple)}
@@ -1106,23 +1254,27 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">마감일 *</label>
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  마감일 *
+                </label>
                 <input
                   type="datetime-local"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 transition-colors"
+                  className="w-full px-4 py-3 transition-colors border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 font-jua">선택지 *</label>
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  선택지 *
+                </label>
                 <div className="space-y-3">
                   {options.map((option, index) => (
                     <div key={index} className="flex gap-2">
                       <input
                         type="text"
-                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 transition-colors"
+                        className="flex-1 px-4 py-3 transition-colors border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400"
                         placeholder={`선택지 ${index + 1}`}
                         value={option}
                         onChange={(e) => updateOption(index, e.target.value)}
@@ -1130,7 +1282,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                       {options.length > 2 && (
                         <button
                           onClick={() => removeOption(index)}
-                          className="w-12 h-12 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl transition-colors flex items-center justify-center"
+                          className="flex items-center justify-center w-12 h-12 text-red-600 transition-colors bg-red-100 hover:bg-red-200 rounded-xl"
                         >
                           🗑️
                         </button>
@@ -1139,7 +1291,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   ))}
                   <button
                     onClick={addOption}
-                    className="w-full py-3 border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl text-gray-600 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
+                    className="flex items-center justify-center w-full gap-2 py-3 text-gray-600 transition-colors border-2 border-gray-300 border-dashed hover:border-orange-400 rounded-xl hover:text-orange-600"
                   >
                     <span className="text-lg">+</span>
                     <span className="font-gowun">선택지 추가</span>
@@ -1151,7 +1303,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             <div className="flex gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowVoteModal(false)}
-                className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors font-jua"
+                className="flex-1 px-4 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
               >
                 취소
               </button>
@@ -1163,7 +1315,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   !deadline ||
                   options.filter((opt) => opt.trim()).length < 2
                 }
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-jua"
+                className="flex-1 px-4 py-3 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-jua"
               >
                 {isCreatingVote ? "생성 중…" : "생성"}
               </button>
