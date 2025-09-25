@@ -133,118 +133,118 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* 일정표 */}
-      <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg lg:col-span-2">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
-          <span>📅</span>
-          상세 일정표
-        </h3>
-        <div className="space-y-3">
-          {mtPlan.schedule.map((item, index) => (
-            <div key={index} className="flex items-center gap-4 p-3 bg-orange-50 rounded-lg">
-              <div className="text-orange-600 font-bold text-sm w-20 font-jua">
-                {item.day}일차
-              </div>
-              <div className="flex-1">
-                <div className="font-medium text-gray-800 font-jua">{item.title}</div>
-                <div className="text-gray-600 text-sm font-gowun">
-                  {item.timeStart} ~ {item.timeEnd} / {item.place}
-                </div>
-                {item.notes && <div className="text-xs text-gray-500 font-gowun">{item.notes}</div>}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                  {/* 일정표 */}
+                  <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg lg:col-span-2">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
+                      <span>📅</span>
+                      상세 일정표
+                    </h3>
+                    <div className="space-y-3">
+                      {mtPlan.schedule.map((item, index) => (
+                        <div key={index} className="flex items-center gap-4 p-3 bg-orange-50 rounded-lg">
+                          <div className="text-orange-600 font-bold text-sm w-20 font-jua">
+                            {item.day}일차
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-800 font-jua">{item.title}</div>
+                            <div className="text-gray-600 text-sm font-gowun">
+                              {item.timeStart} ~ {item.timeEnd} / {item.place}
+                            </div>
+                            {item.notes && <div className="text-xs text-gray-500 font-gowun">{item.notes}</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-      {/* 준비물 */}
-      <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
-          <span>🎒</span>
-          준비물 리스트
-        </h3>
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-semibold text-red-500 mb-2 font-jua">필수 준비물</h4>
-            <ul className="space-y-1">
-              {mtPlan.packingList.essential.map((item, idx) => (
-                <li key={idx} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
-                  <span className="text-red-400">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold text-orange-500 mb-2 font-jua">권장 준비물</h4>
-            <ul className="space-y-1">
-              {mtPlan.packingList.recommended.map((item, idx) => (
-                <li key={idx} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
-                  <span className="text-orange-400">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold text-green-500 mb-2 font-jua">제공 물품</h4>
-            <ul className="space-y-1">
-              {mtPlan.packingList.provided.map((item, idx) => (
-                <li key={idx} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
-                  <span className="text-green-400">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
+                  {/* 준비물 */}
+                  <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
+                      <span>🎒</span>
+                      준비물 리스트
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-red-500 mb-2 font-jua">필수 준비물</h4>
+                        <ul className="space-y-1">
+                          {mtPlan.packingList.essential.map((item, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
+                              <span className="text-red-400">•</span>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-orange-500 mb-2 font-jua">권장 준비물</h4>
+                        <ul className="space-y-1">
+                          {mtPlan.packingList.recommended.map((item, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
+                              <span className="text-orange-400">•</span>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-green-500 mb-2 font-jua">제공 물품</h4>
+                        <ul className="space-y-1">
+                          {mtPlan.packingList.provided.map((item, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-center gap-2 font-gowun">
+                              <span className="text-green-400">•</span>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
 
-      {/* 예산 */}
-      <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
-          <span>💰</span>
-          예상 예산
-        </h3>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-gray-600 font-gowun">숙박비</span>
-            <span className="font-medium font-jua">{mtPlan.budget.lodging.toLocaleString()}원</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600 font-gowun">식비</span>
-            <span className="font-medium font-jua">{mtPlan.budget.food.toLocaleString()}원</span>
-          </div>
-          <div className="border-t pt-2 mt-2">
-            <div className="flex justify-between font-bold text-orange-600 font-jua">
-              <span>총 예산</span>
-              <span>{mtPlan.budget.total.toLocaleString()}원</span>
-            </div>
-            <div className="flex justify-between text-gray-700 font-jua text-sm">
-              <span>1인당</span>
-              <span>{mtPlan.budget.perPerson.toLocaleString()}원</span>
-            </div>
-          </div>
-        </div>
-      </div>
+                  {/* 예산 */}
+                  <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
+                      <span>💰</span>
+                      예상 예산
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-gowun">숙박비</span>
+                        <span className="font-medium font-jua">{mtPlan.budget.lodging.toLocaleString()}원</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-gowun">식비</span>
+                        <span className="font-medium font-jua">{mtPlan.budget.food.toLocaleString()}원</span>
+                      </div>
+                      <div className="border-t pt-2 mt-2">
+                        <div className="flex justify-between font-bold text-orange-600 font-jua">
+                          <span>총 예산</span>
+                          <span>{mtPlan.budget.total.toLocaleString()}원</span>
+                        </div>
+                        <div className="flex justify-between text-gray-700 font-jua text-sm">
+                          <span>1인당</span>
+                          <span>{mtPlan.budget.perPerson.toLocaleString()}원</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-      {/* 식재료 / 공급품 */}
-      <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
-          <span>🥘</span>
-          식재료 및 준비물
-        </h3>
-        <ul className="space-y-2">
-          {mtPlan.supplies.map((supply, idx) => (
-            <li key={idx} className="flex justify-between text-sm text-gray-700 font-gowun">
-              <span>
-                [{supply.category}] {supply.item} ({supply.qtyPerPerson} × {formData.people}명)
-              </span>
-              <span className="font-medium">{supply.qtyTotal}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+                  {/* 식재료 / 공급품 */}
+                  <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-jua">
+                      <span>🥘</span>
+                      식재료 및 준비물
+                    </h3>
+                    <ul className="space-y-2">
+                      {mtPlan.supplies.map((supply, idx) => (
+                        <li key={idx} className="flex justify-between text-sm text-gray-700 font-gowun">
+                          <span>
+                            [{supply.category}] {supply.item} ({supply.qtyPerPerson} × {formData.people}명)
+                          </span>
+                          <span className="font-medium">{supply.qtyTotal}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             )}
@@ -439,9 +439,66 @@ const MtPlanner: React.FC<MtPlannerProps> = ({
                   disabled={loading}
                   className={`px-6 py-3 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-bold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2 font-jua ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  <span>✨</span>
-                  <span>{loading ? "생성 중..." : "MT 계획 생성"}</span>
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                        ></path>
+                      </svg>
+                      <span>생성 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>✨</span>
+                      <span>MT 계획 생성</span>
+                    </>
+                  )}
                 </button>
+                {loading && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-[60]">
+                    <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center">
+                      <svg
+                        className="animate-spin h-10 w-10 text-orange-500 mb-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                        ></path>
+                      </svg>
+                      <p className="text-gray-700 font-jua text-lg">
+                        AI가 MT 계획을 준비 중입니다...
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </form>
           </div>
