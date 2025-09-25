@@ -45,6 +45,19 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
                              @Param("now") LocalDateTime now,
                              Pageable pageable);
 
+    // 내가 참여한 모임들 중 오늘 이후 일정들 조회 (디버깅용)
+    @Query("""
+      select e from Event e
+      join EventMember em on em.event.id = e.id
+      where e.club.id = :clubId
+        and em.user.id = :userId
+        and e.startAt >= :todayStart
+      order by e.startAt asc
+    """)
+    List<Event> findMyOngoingEvents(@Param("clubId") Integer clubId,
+                                    @Param("userId") Integer userId,
+                                    @Param("todayStart") LocalDateTime todayStart);
+
     @Query("""
         select cr.targetId
         from ChatRoom cr

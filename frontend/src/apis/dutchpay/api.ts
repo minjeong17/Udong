@@ -8,7 +8,7 @@ export const DutchpayApi = {
     const url = `${BASE_URL}${API_PREFIX}/dutchpay/${clubId}`;
     const response = await fetchClient<ApiResponse<DutchpayListResponse[]>>(url, {
       method: "GET",
-      auth: true, 
+      auth: true,
     });
     return response.data;
   },

@@ -205,6 +205,19 @@ public class EventService {
                 .getContent();
     }
 
+    @Transactional(readOnly = true)
+    public List<EventListItemRes> getOngoing(Long rawClubId) {
+        Integer userId = currentUserId();
+        requireClubMember(rawClubId, userId);
+
+        Integer clubId = Math.toIntExact(rawClubId);
+        LocalDateTime todayStart = LocalDateTime.now().toLocalDate().atStartOfDay();
+
+        return events.findMyOngoingEvents(clubId, userId, todayStart).stream()
+                .map(this::toListItem)
+                .toList();
+    }
+
     // mappers
     private EventListItemRes toListItem(Event e) {
         return EventListItemRes.builder()
