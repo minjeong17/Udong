@@ -60,13 +60,13 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   );
 
   // 더미 멤버(초기 선택값)
-  const chatMembers = [
-    { id: "1", name: "김민수", avatar: "KM" },
-    { id: "2", name: "이지은", avatar: "LJ" },
-    { id: "3", name: "박준호", avatar: "PJ" },
-    { id: "4", name: "최유진", avatar: "CY" },
-    { id: "5", name: "나", avatar: "ME" },
-  ];
+  // const chatMembers = [
+  //   { id: "1", name: "김민수", avatar: "KM" },
+  //   { id: "2", name: "이지은", avatar: "LJ" },
+  //   { id: "3", name: "박준호", avatar: "PJ" },
+  //   { id: "4", name: "최유진", avatar: "CY" },
+  //   { id: "5", name: "나", avatar: "ME" },
+  // ];
 
   // 옵션 조작
   const addOption = () => setOptions([...options, ""]);
@@ -231,10 +231,10 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   }, [chatMessages]);
 
   // 초기 선택 기본값
-  useEffect(() => {
-    setSelectedMembers(chatMembers.map((m) => m.id));
-    setSettlementParticipants(chatMembers.map((m) => m.id));
-  }, []);
+  // useEffect(() => {
+  //   setSelectedMembers(chatMembers.map((m) => m.id));
+  //   setSettlementParticipants(chatMembers.map((m) => m.id));
+  // }, []);
 
   // 채널 목록 로드
   useEffect(() => {
@@ -511,7 +511,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   // 모달 조작
   const handleCancelMemberCheck = () => {
     setShowMemberCheckModal(false);
-    setSelectedMembers(chatMembers.map((m) => m.id));
+    // setSelectedMembers(chatMembers.map((m) => m.id));
   };
   const handleSettlementParticipantToggle = (memberId: string) => {
     setSettlementParticipants((prev) =>
@@ -589,66 +589,66 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             </div>
 
             {selectedChannel && (
-            <div className="p-4 border-t border-orange-200 space-y-3">
-              <button
-                onClick={() => setShowVoteModal(true)}
-                className="flex items-center justify-center w-full px-4 py-3 font-semibold text-white transition-all duration-200 bg-orange-400 shadow-md rounded-xl hover:bg-orange-500 hover:shadow-lg font-jua"
-              >
-                <span className="inline-flex items-center justify-center gap-2 leading-none">
-                  <span className="text-xl leading-none">🗳️</span>
-                  <span className="leading-none">투표 생성</span>
-                </span>
-              </button>
+              <div className="p-4 border-t border-orange-200 space-y-3">
+                <button
+                  onClick={() => setShowVoteModal(true)}
+                  className="flex items-center justify-center w-full px-4 py-3 font-semibold text-white transition-all duration-200 bg-orange-400 shadow-md rounded-xl hover:bg-orange-500 hover:shadow-lg font-jua"
+                >
+                  <span className="inline-flex items-center justify-center gap-2 leading-none">
+                    <span className="text-xl leading-none">🗳️</span>
+                    <span className="leading-none">투표 생성</span>
+                  </span>
+                </button>
 
-                  {/* EVENT 전용: 실제 참여 인원 체크 */}
-                  {!isGlobal && (
-                    <button
-                      onClick={openMemberCheckModal}
-                      className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-jua ${
-                        isParticipantsConfirmed
-                          ? "bg-blue-400 hover:bg-blue-500 text-white"
-                          : "bg-gray-400 hover:bg-gray-500 text-white"
-                      }`}
-                    >
-                      <span className="text-lg text-white">👥</span>
-                      <span className="text-white">
-                        {isParticipantsConfirmed
-                          ? `참여 인원 확정 (${confirmedCount}명)`
-                          : "실제 참여 인원 체크"}
-                      </span>
-                    </button>
-                  )}
+                {/* EVENT 전용: 실제 참여 인원 체크 */}
+                {!isGlobal && (
+                  <button
+                    onClick={openMemberCheckModal}
+                    className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-jua ${
+                      isParticipantsConfirmed
+                        ? "bg-blue-400 hover:bg-blue-500 text-white"
+                        : "bg-gray-400 hover:bg-gray-500 text-white"
+                    }`}
+                  >
+                    <span className="text-lg text-white">👥</span>
+                    <span className="text-white">
+                      {isParticipantsConfirmed
+                        ? `참여 인원 확정 (${confirmedCount}명)`
+                        : "실제 참여 인원 체크"}
+                    </span>
+                  </button>
+                )}
 
-                  {/* EVENT 전용: 정산 생성 */}
-                  {!isGlobal && (
-                    <button
-                      onClick={openSettlementModal}
-                      disabled={!isSettlementEnabled}
-                      className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg font-jua flex items-center justify-center ${
-                        isSettlementEnabled
-                          ? "bg-green-400 hover:bg-green-500 text-white"
-                          : "bg-green-300 text-green-100 cursor-not-allowed"
-                      }`}
-                    >
-                      <span className="inline-flex items-center gap-2 leading-none">
-                        <span className="text-xl leading-none">💰</span>
-                        <span className="leading-none">정산 생성</span>
-                      </span>
-                    </button>
-                  )}
+                {/* EVENT 전용: 정산 생성 */}
+                {!isGlobal && (
+                  <button
+                    onClick={openSettlementModal}
+                    disabled={!isSettlementEnabled}
+                    className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg font-jua flex items-center justify-center ${
+                      isSettlementEnabled
+                        ? "bg-green-400 hover:bg-green-500 text-white"
+                        : "bg-green-300 text-green-100 cursor-not-allowed"
+                    }`}
+                  >
+                    <span className="inline-flex items-center gap-2 leading-none">
+                      <span className="text-xl leading-none">💰</span>
+                      <span className="leading-none">정산 생성</span>
+                    </span>
+                  </button>
+                )}
 
-                  {/* EVENT 전용: 채팅방 나가기 (방장 아님) */}
-                  {!isGlobal && !isRoomOwner && (
-                    <button
-                      onClick={handleLeaveRoom}
-                      className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
-                    >
-                      <span className="text-gray-700">🚪</span>
-                      <span className="text-gray-700">채팅방 나가기</span>
-                    </button>
-                  )}
-                </div>
-              )}
+                {/* EVENT 전용: 채팅방 나가기 (방장 아님) */}
+                {!isGlobal && !isRoomOwner && (
+                  <button
+                    onClick={handleLeaveRoom}
+                    className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
+                  >
+                    <span className="text-gray-700">🚪</span>
+                    <span className="text-gray-700">채팅방 나가기</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* 채팅 메인 */}
@@ -718,9 +718,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                         >
                           {/* 왼쪽 아바타는 상대 글일 때만 */}
                           {!msg.isOwn && (
-                            <div
-                              className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-sm font-semibold text-white rounded-full bg-gradient-to-br from-orange-400 to-orange-600"
-                            >
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-sm font-semibold text-white rounded-full bg-gradient-to-br from-orange-400 to-orange-600">
                               {twoLetters(msg.user)}
                             </div>
                           )}
@@ -1034,6 +1032,18 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     )}
                   </p>
                 </div>
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  메모
+                </label>
+                <textarea
+                  value={settlementMemo}
+                  onChange={(e) => setSettlementMemo(e.target.value)}
+                  className="w-full px-4 py-3 transition-colors border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-400"
+                  placeholder="메모를 작성하세요"
+                  rows={4}
+                />
               </div>
 
               {settlementAmount && settlementParticipants.length > 0 && (

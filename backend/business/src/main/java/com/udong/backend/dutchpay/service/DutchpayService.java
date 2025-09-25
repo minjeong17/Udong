@@ -134,7 +134,17 @@ public class DutchpayService {
      * status:  "open" | "completed"
      */
     public List<DutchpayListResponse> findByUser(Integer userId, Integer clubId) {
-        return dutchpayRepository.findSummaryByUserIdAndClubId(userId, clubId);
+        // 1. 사용자 참여 정산 목록 조회
+        List<DutchpayListResponse> dutchpayList = dutchpayRepository.findSummaryByUserIdAndClubId(userId, clubId);
+
+        // 2. 각 정산의 참여자 수를 추가로 조회
+        for (DutchpayListResponse dutchpay : dutchpayList) {
+            Integer dutchpayId = dutchpay.getId();
+            Long participantCount = dutchpayRepository.getParticipantCount(dutchpayId);
+            dutchpay.setParticipantCount(participantCount);  // 참여자 수 설정
+        }
+
+        return dutchpayList;
     }
 
     public DutchpayDetailResponse getDetail(Integer dutchpayId) {
