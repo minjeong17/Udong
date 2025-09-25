@@ -18,11 +18,17 @@ import MemberManagement from '../pages/MemberManagement'
 import PaymentManagement from '../pages/PaymentManagement'
 import ClubFund from '../pages/ClubFund'
 import { RouterContext, type Route } from '../hooks/useRouter'
+import { useAuthStore } from '../stores/authStore'
 
 
 const Router = () => {
-  const [currentRoute, setCurrentRoute] = useState<Route>(() => {
-    const path = window.location.pathname
+  const { isAuthenticated } = useAuthStore()
+
+  // 공개 페이지 (인증 없이 접근 가능)
+  const publicRoutes: Route[] = ['onboarding', 'login', 'signup']
+
+  // 경로를 라우트로 변환하는 함수
+  const getRouteFromPath = (path: string): Route => {
     if (path === '/login') return 'login'
     if (path === '/signup') return 'signup'
     if (path === '/club-selection') return 'club-selection'
@@ -41,40 +47,65 @@ const Router = () => {
     if (path === '/payment-management') return 'payment-management'
     if (path === '/club-fund') return 'club-fund'
     return 'onboarding'
+  }
+
+  const [currentRoute, setCurrentRoute] = useState<Route>(() => {
+    const path = window.location.pathname
+    const requestedRoute = getRouteFromPath(path)
+
+    // 인증이 필요한 페이지인지 확인
+    if (!publicRoutes.includes(requestedRoute) && !isAuthenticated) {
+      // 인증되지 않은 사용자가 보호된 페이지에 접근하려고 하면 로그인으로 리다이렉트
+      window.history.pushState({}, '', '/login')
+      return 'login'
+    }
+
+    return requestedRoute
   })
 
   const navigate = (route: Route) => {
+    // 인증이 필요한 페이지인지 확인
+    if (!publicRoutes.includes(route) && !isAuthenticated) {
+      // 인증되지 않은 사용자가 보호된 페이지로 이동하려고 하면 로그인으로 리다이렉트
+      setCurrentRoute('login')
+      window.history.pushState({}, '', '/login')
+      return
+    }
+
     setCurrentRoute(route)
     const path = route === 'onboarding' ? '/' : `/${route}`
     window.history.pushState({}, '', path)
   }
 
+  // 브라우저 뒤로가기/앞으로가기 처리
   useEffect(() => {
     const handlePopstate = () => {
       const path = window.location.pathname
-      if (path === '/login') setCurrentRoute('login')
-      else if (path === '/signup') setCurrentRoute('signup')
-      else if (path === '/club-selection') setCurrentRoute('club-selection')
-      else if (path === '/club-creation') setCurrentRoute('club-creation')
-      else if (path === '/club-list') setCurrentRoute('club-list')
-      else if (path === '/club-dashboard') setCurrentRoute('club-dashboard')
-      else if (path === '/notification') setCurrentRoute('notification')
-      else if (path === '/mt-planner') setCurrentRoute('mt-planner')
-      else if (path === '/settlement') setCurrentRoute('settlement')
-      else if (path === '/chat') setCurrentRoute('chat')
-      else if (path === '/vote') setCurrentRoute('vote')
-      else if (path === '/calendar') setCurrentRoute('calendar')
-      else if (path === '/mypage') setCurrentRoute('mypage')
-      else if (path === '/shop') setCurrentRoute('shop')
-      else if (path === '/member-management') setCurrentRoute('member-management')
-      else if (path === '/payment-management') setCurrentRoute('payment-management')
-      else if (path === '/club-fund') setCurrentRoute('club-fund')
-      else setCurrentRoute('onboarding')
+      const requestedRoute = getRouteFromPath(path)
+
+      // 인증이 필요한 페이지인지 확인
+      if (!publicRoutes.includes(requestedRoute) && !isAuthenticated) {
+        // 인증되지 않은 사용자가 보호된 페이지에 접근하려고 하면 로그인으로 리다이렉트
+        setCurrentRoute('login')
+        window.history.pushState({}, '', '/login')
+        return
+      }
+
+      setCurrentRoute(requestedRoute)
     }
 
     window.addEventListener('popstate', handlePopstate)
     return () => window.removeEventListener('popstate', handlePopstate)
-  }, [])
+  }, [isAuthenticated])
+
+  // 인증 상태 변경 시 현재 페이지가 보호된 페이지인지 확인
+  useEffect(() => {
+    if (!publicRoutes.includes(currentRoute) && !isAuthenticated) {
+      // 로그아웃되었는데 보호된 페이지에 있다면 로그인으로 리다이렉트
+      setCurrentRoute('login')
+      window.history.pushState({}, '', '/login')
+    }
+  }, [isAuthenticated, currentRoute])
 
   const routerValue = {
     currentRoute,
