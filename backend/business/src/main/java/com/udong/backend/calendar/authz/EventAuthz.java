@@ -24,16 +24,12 @@ public class EventAuthz {
         // 2) LIGHTNING은 '회원이면' 가능
         if ("LIGHTNING".equalsIgnoreCase(eventType)) return true;
 
-        // 3) REGULAR/MT는 OWNER(=club.leader_user_id) 또는 LEADER만
-        boolean isOwner = clubs.findById(clubId)
-                .map(c -> Long.valueOf(c.getLeaderUserId()).equals(userId))
+        // 3) REGULAR/MT는 LEADER/MANAGER 만
+
+        return memberships.findByClub_IdAndUserId(clubId, userIdInt)
+                .map(m -> "LEADER".equalsIgnoreCase(m.getRoleCode()) || "MANAGER".equalsIgnoreCase(m.getRoleCode()))
                 .orElse(false);
 
-        boolean isLeader = memberships.findByClub_IdAndUserId(clubId, userIdInt)
-                .map(m -> "LEADER".equalsIgnoreCase(m.getRoleCode()))
-                .orElse(false);
-
-        return isOwner || isLeader;
     }
 
     public boolean canEdit(Event e, Integer userId) {

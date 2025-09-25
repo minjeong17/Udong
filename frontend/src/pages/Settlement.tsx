@@ -254,7 +254,11 @@ export default function SettlementPage({
                       className="p-4 border-b border-orange-200 cursor-pointer transition-colors hover:bg-orange-50"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0 bg-green-400" />
+                        <div
+                          className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
+                            settlement.isDone ? "bg-red-400" : "bg-green-400"
+                          }`}
+                        />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-gray-800 text-sm mb-1 truncate font-jua">
                             {settlement.eventTitle}
@@ -447,9 +451,13 @@ export default function SettlementPage({
 
                             <button
                               onClick={() => setOpenPasswordModal(true)}
-                              disabled={!isPaymentRequired}
+                              disabled={
+                                selectedSettlementData.isDone ||
+                                !isPaymentRequired
+                              }
                               className={`w-full py-4 bg-gradient-to-r from-green-300 to-green-500 text-white rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 font-jua
                                 ${
+                                  selectedSettlementData.isDone ||
                                   !isPaymentRequired
                                     ? "opacity-60 cursor-not-allowed"
                                     : "hover:from-green-400 hover:to-green-600 hover:scale-105 shadow-lg hover:shadow-xl"
