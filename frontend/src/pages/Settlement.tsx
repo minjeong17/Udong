@@ -10,29 +10,9 @@ import { useAuthStore } from "../stores/authStore";
 
 // 참여자(결제 현황) 타입: id는 number, isPaid 필수
 export type ParticipantPayment = {
-  id: number;
+  userId: number;
   name: string;
   isPaid: boolean;
-};
-
-// 정산 상태
-export type SettlementStatus = "pending" | "completed";
-
-// 정산 아이템 타입 (더미데이터/화면에서 실제 쓰는 필드 기준)
-export type Settlement = {
-  id: number;
-  title: string;
-  description?: string;
-  totalAmount: number;
-  status: SettlementStatus;
-  createdAt: string;
-  dueDate: string;
-  createdBy: string;
-  createdById: number;
-  receiptImage: string | null;
-  bankAccount: string;
-  accountHolder: string;
-  participantsList: ParticipantPayment[];
 };
 
 export type DutchpayDetailResponse = {
@@ -42,7 +22,8 @@ export type DutchpayDetailResponse = {
   createdAt: string;
   createdBy: string;
   createdUserId: number;
-  isDone: boolean;
+  done: boolean;
+  isDone?: boolean;
   s3Key: string;
   imageUrl: string;
   event: {
@@ -51,7 +32,7 @@ export type DutchpayDetailResponse = {
     description: string;
   };
   participants: {
-    id: number;
+    userId: number;
     name: string;
     isPaid: boolean;
   }[];
@@ -64,11 +45,9 @@ interface SettlementProps {
 export default function SettlementPage({
   onNavigateToOnboarding,
 }: SettlementProps) {
-  const [selectedSettlement, setSelectedSettlement] = useState<number>();
+  const [selectedSettlement, setSelectedSettlement] = useState<number | null>();
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-  // const currentUser = "김민수"; // 실제로는 로그인된 사용자 정보를 가져와야 함
-  // const currentUserId = 1; // 더미용 (실서비스: 로그인 사용자 id)
   const [settlements, setSettlements] = useState<DutchpayListResponse[]>([]);
   const [selectedSettlementData, setSelectedSettlementData] =
     useState<DutchpayDetailResponse | null>(null);
@@ -84,6 +63,7 @@ export default function SettlementPage({
         if (clubId == null) return;
 
         const fetchedSettlements = await DutchpayApi.getMyDutchpays(clubId); // API 호출
+        console.log(fetchedSettlements);
         setSettlements(fetchedSettlements); // 상태에 정산 목록 저장
       } catch (error) {
         console.error("정산 목록 조회 실패:", error);
@@ -104,19 +84,23 @@ export default function SettlementPage({
           selectedSettlement
         );
 
+        console.log("fetchedSettlement", fetchedSettlement);
+
         const normalized: DutchpayDetailResponse = {
           ...fetchedSettlement,
+          isDone: fetchedSettlement.done, // done을 isDone으로 변경
           participants: fetchedSettlement.participants.map((p) => ({
-            id: p.userId, // Changed this to userId
+            userId: p.userId, // id를 userId로 변경
             name: p.name,
             isPaid: (p as any).isPaid ?? (p as any).paid ?? false,
           })),
         };
+        console.log(normalized);
 
         setSelectedSettlementData(normalized); // 상태 업데이트
 
         const currentUserParticipant = normalized.participants.find(
-          (p) => p.id === userId
+          (p) => p.userId === userId
         );
 
         if (currentUserParticipant) {
@@ -155,6 +139,18 @@ export default function SettlementPage({
       // 3. '정산하기' API 호출
       await DutchpayApi.pay(settlementId, payRequest); // API 호출
 
+      // 4. 결제 완료 처리
+      setSelectedSettlementData((prevState) => {
+        if (prevState) {
+          return {
+            ...prevState,
+            isDone: true, // 정산 완료 상태로 업데이트
+          };
+        }
+        return prevState!;
+      });
+
+      setIsPaymentRequired(false);
       alert("정상적으로 처리되었습니다.");
     } catch (error) {
       console.error("정산 중 오류 발생:", error);
@@ -162,15 +158,47 @@ export default function SettlementPage({
     }
   };
 
-  // 참여자 수 / 1인당 금액(올림) 공통 계산
-  // const getParticipantCount = (s: Settlement) => s.participantsList.length;
-  // const getPerPerson = (s: Settlement) =>
-  //   Math.ceil(s.totalAmount / Math.max(1, getParticipantCount(s)));
-
   const getPerPersonAmount = (amount: number, participantCount: number) => {
     return Math.ceil(amount / participantCount).toLocaleString(); // 금액을 인당 계산 후 포맷팅
   };
 
+  const handleDeleteSettlement = async (settlementId: number) => {
+    try {
+      confirm("정말 삭제하시겠습니까?");
+
+      // API를 호출하여 정산 삭제
+      await DutchpayApi.deleteSettlement(settlementId);
+
+      // 삭제 완료 후 알림
+      alert("정산이 삭제되었습니다.");
+
+      // 여기서 상태 업데이트나 UI 변경을 할 수 있습니다.
+      // 예: 삭제된 정산을 목록에서 제거하는 등의 처리
+      setSettlements((prevSettlements) =>
+        prevSettlements.filter((settlement) => settlement.id !== settlementId)
+      );
+      setSelectedSettlement(null);
+      window.location.reload();
+    } catch (error) {
+      console.error("정산 삭제 중 오류 발생:", error);
+      alert("정산 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleEndSettlement = async (settlementId: number) => {
+    try {
+      confirm("정말 정산을 종료하시겠습니까?");
+
+      // 정산 종료 API 호출
+      await DutchpayApi.endSettlement(settlementId);
+
+      // 종료 완료 후 알림
+      alert("정산이 종료되었습니다.");
+    } catch (error) {
+      console.error("정산 종료 중 오류 발생:", error);
+      alert("정산 종료 중 오류가 발생했습니다.");
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="flex">
@@ -349,7 +377,7 @@ export default function SettlementPage({
                         {selectedSettlementData.event.title}
                       </h1>
                       <p className="text-gray-600 text-sm font-gowun">
-                        {selectedSettlementData.event.description}
+                        {selectedSettlementData.note}
                       </p>
                     </div>
 
@@ -469,88 +497,120 @@ export default function SettlementPage({
                             >
                               <span>💳</span>
                               <span>
-                                {isPaymentRequired ? "정산하기" : "정산완료"}
+                                {isPaymentRequired &&
+                                !selectedSettlementData.isDone
+                                  ? "정산하기"
+                                  : "정산완료"}
                               </span>
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-lg">
-                          <h3 className="font-semibold text-gray-800 text-base mb-3 font-jua">
-                            참여자 결제 현황
-                          </h3>
-                          <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {selectedSettlementData.participants.map(
-                              (participant) => (
-                                <div
-                                  key={participant.id}
-                                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold font-jua">
-                                      {participant.name.charAt(0)}
+                        <>
+                          {/* 참여자 결제 현황 */}
+                          <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-lg">
+                            <h3 className="font-semibold text-gray-800 text-base mb-3 font-jua">
+                              참여자 결제 현황
+                            </h3>
+                            <div className="space-y-2 h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                              {selectedSettlementData.participants.map(
+                                (participant) => (
+                                  <div
+                                    key={participant.userId}
+                                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold font-jua">
+                                        {participant.name.charAt(0)}
+                                      </div>
+                                      <span className="font-medium text-gray-800 font-jua">
+                                        {participant.name}
+                                      </span>
                                     </div>
-                                    <span className="font-medium text-gray-800 font-jua">
-                                      {participant.name}
-                                    </span>
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-sm text-gray-600 font-gowun">
+                                        {selectedSettlementData.amount /
+                                          selectedSettlementData.participants
+                                            .length}{" "}
+                                        원
+                                      </span>
+                                      <span
+                                        className={`px-3 py-1 rounded-full text-sm font-semibold font-gowun ${
+                                          participant.isPaid
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-red-100 text-red-700"
+                                        }`}
+                                        aria-readonly="true"
+                                      >
+                                        {participant.isPaid
+                                          ? "✅ 완료"
+                                          : "❌ 미완료"}
+                                      </span>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-sm text-gray-600 font-gowun">
-                                      {selectedSettlementData.amount /
-                                        selectedSettlementData.participants
-                                          .length}
-                                      원
-                                    </span>
-                                    <span
-                                      className={`px-3 py-1 rounded-full text-sm font-semibold font-gowun ${
-                                        participant.isPaid
-                                          ? "bg-green-100 text-green-700"
-                                          : "bg-red-100 text-red-700"
-                                      }`}
-                                      aria-readonly="true"
-                                    >
-                                      {participant.isPaid
-                                        ? "✅ 완료"
-                                        : "❌ 미완료"}
-                                    </span>
-                                  </div>
-                                </div>
-                              )
-                            )}
-                          </div>
+                                )
+                              )}
+                            </div>
 
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600 font-gowun">
-                                결제 완료
-                              </span>
-                              <span className="font-semibold text-green-500 font-jua">
-                                {
-                                  selectedSettlementData.participants.filter(
+                            {/* 결제 완료와 수금 완료 텍스트 */}
+                            <div className="mt-auto pt-4 border-t border-gray-200">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600 font-gowun">
+                                  결제 완료
+                                </span>
+                                <span className="font-semibold text-green-500 font-jua">
+                                  {
+                                    selectedSettlementData.participants.filter(
+                                      (p) => p.isPaid
+                                    ).length
+                                  }{" "}
+                                  / {selectedSettlementData.participants.length}
+                                  명
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm mt-1">
+                                <span className="text-gray-600 font-gowun">
+                                  수금 완료
+                                </span>
+                                <span className="font-semibold text-green-500 font-jua">
+                                  {selectedSettlementData.participants.filter(
                                     (p) => p.isPaid
-                                  ).length
-                                }
-                                {" / "}
-                                {selectedSettlementData.participants.length}명
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm mt-1">
-                              <span className="text-gray-600 font-gowun">
-                                수금 완료
-                              </span>
-                              <span className="font-semibold text-green-500 font-jua">
-                                {selectedSettlementData.participants.filter(
-                                  (p) => p.isPaid
-                                ).length *
-                                  (selectedSettlementData.amount /
-                                    selectedSettlementData.participants.length)}
-                                원
-                              </span>
+                                  ).length *
+                                    (selectedSettlementData.amount /
+                                      selectedSettlementData.participants
+                                        .length)}{" "}
+                                  원
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </>
                       )}
                     </div>
+
+                    {selectedSettlementData?.createdUserId === userId &&
+                      !selectedSettlementData.isDone && (
+                        <div className="mt-6 flex gap-4 font-semibold font-jua justify-end">
+                          <button
+                            onClick={() =>
+                              handleDeleteSettlement(selectedSettlementData.id)
+                            }
+                            className="inline-flex items-center gap-2 py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                          >
+                            <span className="text-xl">❌</span>
+                            <span>정산 삭제</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleEndSettlement(selectedSettlementData.id)
+                            }
+                            className="inline-flex items-center gap-2 py-2 px-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                          >
+                            <span className="text-xl">⏰</span>
+                            <span>정산 종료</span>
+                          </button>
+                        </div>
+                      )}
                   </div>
                 </div>
               ) : null}
