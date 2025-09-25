@@ -111,8 +111,8 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       title: voteTitle.trim(),
       description: voteDescription.trim() || undefined,
       allowMultiple,
-      // <input type="datetime-local"> 값을 백엔드가 기대하는 LocalDateTime 형식으로 변환
-      deadline: new Date(deadline).toISOString().slice(0, 19),
+      // datetime-local 값을 로컬 시간 기준으로 LocalDateTime 형식으로 변환 (시간대 변환 없이)
+      deadline: deadline + ':00', // "2025-09-25T12:00" -> "2025-09-25T12:00:00"
       options: opts,
     };
 
