@@ -7,7 +7,7 @@ import AvailabilityBadges from '../components/AvailabilityBadges';
 import { useRouter } from '../hooks/useRouter';
 import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
-import type { ClubCreateResponse, ClubManagementInfoResponse, AvailabilityInfo } from '../apis/clubs/response';
+import type { ClubManagementInfoResponse, AvailabilityInfo } from '../apis/clubs/response';
 
 interface MemberManagementProps {
   onNavigateToOnboarding: () => void;
