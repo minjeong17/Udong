@@ -591,60 +591,54 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
         {/* 메인 콘텐츠 */}
         <div className="flex flex-1 h-full min-h-0">
-          {/* 채널 사이드바 */}
-          <div className="h-full bg-white border-r border-orange-200 shadow-lg w-80 flex flex-col">
-            {/* 상단 헤더 (고정) */}
-            <div className="p-6 border-b border-orange-200 shrink-0">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-800 font-jua">채팅</h2>
-              </div>
+        {/* 채널 사이드바 */}
+        <div className="h-full w-80 bg-white border-r border-orange-200 shadow-lg flex flex-col min-h-0">
+          {/* 상단 헤더 (고정) */}
+          <div className="p-6 border-b border-orange-200 shrink-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800 font-jua">채팅</h2>
             </div>
+          </div>
 
-            {/* 채팅 리스트 영역: 고정 높이 + 스크롤 */}
-            <div className="p-2 shrink-0">
-              {/* 필요에 따라 높이 조절: h-[420px] 대신 h-[360px] 등 */}
-              <div className="space-y-2 overflow-y-auto h-[360px]">
-                {channels.map((channel) => (
-                  <div
-                    key={channel.id}
-                    className={`p-3 rounded-xl cursor-pointer transition-all ${
-                      selectedChannel === channel.id
-                        ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-md"
-                        : "bg-orange-50 text-gray-700 hover:bg-orange-100"
-                    }`}
-                    onClick={() => setSelectedChannel(channel.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold font-jua"># {channel.name}</div>
-                        <div className="font-semibold font-jua">인원 : {channel.memberCount}</div>
-                      </div>
+          {/* 채팅 리스트: 남은 공간 모두 차지 + 해당 영역만 스크롤 */}
+          <div className="p-1 flex-1 min-h-0 overflow-y-auto">
+            <div className="space-y-2">
+              {channels.map((channel) => (
+                <div
+                  key={channel.id}
+                  className={`p-3 rounded-xl cursor-pointer transition-all ${
+                    selectedChannel === channel.id
+                      ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-md"
+                      : "bg-orange-50 text-gray-700 hover:bg-orange-100"
+                  }`}
+                  onClick={() => setSelectedChannel(channel.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold font-jua"># {channel.name}</div>
+                      <div className="font-semibold font-jua">인원 : {channel.memberCount}</div>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
 
-                {/* 리스트가 비어도 높이 유지 + 안내 */}
-                {channels.length === 0 && (
-                  <div className="h-full flex items-center justify-center text-gray-400 text-sm font-gowun">
-                    채팅방이 없습니다.
-                  </div>
-                )}
-              </div>
+              {channels.length === 0 && (
+                <div className="h-full flex items-center justify-center text-gray-400 text-sm font-gowun">
+                  채팅방이 없습니다.
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* 항상 보이는 구분선 */}
-            <div className="border-t border-orange-200 w-full shrink-0" />
-
-            {/* 버튼 영역: 컨테이너는 항상 표시, 버튼은 조건부 */}
-            <div className="p-4 space-y-3 shrink-0">
-              {/* 채팅방 미선택 시 안내 문구 */}
+          {/* 하단 액션: 항상 보이도록 sticky + 배경/보더로 분리감 */}
+          <div className="sticky bottom-0 z-10 bg-white border-t border-orange-200">
+            <div className="p-4 space-y-3">
               {!selectedChannel && (
                 <div className="text-xs text-gray-500 text-center font-gowun">
                   채팅방을 선택하세요
                 </div>
               )}
 
-              {/* 선택된 채널이 있을 때만 버튼 노출 */}
               {selectedChannel && (
                 <>
                   <button
@@ -657,7 +651,6 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     </span>
                   </button>
 
-                  {/* EVENT 전용: 실제 참여 인원 체크 */}
                   {!isGlobal && (
                     <button
                       onClick={openMemberCheckModal}
@@ -674,7 +667,6 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     </button>
                   )}
 
-                  {/* EVENT 전용: 정산 생성 */}
                   {!isGlobal && (
                     <button
                       onClick={openSettlementModal}
@@ -692,7 +684,6 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     </button>
                   )}
 
-                  {/* EVENT 전용: 채팅방 나가기 (방장 아님) */}
                   {!isGlobal && !isRoomOwner && (
                     <button
                       onClick={handleLeaveRoom}
@@ -706,6 +697,8 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               )}
             </div>
           </div>
+        </div>
+
 
 
           {/* 채팅 메인 */}
