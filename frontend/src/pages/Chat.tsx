@@ -111,8 +111,8 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
       title: voteTitle.trim(),
       description: voteDescription.trim() || undefined,
       allowMultiple,
-      // <input type="datetime-local"> 값을 백엔드가 기대하는 LocalDateTime 형식으로 변환
-      deadline: new Date(deadline).toISOString().slice(0, 19),
+      // datetime-local 값을 로컬 시간 기준으로 LocalDateTime 형식으로 변환 (시간대 변환 없이)
+      deadline: deadline + ':00', // "2025-09-25T12:00" -> "2025-09-25T12:00:00"
       options: opts,
     };
 
@@ -243,13 +243,50 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
         const auth = useAuthStore.getState();
         const clubId = auth?.clubId;
         if (clubId == null) return;
-        const rooms = await ChatApi.getRoomsByClub(clubId);
-        setChannels(rooms);
+
+        const rooms = await ChatApi.getRoomsByClub(clubId); // clubId = 4
+        console.log("채팅방 목록:", rooms);
+        setChannels(rooms); // rooms는 Channel[] 타입
+
+        // 채널 목록을 불러온 후 자동 선택 확인
+        const autoSelectRoom = sessionStorage.getItem('autoSelectRoom');
+        if (autoSelectRoom === 'global') {
+          // GLOBAL 채팅방을 찾아서 자동 선택
+          const globalRoom = rooms.find(room => room.typeCode === 'GLOBAL');
+          if (globalRoom) {
+            setSelectedChannel(globalRoom.id);
+          }
+          // 한 번 사용한 후 제거
+          sessionStorage.removeItem('autoSelectRoom');
+        }
+
+        // 🔸 추가: Calendar에서 저장한 focusChatId 우선 선택
+        const focusIdStr = sessionStorage.getItem('focusChatId');
+        if (focusIdStr) {
+          const focusId = Number(focusIdStr);
+          const target = rooms.find(r => r.id === focusId);
+          if (target) setSelectedChannel(target.id);
+          sessionStorage.removeItem('focusChatId');
+        }
+
       } catch (err) {
         console.error("채팅방 목록 불러오기 실패:", err);
       }
     })();
   }, []);
+
+    // 2) channels 변경 시 혹시 모를 레이스컨디션 보완
+  useEffect(() => {
+    if (selectedChannel != null || channels.length === 0) return;
+    const focusIdStr = sessionStorage.getItem('focusChatId');
+    if (!focusIdStr) return;
+    const focusId = Number(focusIdStr);
+    if (channels.some(r => r.id === focusId)) {
+      setSelectedChannel(focusId);
+      sessionStorage.removeItem('focusChatId');
+    }
+  }, [channels, selectedChannel]);
+
 
   // focusChatId 자동 선택
   useEffect(() => {
@@ -554,16 +591,18 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
         {/* 메인 콘텐츠 */}
         <div className="flex flex-1 h-full min-h-0">
-          {/* 채널 사이드바 */}
-          <div className="h-full overflow-y-auto bg-white border-r border-orange-200 shadow-lg w-80">
-            <div className="p-6 border-b border-orange-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-800 font-jua">
-                  채팅
-                </h2>
-              </div>
+        {/* 채널 사이드바 */}
+        <div className="h-full w-80 bg-white border-r border-orange-200 shadow-lg flex flex-col min-h-0">
+          {/* 상단 헤더 (고정) */}
+          <div className="p-6 border-b border-orange-200 shrink-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800 font-jua">채팅</h2>
             </div>
-            <div className="p-4 space-y-2">
+          </div>
+
+          {/* 채팅 리스트: 남은 공간 모두 차지 + 해당 영역만 스크롤 */}
+          <div className="p-1 flex-1 min-h-0 overflow-y-auto">
+            <div className="space-y-2">
               {channels.map((channel) => (
                 <div
                   key={channel.id}
@@ -576,80 +615,91 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold font-jua">
-                        # {channel.name}
-                      </div>
-                      <div className="font-semibold font-jua">
-                        인원 : {channel.memberCount}
-                      </div>
+                      <div className="font-semibold font-jua"># {channel.name}</div>
+                      <div className="font-semibold font-jua">인원 : {channel.memberCount}</div>
                     </div>
                   </div>
                 </div>
               ))}
+
+              {channels.length === 0 && (
+                <div className="h-full flex items-center justify-center text-gray-400 text-sm font-gowun">
+                  채팅방이 없습니다.
+                </div>
+              )}
             </div>
-
-            {selectedChannel && (
-              <div className="p-4 border-t border-orange-200 space-y-3">
-                <button
-                  onClick={() => setShowVoteModal(true)}
-                  className="flex items-center justify-center w-full px-4 py-3 font-semibold text-white transition-all duration-200 bg-orange-400 shadow-md rounded-xl hover:bg-orange-500 hover:shadow-lg font-jua"
-                >
-                  <span className="inline-flex items-center justify-center gap-2 leading-none">
-                    <span className="text-xl leading-none">🗳️</span>
-                    <span className="leading-none">투표 생성</span>
-                  </span>
-                </button>
-
-                {/* EVENT 전용: 실제 참여 인원 체크 */}
-                {!isGlobal && (
-                  <button
-                    onClick={openMemberCheckModal}
-                    className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-jua ${
-                      isParticipantsConfirmed
-                        ? "bg-blue-400 hover:bg-blue-500 text-white"
-                        : "bg-gray-400 hover:bg-gray-500 text-white"
-                    }`}
-                  >
-                    <span className="text-lg text-white">👥</span>
-                    <span className="text-white">
-                      {isParticipantsConfirmed
-                        ? `참여 인원 확정 (${confirmedCount}명)`
-                        : "실제 참여 인원 체크"}
-                    </span>
-                  </button>
-                )}
-
-                {/* EVENT 전용: 정산 생성 */}
-                {!isGlobal && (
-                  <button
-                    onClick={openSettlementModal}
-                    disabled={!isSettlementEnabled}
-                    className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg font-jua flex items-center justify-center ${
-                      isSettlementEnabled
-                        ? "bg-green-400 hover:bg-green-500 text-white"
-                        : "bg-green-300 text-green-100 cursor-not-allowed"
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-2 leading-none">
-                      <span className="text-xl leading-none">💰</span>
-                      <span className="leading-none">정산 생성</span>
-                    </span>
-                  </button>
-                )}
-
-                {/* EVENT 전용: 채팅방 나가기 (방장 아님) */}
-                {!isGlobal && !isRoomOwner && (
-                  <button
-                    onClick={handleLeaveRoom}
-                    className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
-                  >
-                    <span className="text-gray-700">🚪</span>
-                    <span className="text-gray-700">채팅방 나가기</span>
-                  </button>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* 하단 액션: 항상 보이도록 sticky + 배경/보더로 분리감 */}
+          <div className="sticky bottom-0 z-10 bg-white border-t border-orange-200">
+            <div className="p-4 space-y-3">
+              {!selectedChannel && (
+                <div className="text-xs text-gray-500 text-center font-gowun">
+                  채팅방을 선택하세요
+                </div>
+              )}
+
+              {selectedChannel && (
+                <>
+                  <button
+                    onClick={() => setShowVoteModal(true)}
+                    className="flex items-center justify-center w-full px-4 py-3 font-semibold text-white transition-all duration-200 bg-orange-400 shadow-md rounded-xl hover:bg-orange-500 hover:shadow-lg font-jua"
+                  >
+                    <span className="inline-flex items-center justify-center gap-2 leading-none">
+                      <span className="text-xl leading-none">🗳️</span>
+                      <span className="leading-none">투표 생성</span>
+                    </span>
+                  </button>
+
+                  {!isGlobal && (
+                    <button
+                      onClick={openMemberCheckModal}
+                      className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-jua ${
+                        isParticipantsConfirmed
+                          ? "bg-blue-400 hover:bg-blue-500 text-white"
+                          : "bg-gray-400 hover:bg-gray-500 text-white"
+                      }`}
+                    >
+                      <span className="text-lg text-white">👥</span>
+                      <span className="text-white">
+                        {isParticipantsConfirmed ? `참여 인원 확정 (${confirmedCount}명)` : "실제 참여 인원 체크"}
+                      </span>
+                    </button>
+                  )}
+
+                  {!isGlobal && (
+                    <button
+                      onClick={openSettlementModal}
+                      disabled={!isSettlementEnabled}
+                      className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg font-jua flex items-center justify-center ${
+                        isSettlementEnabled
+                          ? "bg-green-400 hover:bg-green-500 text-white"
+                          : "bg-green-300 text-green-100 cursor-not-allowed"
+                      }`}
+                    >
+                      <span className="inline-flex items-center gap-2 leading-none">
+                        <span className="text-xl leading-none">💰</span>
+                        <span className="leading-none">정산 생성</span>
+                      </span>
+                    </button>
+                  )}
+
+                  {!isGlobal && !isRoomOwner && (
+                    <button
+                      onClick={handleLeaveRoom}
+                      className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl font-jua"
+                    >
+                      <span className="text-gray-700">🚪</span>
+                      <span className="text-gray-700">채팅방 나가기</span>
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+
 
           {/* 채팅 메인 */}
           <div className="flex flex-col flex-1 min-h-0">

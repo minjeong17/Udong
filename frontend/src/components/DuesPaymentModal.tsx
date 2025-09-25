@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { MyUnpaidDuesItem } from '../apis/clubdues/response';
 import { UserApi } from '../apis/user/api';
 import { ClubDuesApi } from '../apis/clubdues/api';
+import { InventoryApi } from '../apis/inventory';
+import type { InventoryResponse } from '../apis/inventory/response';
 import { useAuthStore } from '../stores/authStore';
 import AccountChangeModal from './AccountChangeModal';
 
@@ -19,42 +21,79 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
   duesInfo
 }) => {
   const clubId = useAuthStore((state) => state.clubId);
-  const [hasDiscountCoupon] = useState(false); // 추후 inventory API로 확인
-  const [discountAmount, setDiscountAmount] = useState(0); // 추후 계산
+  const [inventory, setInventory] = useState<InventoryResponse[]>([]);
+  const [useDiscountCoupon, setUseDiscountCoupon] = useState(false);
   const [userAccount, setUserAccount] = useState({
     bankName: '로딩중...',
     accountNumber: '로딩중...'
   });
   const [isAccountChangeModalOpen, setIsAccountChangeModalOpen] = useState(false);
+  const [paymentPassword, setPaymentPassword] = useState('');
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      UserApi.getMyAccount()
-        .then(setUserAccount)
-        .catch(error => {
-          console.error('계좌 정보 조회 실패:', error);
-          setUserAccount({
-            bankName: '계좌 정보 오류',
-            accountNumber: '정보를 불러올 수 없습니다'
-          });
+    if (isOpen && clubId) {
+      // 계좌 정보와 인벤토리 정보를 병렬로 조회
+      Promise.all([
+        UserApi.getMyAccount(),
+        InventoryApi.getUserInventory(clubId)
+      ]).then(([accountData, inventoryData]) => {
+        setUserAccount(accountData);
+        setInventory(inventoryData);
+      }).catch(error => {
+        console.error('정보 조회 실패:', error);
+        setUserAccount({
+          bankName: '계좌 정보 오류',
+          accountNumber: '정보를 불러올 수 없습니다'
         });
+        setInventory([]);
+      });
+    } else if (!isOpen) {
+      // 모달이 닫힐 때 상태 초기화
+      setShowPasswordInput(false);
+      setPaymentPassword('');
+      setUseDiscountCoupon(false);
     }
-  }, [isOpen]);
+  }, [isOpen, clubId]);
 
   if (!isOpen) return null;
 
+  // 회비 감면권 보유 수량 계산 (itemName에 '회비감면권' 또는 '감면권'이 포함된 아이템)
+  const discountCouponItem = inventory.find(item =>
+    item.itemName.includes('회비감면권') || item.itemName.includes('감면권')
+  );
+  const discountCouponCount = discountCouponItem?.qty || 0;
+  const hasDiscountCoupon = discountCouponCount > 0;
+
+  // 10% 할인 계산
+  const discountAmount = useDiscountCoupon ? Math.floor(duesInfo.membershipDues * 0.1) : 0;
   const finalAmount = duesInfo.membershipDues - discountAmount;
+
+  const handlePayment = () => {
+    setShowPasswordInput(true);
+  };
 
   const handleConfirm = async () => {
     try {
-      const paymentRequest = {
-        originalAmount: duesInfo.membershipDues,
-        discountAmount: discountAmount
-      };
-
       if (!clubId) {
         throw new Error('동아리 정보를 찾을 수 없습니다.');
       }
+
+      if (!paymentPassword.trim()) {
+        alert('결제 비밀번호를 입력해주세요.');
+        return;
+      }
+
+      // 감면권 사용 시 아이템 사용 API 호출
+      if (useDiscountCoupon && discountCouponItem) {
+        await InventoryApi.useItem(clubId, discountCouponItem.itemId);
+      }
+
+      const paymentRequest = {
+        originalAmount: duesInfo.membershipDues,
+        discountAmount: discountAmount,
+        paymentPassword: paymentPassword
+      };
 
       const result = await ClubDuesApi.payDues(clubId, duesInfo.duesId, paymentRequest);
 
@@ -85,6 +124,8 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
         errorMessage = '🏦 계좌 정보에 문제가 있습니다.\n계좌번호를 다시 확인해 주세요.';
       } else if (errorMessage.includes('이체')) {
         errorMessage = '⚠️ ' + errorMessage;
+      } else if (errorMessage.includes('비밀번호')) {
+        errorMessage = '🔒 결제 비밀번호가 올바르지 않습니다.';
       }
 
       alert(errorMessage);
@@ -172,7 +213,7 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                   <span className="font-medium text-green-700 font-gowun">회비 감면권 보유</span>
                 </div>
                 <div className="text-sm text-green-600 font-gowun">
-                  사용 가능한 감면권: 2개 (각 1,000원 할인)
+                  사용 가능한 감면권: {discountCouponCount}개 (10% 할인)
                 </div>
               </div>
 
@@ -182,8 +223,8 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                     type="radio"
                     name="discount"
                     value="none"
-                    checked={discountAmount === 0}
-                    onChange={() => setDiscountAmount(0)}
+                    checked={!useDiscountCoupon}
+                    onChange={() => setUseDiscountCoupon(false)}
                     className="text-orange-500"
                   />
                   <span className="font-gowun text-sm">감면권 사용 안함</span>
@@ -192,23 +233,14 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                   <input
                     type="radio"
                     name="discount"
-                    value="1000"
-                    checked={discountAmount === 1000}
-                    onChange={() => setDiscountAmount(1000)}
+                    value="use"
+                    checked={useDiscountCoupon}
+                    onChange={() => setUseDiscountCoupon(true)}
                     className="text-orange-500"
                   />
-                  <span className="font-gowun text-sm">감면권 1개 사용 (1,000원 할인)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="discount"
-                    value="2000"
-                    checked={discountAmount === 2000}
-                    onChange={() => setDiscountAmount(2000)}
-                    className="text-orange-500"
-                  />
-                  <span className="font-gowun text-sm">감면권 2개 사용 (2,000원 할인)</span>
+                  <span className="font-gowun text-sm">
+                    감면권 1개 사용 (10% 할인 - {Math.floor(duesInfo.membershipDues * 0.1).toLocaleString()}원 할인)
+                  </span>
                 </label>
               </div>
             </div>
@@ -281,20 +313,54 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
           </div>
         </div>
 
+        {/* 결제 비밀번호 입력 */}
+        {showPasswordInput && (
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-base font-bold text-gray-700 font-jua mb-3">결제 비밀번호 입력</h3>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-yellow-600 text-lg">🔒</span>
+                <span className="font-medium text-yellow-700 font-gowun text-sm">
+                  결제를 위해 비밀번호를 입력하세요
+                </span>
+              </div>
+              <input
+                type="password"
+                value={paymentPassword}
+                onChange={(e) => setPaymentPassword(e.target.value)}
+                placeholder="결제 비밀번호를 입력하세요"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg font-gowun text-center text-lg tracking-widest focus:outline-none focus:border-orange-500"
+                maxLength={6}
+                autoFocus
+              />
+              <p className="text-xs text-yellow-600 font-gowun mt-2 text-center">
+                회원가입 시 설정한 6자리 결제 비밀번호를 입력하세요
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* 버튼 */}
         <div className="px-6 py-4">
           <div className="flex gap-3 justify-center">
             <button
-              onClick={onClose}
+              onClick={() => {
+                if (showPasswordInput) {
+                  setShowPasswordInput(false);
+                  setPaymentPassword('');
+                } else {
+                  onClose();
+                }
+              }}
               className="bg-white border-2 border-gray-300 text-gray-600 rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-gray-50 transition-colors"
             >
-              취소
+              {showPasswordInput ? '이전' : '취소'}
             </button>
             <button
-              onClick={handleConfirm}
+              onClick={showPasswordInput ? handleConfirm : handlePayment}
               className="bg-orange-500 border-2 border-orange-600 text-white rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-orange-600 transition-colors"
             >
-              {finalAmount.toLocaleString()}원 결제하기
+              {showPasswordInput ? '결제 완료' : `${finalAmount.toLocaleString()}원 결제하기`}
             </button>
           </div>
         </div>

@@ -111,7 +111,8 @@ public class ClubDuesDtos {
     @Builder
     public record PayDuesRequest(
             Integer originalAmount,
-            Integer discountAmount
+            Integer discountAmount,
+            String paymentPassword
     ) {}
 
     // 회비 결제 응답 DTO

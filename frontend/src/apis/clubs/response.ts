@@ -28,6 +28,12 @@ export interface MascotResponse {
   createdAt: string;
 }
 
+export interface AvailabilityInfo {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+}
+
 export interface MemberResponse {
   membershipId: number;
   userId: number;
@@ -40,6 +46,8 @@ export interface MemberResponse {
   residence: string;
   role: string;
   joinedAtIso: string;
+  lastAccessedAt: string | null;
+  availabilities: AvailabilityInfo[];
 }
 
 export interface ChangeRoleRequest {
@@ -49,4 +57,14 @@ export interface ChangeRoleRequest {
 
 export interface InviteCodeResponse {
   code: string;
+}
+
+export interface ClubManagementInfoResponse {
+  codeUrl: string;
+  accountNumber: string;
+}
+
+export interface DailyAccessResponse {
+  isFirstAccessToday: boolean;
+  pointsAwarded: number;
 }

@@ -33,21 +33,28 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
         }
 
-        // 1) 계좌 암호화 (기존)
+        // 1) 계좌번호 정규화 및 기본 검증
         String normalized = accountCrypto.normalize(req.getAccount());
         if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다.");
+
+        // 2) 외부 API로 userKey 가져오기
+        String plainUserKey = finApiClient.fetchUserKeyByEmail(req.getEmail());
+
+        // 3) 계좌 소유권 검증 - 이메일로 받은 userKey와 입력한 계좌번호가 매칭되는지 확인
+        if (!finApiClient.validateAccount(plainUserKey, normalized)) {
+            throw new IllegalArgumentException("입력하신 계좌번호가 해당 이메일 소유자의 계좌가 아닙니다. 본인 명의의 계좌번호를 입력해주세요.");
+        }
+
+        // 4) 검증 완료 후 암호화 진행
         String accountCipher = accountCrypto.encrypt(normalized);
         short keyVer = (short) accountCrypto.keyVersion();
+        String userKeyCipher = accountCrypto.encrypt(plainUserKey);
 
-        // 2) 외부 API로 userKey 가져오기 → 검증 → 암호화
-        String plainUserKey = finApiClient.fetchUserKeyByEmail(req.getEmail());         // ★ 아래 private 메서드
-
-        String userKeyCipher = accountCrypto.encrypt(plainUserKey);        // 계좌와 동일한 암호화기/키버전
-
-        // 3) 엔티티 생성/저장
+        // 5) 엔티티 생성/저장
         User user = User.builder()
                 .email(req.getEmail())
                 .passwordHash(passwordEncoder.encode(req.getPassword()))
+                .paymentPasswordHash(passwordEncoder.encode(req.getPaymentPassword()))
                 .name(req.getName())
                 .university(req.getUniversity())
                 .major(req.getMajor())
@@ -123,6 +130,18 @@ public class UserService {
 
         user.updateAccount(accountCipher, keyVer);
         userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean validatePaymentPassword(Integer userId, String inputPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"));
+
+        if (user.getPaymentPasswordHash() == null || user.getPaymentPasswordHash().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 비밀번호가 설정되지 않았습니다");
+        }
+
+        return passwordEncoder.matches(inputPassword, user.getPaymentPasswordHash());
     }
 
     public static class AccountInfo {

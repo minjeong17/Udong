@@ -3,10 +3,11 @@ import Sidebar from '../components/Sidebar';
 import RoleChangeModal from '../components/RoleChangeModal';
 import LeaderTransferModal from '../components/LeaderTransferModal';
 import NotificationModal from '../components/NotificationModal';
+import AvailabilityBadges from '../components/AvailabilityBadges';
 import { useRouter } from '../hooks/useRouter';
 import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
-import type { ClubCreateResponse } from '../apis/clubs/response';
+import type { ClubManagementInfoResponse, AvailabilityInfo } from '../apis/clubs/response';
 
 interface MemberManagementProps {
   onNavigateToOnboarding: () => void;
@@ -25,6 +26,8 @@ interface Member {
   address: string;
   role: string;
   joinedAt: string;
+  lastAccessedAt: string | null;
+  availabilities: AvailabilityInfo[];
 }
 
 const MemberManagement: React.FC<MemberManagementProps> = ({
@@ -47,8 +50,9 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [clubInfo, setClubInfoState] = useState<ClubCreateResponse | null>(null);
+  const [clubManagementInfo, setClubManagementInfo] = useState<ClubManagementInfoResponse | null>(null);
   const [isRegeneratingCode, setIsRegeneratingCode] = useState(false);
+  const [showAccountNumber, setShowAccountNumber] = useState(false);
 
   // API에서 멤버 목록 가져오기
   const fetchMembers = async () => {
@@ -72,7 +76,9 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
         department: member.major,
         address: member.residence,
         role: member.role,
-        joinedAt: member.joinedAtIso
+        joinedAt: member.joinedAtIso,
+        lastAccessedAt: member.lastAccessedAt,
+        availabilities: member.availabilities || []
       }));
 
       setMembersList(transformedMembers);
@@ -90,15 +96,15 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
     }
   };
 
-  // 동아리 정보 가져오기
-  const fetchClubInfo = async () => {
+  // 동아리 관리 정보 가져오기
+  const fetchClubManagementInfo = async () => {
     if (!clubId) return;
 
     try {
-      const clubData = await ClubApi.getClubDetails(clubId);
-      setClubInfoState(clubData);
+      const clubData = await ClubApi.getClubManagementInfo(clubId);
+      setClubManagementInfo(clubData);
     } catch (error) {
-      console.error('Failed to fetch club info:', error);
+      console.error('Failed to fetch club management info:', error);
     }
   };
 
@@ -114,10 +120,10 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
       const newCode = await ClubApi.regenerateInviteCode(clubId);
 
       // 상태 업데이트로 새 초대코드 반영
-      setClubInfoState(prev => prev ? { ...prev, codeUrl: newCode } : null);
+      setClubManagementInfo(prev => prev ? { ...prev, codeUrl: newCode } : null);
 
-      // 동아리 정보 새로고침 (최신 데이터 확보)
-      await fetchClubInfo();
+      // 동아리 관리 정보 새로고침 (최신 데이터 확보)
+      await fetchClubManagementInfo();
 
       alert('초대코드가 재발급되었습니다.');
     } catch (error) {
@@ -130,9 +136,9 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
 
   // 초대코드 복사
   const handleCopyInviteCode = () => {
-    if (!clubInfo?.codeUrl) return;
+    if (!clubManagementInfo?.codeUrl) return;
 
-    navigator.clipboard.writeText(clubInfo.codeUrl).then(() => {
+    navigator.clipboard.writeText(clubManagementInfo.codeUrl).then(() => {
       alert('초대코드가 클립보드에 복사되었습니다.');
     }).catch(() => {
       alert('복사에 실패했습니다.');
@@ -142,7 +148,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
   // 컴포넌트 마운트 시 데이터 불러오기
   useEffect(() => {
     fetchMembers();
-    fetchClubInfo();
+    fetchClubManagementInfo();
   }, [clubId]);
 
   const handleRoleClick = (member: Member) => {
@@ -308,32 +314,75 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
           </div>
         </div>
 
-        {/* 초대코드 카드 - 절대 위치로 오른쪽 위에 고정 */}
+        {/* 정보 카드들 - 절대 위치로 오른쪽 위에 고정 */}
         {myRole === 'LEADER' && (
-          <div className="absolute top-4 right-8 bg-white rounded-xl shadow-lg border border-orange-100 p-4 w-[320px] z-10">
-            <h2 className="text-sm font-bold text-gray-800 font-jua mb-2">초대코드</h2>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                <span className="font-mono text-sm font-semibold text-gray-800">
-                  {clubInfo?.codeUrl || '로딩중...'}
-                </span>
+          <div className="absolute top-4 right-8 flex gap-4 z-10">
+            {/* 동아리 계좌번호 카드 */}
+            <div className="bg-white rounded-xl shadow-lg border border-green-100 p-4 w-[320px]">
+              <h2 className="text-sm font-bold text-gray-800 font-jua mb-2">동아리 공용 계좌</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <span className="font-mono text-sm font-semibold text-green-700">
+                    {clubManagementInfo?.accountNumber ?
+                      (showAccountNumber ? clubManagementInfo.accountNumber : '●●●●●●●●●●●●')
+                      : '로딩중...'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAccountNumber(!showAccountNumber)}
+                  disabled={!clubManagementInfo?.accountNumber}
+                  className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                >
+                  👁️ {showAccountNumber ? '숨기기' : '보기'}
+                </button>
+                <button
+                  onClick={() => {
+                    if (clubManagementInfo?.accountNumber && showAccountNumber) {
+                      navigator.clipboard.writeText(clubManagementInfo.accountNumber).then(() => {
+                        alert('계좌번호가 클립보드에 복사되었습니다.');
+                      }).catch(() => {
+                        alert('복사에 실패했습니다.');
+                      });
+                    } else if (!showAccountNumber) {
+                      alert('계좌번호를 먼저 확인해주세요.');
+                    }
+                  }}
+                  disabled={!clubManagementInfo?.accountNumber}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                >
+                  📋 복사
+                </button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleCopyInviteCode}
-                disabled={!clubInfo?.codeUrl}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
-              >
-                📋 복사
-              </button>
-              <button
-                onClick={handleRegenerateInviteCode}
-                disabled={isRegeneratingCode || !clubInfo?.codeUrl}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
-              >
-                {isRegeneratingCode ? '재발급 중...' : '🔄 재발급'}
-              </button>
+
+            {/* 초대코드 카드 */}
+            <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-4 w-[320px]">
+              <h2 className="text-sm font-bold text-gray-800 font-jua mb-2">초대코드</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <span className="font-mono text-sm font-semibold text-gray-800">
+                    {clubManagementInfo?.codeUrl || '로딩중...'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyInviteCode}
+                  disabled={!clubManagementInfo?.codeUrl}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                >
+                  📋 복사
+                </button>
+                <button
+                  onClick={handleRegenerateInviteCode}
+                  disabled={isRegeneratingCode || !clubManagementInfo?.codeUrl}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                >
+                  {isRegeneratingCode ? '재발급 중...' : '🔄 재발급'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -459,13 +508,14 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
 
         {/* 테이블 헤더 */}
         <div className="bg-white rounded-t-2xl shadow-lg border border-orange-100 p-4">
-          <div className="grid gap-4 text-sm font-medium text-gray-600 font-gowun" style={{gridTemplateColumns: '1fr 1.2fr 2fr 0.7fr 1.3fr 1.5fr 0.8fr 0.8fr'}}>
+          <div className="grid gap-4 text-sm font-medium text-gray-600 font-gowun" style={{gridTemplateColumns: '1fr 1.2fr 1.8fr 0.7fr 1.2fr 1.8fr 1fr 0.8fr 0.8fr'}}>
             <div>이름</div>
             <div>연락처</div>
             <div>이메일</div>
             <div>성별</div>
             <div>학교/학과</div>
-            <div>거주지</div>
+            <div>거주지 / 활동시간</div>
+            <div>마지막 접속</div>
             <div>직책</div>
             <div>관리</div>
           </div>
@@ -495,13 +545,34 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
                 index === filteredMembers.length - 1 ? 'border-b-0' : ''
               } hover:bg-gray-50 transition-colors`}
             >
-              <div className="grid gap-4 text-sm font-gowun items-center" style={{gridTemplateColumns: '1fr 1.2fr 2fr 0.7fr 1.3fr 1.5fr 0.8fr 0.8fr'}}>
+              <div className="grid gap-4 text-sm font-gowun items-center" style={{gridTemplateColumns: '1fr 1.2fr 1.8fr 0.7fr 1.2fr 1.8fr 1fr 0.8fr 0.8fr'}}>
                 <div className="font-medium text-gray-800">{member.name}</div>
                 <div className="text-gray-600">{member.phone}</div>
                 <div className="text-gray-600">{member.email}</div>
                 <div className="text-gray-600">{member.gender}</div>
                 <div className="text-gray-600">{member.university}<br/>{member.department}</div>
-                <div className="text-gray-600">{member.address}</div>
+                <div className="text-gray-600">
+                  <div className="mb-1">{member.address}</div>
+                  <AvailabilityBadges availabilities={member.availabilities} />
+                </div>
+                <div className="text-gray-600 text-xs">
+                  {member.lastAccessedAt ? (
+                    <>
+                      {new Date(member.lastAccessedAt).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                      <br/>
+                      {new Date(member.lastAccessedAt).toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">접속 기록 없음</span>
+                  )}
+                </div>
                 <div>
                   {myRole === 'LEADER' && member.userId === currentUserId ? (
                     <span className={`px-2 py-1 rounded-full text-xs ${getRoleColor(member.role)} opacity-75 cursor-not-allowed`}>

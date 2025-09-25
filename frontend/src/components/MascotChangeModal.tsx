@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { ClubApi } from '../apis/clubs';
+import type { MascotResponse } from '../apis/clubs/response';
 
 interface Mascot {
   id: number;
   name: string;
   src: string;
   description?: string;
+  createdAt?: string;
 }
 
 interface MascotChangeModalProps {
@@ -20,6 +23,7 @@ const MascotChangeModal: React.FC<MascotChangeModalProps> = ({
   onClose,
   onMascotChange,
   currentMascotId = 1,
+  clubId,
 }) => {
   const [selectedMascotId, setSelectedMascotId] = useState(currentMascotId);
   const [currentPage, setCurrentPage] = useState(0);
@@ -31,34 +35,40 @@ const MascotChangeModal: React.FC<MascotChangeModalProps> = ({
   const itemsPerPage = 4;
   const totalPages = Math.ceil(mascots.length / itemsPerPage);
 
-  // API 호출 시뮬레이션 - 마스코트 목록 가져오기
+  // 실제 API로 마스코트 목록 가져오기
   const fetchMascots = async () => {
+    if (!clubId) {
+      setError('동아리 정보가 없습니다.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // TODO: 실제 API 호출로 교체
-      // const response = await fetch(`/api/mascots?clubId=${clubId}`);
-      // const data = await response.json();
-      // setMascots(data.mascots);
+      // 실제 API 호출
+      const response = await ClubApi.getMascotList(clubId, 0, 20); // 최대 20개까지 가져오기
 
-      // 임시 데이터 (API 연동 전)
-      await new Promise(resolve => setTimeout(resolve, 500)); // 로딩 시뮬레이션
+      // API 응답을 Mascot 인터페이스에 맞게 변환
+      const apiMascots: Mascot[] = response.content.map((mascot: MascotResponse) => ({
+        id: mascot.id,
+        name: `마스코트 ${mascot.id}`,
+        src: mascot.imageUrl,
+        description: `생성일: ${new Date(mascot.createdAt).toLocaleDateString()}`,
+        createdAt: mascot.createdAt
+      }));
 
-      const mockMascots: Mascot[] = [
-        { id: 1, name: 'mas_1', src: '/images/mas_1.png', description: '기본 마스코트' },
-        { id: 2, name: 'mas_2', src: '/images/mas_2.png', description: '귀여운 마스코트' },
-        { id: 3, name: 'mas_3', src: '/images/mas_3.png', description: '활발한 마스코트' },
-        { id: 4, name: 'mas_4', src: '/images/mas_4.png', description: '희귀 마스코트' },
-        { id: 5, name: 'mas_5', src: '/images/mas_5.png', description: '친근한 마스코트' },
-        { id: 6, name: 'mas_6', src: '/images/mas_6.png', description: '특별한 마스코트' },
-        { id: 7, name: 'mas_7', src: '/images/mas_7.png', description: '전설의 마스코트' },
-        { id: 8, name: 'mas_8', src: '/images/mas_8.png', description: '멋진 마스코트' },
-        { id: 9, name: 'mas_9', src: '/images/mas_9.png', description: '최고급 마스코트' },
-        { id: 10, name: 'mas_10', src: '/images/mas_10.png', description: '궁극의 마스코트' },
-      ];
+      // 정순으로 정렬 (오래된 마스코트가 먼저 나오도록)
+      apiMascots.sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
 
-      setMascots(mockMascots);
+      setMascots(apiMascots);
+
+      if (apiMascots.length === 0) {
+        setError('아직 생성된 마스코트가 없습니다. 마스코트 리롤권을 사용해보세요!');
+      }
     } catch (err) {
       setError('마스코트 목록을 불러오는데 실패했습니다.');
       console.error('마스코트 목록 조회 실패:', err);
@@ -114,13 +124,13 @@ const MascotChangeModal: React.FC<MascotChangeModalProps> = ({
 
   // 모달이 열릴 때 데이터 로드 및 초기화
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && clubId) {
       setSelectedMascotId(currentMascotId);
       setError(null);
       setCurrentPage(0);
       fetchMascots();
     }
-  }, [isOpen, currentMascotId]);
+  }, [isOpen, currentMascotId, clubId]);
 
   // 마스코트 목록이 로드된 후 선택된 마스코트가 있는 페이지로 이동
   useEffect(() => {

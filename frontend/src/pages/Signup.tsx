@@ -14,6 +14,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
     name: '',
     email: '',
     password: '',
+    paymentPassword: '',
     gender: '',
     university: '',
     major: '',
@@ -99,6 +100,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
       const requestData: SignUpRequest = {
         email: formData.email,
         password: formData.password,
+        paymentPassword: formData.paymentPassword,
         name: formData.name,
         gender: formData.gender as 'M' | 'F',
         account: formData.account,
@@ -124,15 +126,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
     } catch (error) {
       console.error('Signup failed:', error);
       if (error instanceof Error) {
-        if (error.message.includes('이미 사용 중인 이메일입니다')) {
-          setError('이미 사용 중인 이메일입니다.');
-        } else if (error.message.includes('계좌번호')) {
-          setError('계좌번호 형식이 올바르지 않습니다.');
-        } else if (error.message.includes('email')) {
-          setError('이메일 형식이 올바르지 않습니다.');
-        } else {
-          setError('회원가입에 실패했습니다. 다시 시도해주세요.');
-        }
+        // 서버에서 오는 구체적인 에러 메시지를 그대로 표시
+        setError(error.message);
       } else {
         setError('회원가입에 실패했습니다. 다시 시도해주세요.');
       }
@@ -242,6 +237,22 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
               />
             </div>
 
+            {/* Payment Password */}
+            <div>
+              <label className="block text-gray-600 text-sm mb-2 font-gowun">결제 비밀번호</label>
+              <input
+                type="password"
+                name="paymentPassword"
+                value={formData.paymentPassword}
+                onChange={handleInputChange}
+                className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
+                placeholder="6자리 숫자로 입력하세요"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                required
+              />
+            </div>
+
             {/* Gender */}
             <div>
               <label className="block text-gray-600 text-sm mb-2 font-gowun">성별</label>
@@ -265,9 +276,12 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 type="text"
                 name="account"
                 value={formData.account}
-                onChange={handleInputChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+                  setFormData(prev => ({ ...prev, account: value }));
+                }}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="예시 형식) 10002000300045"
+                placeholder="예시 형식) 10002000300045 (숫자만 입력)"
                 required
               />
             </div>
@@ -298,7 +312,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
               />
             </div>
 
-            {/* Residence */}
+            {/* Residence (Optional) */}
             <div>
               <label className="block text-gray-600 text-sm mb-2 font-gowun">거주지 (선택)</label>
               <input
@@ -308,20 +322,23 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
                 placeholder="거주지를 입력하세요"
-                required
               />
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block text-gray-600 text-sm mb-2 font-gowun">연락처 (선택)</label>
+              <label className="block text-gray-600 text-sm mb-2 font-gowun">연락처</label>
               <input
-                type="tel"
+                type="text"
                 name="phone"
                 value={formData.phone}
-                onChange={handleInputChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+                  setFormData(prev => ({ ...prev, phone: value }));
+                }}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="예시 형식) 010-1234-8888"
+                placeholder="예시 형식) 01012345678 (숫자만 입력)"
+                maxLength={11}
                 required
               />
             </div>

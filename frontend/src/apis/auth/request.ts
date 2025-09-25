@@ -2,6 +2,7 @@
 export interface SignUpRequest {
   email: string;
   password: string;
+  paymentPassword: string;
   name: string;
   university?: string;
   major?: string;
