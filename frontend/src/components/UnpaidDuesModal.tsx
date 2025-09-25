@@ -1,4 +1,3 @@
-import React from 'react';
 import type { MyUnpaidDuesResponse, MyUnpaidDuesItem } from '../apis/clubdues/response';
 
 interface UnpaidDuesModalProps {
