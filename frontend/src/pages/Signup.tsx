@@ -319,7 +319,6 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
                 placeholder="거주지를 입력하세요"
-                required
               />
             </div>
 
