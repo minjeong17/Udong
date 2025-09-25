@@ -50,7 +50,6 @@ public class DutchpayController {
     @GetMapping("/{clubId}")
     public ResponseEntity<ApiResponse<List<DutchpayListResponse>>> getMyDutchpays(@PathVariable Integer clubId) {
         Integer userId = securityUtils.currentUserId();
-
         List<DutchpayListResponse> list = dutchpayService.findByUser(userId, clubId);
 
         return ResponseEntity.ok(ApiResponse.ok(list));

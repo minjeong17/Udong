@@ -32,4 +32,24 @@ export const DutchpayApi = {
     });
     return response.data; // 응답이 문자열로 반환됩니다.
   },
+
+  /** 정산 삭제 API */
+  deleteSettlement: async (dutchpayId: number): Promise<string> => {
+    const url = `${BASE_URL}${API_PREFIX}/dutchpay/${dutchpayId}`;
+    const response = await fetchClient<ApiResponse<string>>(url, {
+      method: "DELETE",
+      auth: true,
+    });
+    return response.data; // 응답이 문자열로 반환됩니다.
+  },
+
+  /** 정산 종료 API */
+  endSettlement: async (dutchpayId: number): Promise<string> => {
+    const url = `${BASE_URL}${API_PREFIX}/dutchpay/${dutchpayId}`;
+    const response = await fetchClient<ApiResponse<string>>(url, {
+      method: "PUT", // PUT 메서드를 사용하여 정산 종료 처리
+      auth: true,
+    });
+    return response.data; // 응답이 문자열로 반환됩니다.
+  },
 };
