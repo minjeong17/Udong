@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
 import { VoteApi } from '../apis/vote';
 import type { VoteParticipateRequest, VoteSelectionRequest, VoteResponse } from '../apis/vote';
+import { ItemApi } from '../apis/item';
 import { useAuthStore } from '../stores/authStore';
 
 /** 타입들 - API와 호환되는 형태 */
@@ -17,8 +18,22 @@ const getTotalVotes = (v: Vote) => v.totalVotes
 const getParticipantsCount = (v: Vote) => v.totalParticipants
 const getParticipationRate = (v: Vote) => v.participationRate
 
-// 개인 용량 계산 (임시로 기본 1표)
-const getUserVoteCapacity = (v: Vote) => v.multiSelect ? Number.POSITIVE_INFINITY : 1
+// 옵션당 최대 투표 수 계산 (기본 1표 + 추가 투표권)
+const getPerOptionCapacity = (v: Vote, additionalCapacity: Record<number, number> = {}) => {
+  const basePerOption = 1 // 기본적으로 옵션당 1표
+  const additional = additionalCapacity[v.id] || 0
+  return basePerOption + additional // 추가 투표권만큼 증가
+}
+
+// 총 투표 용량 계산 (검증용)
+const getTotalCapacity = (v: Vote, additionalCapacity: Record<number, number> = {}) => {
+  const perOption = getPerOptionCapacity(v, additionalCapacity)
+  if (v.multiSelect) {
+    return perOption * v.options.length // 다중: 각 옵션당 최대 * 옵션 수
+  } else {
+    return perOption // 단일: 한 옵션에만 투표 가능
+  }
+}
 
 // 현재 사용자 ID 가져오기
 const getCurrentUserId = () => {
@@ -50,6 +65,11 @@ export default function VotingPage({
     useState<Record<number, Record<number, number>>>({}) // {voteId: {optionId: myCount}}
   const [submitting, setSubmitting] =
     useState<Record<number, boolean>>({}) // 제출 버튼 로딩 상태
+
+  // 추가 투표권 관련 상태
+  const [userVoteCapacity, setUserVoteCapacity] =
+    useState<Record<number, number>>({}) // {voteId: additionalCapacity}
+  const [additionalVoteItems, setAdditionalVoteItems] = useState<number>(0) // 보유한 추가 투표권 수량
 
 
   // API 데이터 로드
@@ -88,6 +108,24 @@ export default function VotingPage({
     }
 
     loadVotes()
+  }, [clubId])
+
+  // 사용자 인벤토리 (추가 투표권) 로드
+  useEffect(() => {
+    const loadInventory = async () => {
+      if (!clubId) return
+
+      try {
+        const inventory = await ItemApi.getInventory(clubId)
+        // id=2인 추가 투표권 아이템 찾기
+        const additionalVoteItem = inventory.find(item => item.itemId === 2)
+        setAdditionalVoteItems(additionalVoteItem?.qty || 0)
+      } catch (err) {
+        console.error('인벤토리 로드 실패:', err)
+      }
+    }
+
+    loadInventory()
   }, [clubId])
 
   // 선택된 투표의 상세 정보 로드
@@ -160,24 +198,23 @@ export default function VotingPage({
       ?? (o.myVoteCount ?? 0)), 0)
 
   const getMyDraftRemaining = (v: Vote) =>
-    Math.max(0, getUserVoteCapacity(v) - getMyDraftUsed(v))
+    Math.max(0, getTotalCapacity(v, userVoteCapacity) - getMyDraftUsed(v))
 
   // 드래프트 +/− (서버 반영 X, 로컬만 수정)
   const incDraft = (v: Vote, optionId: number) => {
     if (isClosed(v)) return
 
-    const cap = getUserVoteCapacity(v)
     const used = getMyDraftUsed(v)
     const here = getMyDraftCount(v, optionId)
 
-    // 단일 선택에서 이미 다른 옵션에 표가 있으면 분산 금지
-    if (!v.multiSelect && cap === 1 && used > 0 && here === 0) return
+    // 단일 선택에서는 항상 한 옵션에만 투표 가능 (추가 투표권 관계없이)
+    if (!v.multiSelect && used > 0 && here === 0) return
 
     // 총합 남은 표 확인
     if (getMyDraftRemaining(v) <= 0) return
 
-    // 옵션당 상한: 단일 = cap, 다중 = 1 (임시)
-    const perOptionCap = v.multiSelect ? 1 : cap
+    // 옵션당 상한: 각 옵션당 최대 투표 수
+    const perOptionCap = getPerOptionCapacity(v, userVoteCapacity)
     if (here >= perOptionCap) return
 
     setDraftByVote(d => ({
@@ -202,8 +239,21 @@ export default function VotingPage({
 
   // 확정(서버 반영) 핸들러
   const handleSubmitVotes = async (v: Vote) => {
-    if (!v) return
+    if (!v || !clubId) return
     const draft = draftByVote[v.id] ?? {}
+    const additionalVotesNeeded = userVoteCapacity[v.id] || 0
+
+    // 사용할 추가 투표권이 있으면 확인 요청
+    if (additionalVotesNeeded > 0) {
+      const confirmMessage = `추가 투표권 ${additionalVotesNeeded}개를 사용하여 투표하시겠습니까?`
+      if (!confirm(confirmMessage)) return
+
+      // 투표권 보유 수량 확인
+      if (additionalVotesNeeded > additionalVoteItems) {
+        alert('추가 투표권이 부족합니다.')
+        return
+      }
+    }
 
     // API 요구에 맞는 payload 생성
     const selections: VoteSelectionRequest[] = []
@@ -222,18 +272,40 @@ export default function VotingPage({
     try {
       setSubmitting(s => ({ ...s, [v.id]: true }))
 
-      // 실제 API 호출
+      // 먼저 추가 투표권 차감
+      if (additionalVotesNeeded > 0) {
+        for (let i = 0; i < additionalVotesNeeded; i++) {
+          await ItemApi.useItem(clubId, 2) // itemId = 2 (추가 투표권)
+        }
+        // 인벤토리 상태 업데이트
+        setAdditionalVoteItems(prev => prev - additionalVotesNeeded)
+      }
+
+      // 실제 투표 API 호출
       const updatedVote = await VoteApi.participateVote(v.id, participateRequest)
 
       // 성공 시: votes에 반영
       setVotes(prev => prev.map(x => x.id === v.id ? updatedVote : x))
 
-      // 드래프트 초기화
+      // 드래프트 및 용량 상태 초기화
       setDraftByVote(d => ({ ...d, [v.id]: {} }))
+      setUserVoteCapacity(prev => ({ ...prev, [v.id]: 0 }))
 
       alert("투표가 확정되었습니다.")
     } catch (e) {
       console.error('투표 제출 실패:', e)
+
+      // 투표권이 차감되었지만 투표에 실패한 경우 인벤토리 다시 로드
+      if (additionalVotesNeeded > 0) {
+        try {
+          const inventory = await ItemApi.getInventory(clubId)
+          const additionalVoteItem = inventory.find(item => item.itemId === 2)
+          setAdditionalVoteItems(additionalVoteItem?.qty || 0)
+        } catch (inventoryError) {
+          console.error('인벤토리 재로드 실패:', inventoryError)
+        }
+      }
+
       alert("제출 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.")
     } finally {
       setSubmitting(s => ({ ...s, [v.id]: false }))
@@ -260,6 +332,23 @@ export default function VotingPage({
       console.error('투표 종료 실패:', err)
       alert('투표 종료에 실패했습니다.')
     }
+  }
+
+  // 추가 투표권 사용 (로컬에서만 용량 증가, 실제 차감 X)
+  const handleUseAdditionalVote = (voteId: number) => {
+    const currentUsed = userVoteCapacity[voteId] || 0
+
+    // 보유한 투표권보다 많이 사용할 수 없음
+    if (currentUsed >= additionalVoteItems) {
+      alert('추가 투표권이 부족합니다.')
+      return
+    }
+
+    // 로컬 상태에서만 용량 증가
+    setUserVoteCapacity(prev => ({
+      ...prev,
+      [voteId]: currentUsed + 1
+    }))
   }
 
   const handleDeleteVote = async (voteId: number) => {
@@ -455,28 +544,69 @@ export default function VotingPage({
                   {/* 옵션/투표 영역 */}
                   <div className="bg-white rounded-xl p-6 border border-orange-200 shadow-lg lg:col-span-7">
                     <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      {/* 좌측: 제목 + 추가 투표권 수 */}
+                      {/* 좌측: 제목 + 투표 정보 */}
                       <div className="flex items-center gap-3">
                         <h3 className="font-semibold text-gray-800 text-lg font-jua">투표 선택지</h3>
                         <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold font-jua">
                           내 투표 수 : {selectedVote ? getMyDraftUsed(selectedVote) : 0}
                         </span>
+                        {additionalVoteItems > 0 && (
+                          <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold font-jua">
+                            🎫 {additionalVoteItems}개 보유
+                          </span>
+                        )}
                       </div>
 
-                      {/* 우측: 추가 투표권 버튼 (confirm) */}
-                      <button
-                        onClick={() => {
-                          if (!selectedVote || isClosed(selectedVote)) return
-                          alert("투표는 아래 옵션의 +/- 버튼으로 조절한 뒤 '투표 확정'을 눌러주세요.\n\n한 번 확정된 투표는 재투표가 불가능합니다.")
-                        }}
-                        disabled={!selectedVote || isClosed(selectedVote)}
-                        className={`px-3 py-2 rounded-lg font-semibold
-                          ${!selectedVote || isClosed(selectedVote)
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : "bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700"}`}
-                      >
-                        <span className="font-jua">투표 가이드</span>
-                      </button>
+                      {/* 우측: 추가 투표권 영역 */}
+                      <div className="flex items-center gap-2">
+                        {/* 추가 투표권 사용 버튼 */}
+                        {selectedVote && !isClosed(selectedVote) && (
+                          <div className="flex items-center gap-2">
+                            {/* 보유 및 사용 예정 투표권 표시 */}
+                            <div className="text-sm text-gray-600 font-jua">
+                              보유: {additionalVoteItems}개
+                              {userVoteCapacity[selectedVote.id] > 0 && (
+                                <span className="text-orange-600 ml-1">
+                                  (사용 예정: {userVoteCapacity[selectedVote.id]}개)
+                                </span>
+                              )}
+                            </div>
+
+                            {/* 추가 투표권 사용 버튼 */}
+                            <button
+                              onClick={() => handleUseAdditionalVote(selectedVote.id)}
+                              disabled={(userVoteCapacity[selectedVote.id] || 0) >= additionalVoteItems}
+                              className={`px-3 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                                (userVoteCapacity[selectedVote.id] || 0) < additionalVoteItems
+                                  ? "bg-gradient-to-r from-green-400 to-green-600 text-white hover:from-green-500 hover:to-green-700"
+                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              }`}
+                            >
+                              <span className="font-jua">
+                                {(userVoteCapacity[selectedVote.id] || 0) < additionalVoteItems
+                                  ? "🎫 추가 투표권 +"
+                                  : "🎫 추가 투표권 없음"
+                                }
+                              </span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* 투표 가이드 버튼 */}
+                        <button
+                          onClick={() => {
+                            if (!selectedVote || isClosed(selectedVote)) return
+                            alert("투표는 아래 옵션의 +/- 버튼으로 조절한 뒤 '투표 확정'을 눌러주세요.\n\n한 번 확정된 투표는 재투표가 불가능합니다.")
+                          }}
+                          disabled={!selectedVote || isClosed(selectedVote)}
+                          className={`px-3 py-2 rounded-lg font-semibold
+                            ${!selectedVote || isClosed(selectedVote)
+                              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                              : "bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700"}`}
+                        >
+                          <span className="font-jua">투표 가이드</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -487,11 +617,11 @@ export default function VotingPage({
                         const myUsed = getMyDraftUsed(selectedVote)
                         const remaining = getMyDraftRemaining(selectedVote)
 
-                        const cap = getUserVoteCapacity(selectedVote)
-                        const perOptionCap = selectedVote.multiSelect ? 1 : cap
+                        const perOptionCap = getPerOptionCapacity(selectedVote, userVoteCapacity)
 
-                        // 단일 선택에서 이미 다른 옵션에 표가 있으면 분산 금지
-                        const splitBlocked = !selectedVote.multiSelect && cap === 1 && myUsed > 0 && myCount === 0
+                        // 단일 선택에서 추가 투표권이 없을 때만 분산 금지
+                        const hasAdditionalCapacity = (userVoteCapacity[selectedVote.id] || 0) > 0
+                        const splitBlocked = !selectedVote.multiSelect && !hasAdditionalCapacity && myUsed > 0 && myCount === 0
                         // 옵션당 상한 도달
                         const perOptionLimitReached = myCount >= perOptionCap
 
