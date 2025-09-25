@@ -210,7 +210,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   const isGlobal = currentChannel?.typeCode === "GLOBAL";
 
   // 사용자 정보
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
   const payload = token ? parseJwt(token) : null;
   const myUserId: number | null = payload?.userId
     ? Number(payload.userId)
@@ -249,7 +249,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
         setChannels(rooms); // rooms는 Channel[] 타입
 
         // 채널 목록을 불러온 후 자동 선택 확인
-        const autoSelectRoom = localStorage.getItem('autoSelectRoom');
+        const autoSelectRoom = sessionStorage.getItem('autoSelectRoom');
         if (autoSelectRoom === 'global') {
           // GLOBAL 채팅방을 찾아서 자동 선택
           const globalRoom = rooms.find(room => room.typeCode === 'GLOBAL');
@@ -257,7 +257,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             setSelectedChannel(globalRoom.id);
           }
           // 한 번 사용한 후 제거
-          localStorage.removeItem('autoSelectRoom');
+          sessionStorage.removeItem('autoSelectRoom');
         }
 
       } catch (err) {
@@ -283,7 +283,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
         // const WS_BASE = (location.protocol === "https:" ? "wss://" : "ws://") + (import.meta.env.VITE_API_HOST ?? "localhost:8080");
 
-        const token = localStorage.getItem("accessToken");
+        const token = sessionStorage.getItem("accessToken");
         const url = `${WS_BASE}/api/ws/chat?roomId=${selectedChannel}${
           token ? `&token=${encodeURIComponent(token)}` : ""
         }`;
