@@ -11,10 +11,12 @@ import com.udong.backend.fin.client.FinApiClient;
 import com.udong.backend.fin.dto.FinHeader;
 import com.udong.backend.fin.util.FinHeaderFactory;
 import com.udong.backend.global.config.AccountCrypto;
+import com.udong.backend.global.exception.PaymentPasswordException;
 import com.udong.backend.global.s3.S3Uploader;
 import com.udong.backend.users.entity.User;
 import com.github.f4b6a3.ulid.UlidCreator;
 import com.udong.backend.users.repository.UserRepository;
+import com.udong.backend.users.service.UserService;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -49,6 +51,7 @@ public class DutchpayService {
     private final S3Uploader s3Uploader;
     private final AccountCrypto accountCrypto;
     private final FinApiClient finApiClient; // 외부 API 호출용 (WebClient 감싼 클래스)
+    private final UserService userService;
 
     // 도메인별 프리픽스 (env 없으면 기본값 'dutchpay')
     @Value("${S3_PREFIX_DUTCHPAY:dutchpay}")
@@ -179,6 +182,17 @@ public class DutchpayService {
     }
 
     public PayResponse pay(Integer dutchpayId, Integer withdrawalUserId, PayRequest req) {
+
+        // 0) 결제 비밀번호 검증
+        if (req.getPaymentPassword() == null || req.getPaymentPassword().trim().isEmpty()) {
+            throw new PaymentPasswordException("결제 비밀번호를 입력해주세요.");
+        }
+
+        boolean isValidPassword = userService.validatePaymentPassword(withdrawalUserId, req.getPaymentPassword());
+        if (!isValidPassword) {
+            throw new PaymentPasswordException("결제 비밀번호가 올바르지 않습니다.");
+        }
+
         // 1) 정산 존재 확인
         Dutchpay dutchpay = dutchpayRepository.findById(dutchpayId)
                 .orElseThrow(() -> new IllegalArgumentException("정산 없음: " + dutchpayId));
