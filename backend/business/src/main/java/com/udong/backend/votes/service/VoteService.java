@@ -16,6 +16,8 @@ import com.udong.backend.votes.entity.VoteSelection;
 import com.udong.backend.votes.repository.VoteOptionRepository;
 import com.udong.backend.votes.repository.VoteRepository;
 import com.udong.backend.votes.repository.VoteSelectionRepository;
+import com.udong.backend.notification.dto.NotificationRequest;
+import com.udong.backend.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,7 @@ public class VoteService {
     private final UserRepository userRepository;
     private final ClubRepository clubRepository;
     private final EventRepository eventRepository;
+    private final NotificationService notificationService;
 
     /**
      * 동아리의 투표 목록 조회
@@ -209,6 +212,33 @@ public class VoteService {
 
         voteOptionRepository.saveAll(options);
         savedVote.getOptions().addAll(options);
+
+        // 투표 생성 알림 발송
+        try {
+            // 채팅방 멤버들의 ID 수집
+            List<Long> chatMemberIds = chatMemberRepository.findUserIdsByChatId(chatRoom.getId());
+
+            // 생성자는 알림 대상에서 제외 (본인이 만든 투표에 알림 받을 필요 없음)
+            chatMemberIds = chatMemberIds.stream()
+                    .filter(memberId -> !memberId.equals(currentUserId.longValue()))
+                    .collect(Collectors.toList());
+
+            if (!chatMemberIds.isEmpty()) {
+                NotificationRequest notificationRequest = NotificationRequest.builder()
+                        .payload("새로운 투표가 시작되었습니다: " + "["+savedVote.getTitle()+"]")
+                        .type("VOTE_OPEN")
+                        .targetId(savedVote.getId().longValue())
+                        .createdBy(currentUserId.longValue())
+                        .clubId(club.getId().longValue())
+                        .recipientUserIds(chatMemberIds)
+                        .build();
+
+                notificationService.createAndSendNotification(notificationRequest);
+            }
+        } catch (Exception e) {
+            // 알림 발송 실패는 투표 생성 자체를 실패시키지 않음 (로그만 기록)
+            System.err.println("투표 생성 알림 발송 실패: " + e.getMessage());
+        }
 
         // 생성자 정보
         User creator = userRepository.findById(currentUserId).orElse(null);
