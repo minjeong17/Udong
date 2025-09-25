@@ -21,5 +21,11 @@ public class ClubDtos {
 
     public record ClubListRes(Integer id, String name, String category, String description,
                               String codeUrl, Integer activeMascotId, String masUrl, String joinedAt, String myRole) {}
+
+    // 멤버 관리 페이지용 DTO - 초대코드와 복호화된 계좌번호 포함
+    public record ManagementInfoRes(String codeUrl, String accountNumber) {}
+
+    // 일일 접속 체크 결과 DTO
+    public record DailyAccessRes(boolean isFirstAccessToday, int pointsAwarded) {}
 }
 

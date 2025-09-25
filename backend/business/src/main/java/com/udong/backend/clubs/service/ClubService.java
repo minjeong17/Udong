@@ -11,6 +11,10 @@ import com.udong.backend.clubs.repository.MembershipRepository;
 import com.udong.backend.codes.entity.CodeDetail;
 import com.udong.backend.codes.repository.CodeDetailRepository;
 import com.udong.backend.global.config.AccountCrypto;
+import com.udong.backend.shop.entity.ClubPointsLedger;
+import com.udong.backend.shop.repository.ClubPointsLedgerRepository;
+import com.udong.backend.shop.entity.UserPointLedger;
+import com.udong.backend.shop.repository.PointRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +34,8 @@ public class ClubService {
     private final MembershipRepository membershipRepository;
     private final MascotService mascotService;
     private final ChatRoomService chatRoomService;
+    private final ClubPointsLedgerRepository clubPointsLedgerRepository;
+    private final PointRepository pointRepository;
 
     private final String GLOBAL_CODE = "GLOBAL";
     private final String GLOBAL_CHATROOM_NAME = "전체 채팅방";
@@ -69,6 +75,9 @@ public class ClubService {
         );
 
         mascotService.reroll(saved.getId(),new MascotCreateReq(saved.getCategory(), null));
+
+        // ClubPointsLedger 초기화
+        clubPointsLedgerRepository.save(ClubPointsLedger.createZero(saved.getId().longValue()));
 
         chatRoomService.create(saved.getLeaderUserId(),new CreateRoomRequest(GLOBAL_CODE,saved.getId(),GLOBAL_CHATROOM_NAME));
         return saved;
@@ -124,6 +133,14 @@ public class ClubService {
         if (c.getAccountCipher() == null || c.getAccountCipher().isBlank()) return null;
         String plain = accountCrypto.decrypt(c.getAccountCipher());
         return accountCrypto.mask(plain);
+    }
+
+    // ✅ 관리용: 복호화된 계좌번호 반환 (민감정보 - 권한 체크 필요)
+    @Transactional(readOnly = true)
+    public String getDecryptedAccount(Integer clubId) {
+        Club c = get(clubId);
+        if (c.getAccountCipher() == null || c.getAccountCipher().isBlank()) return null;
+        return accountCrypto.decrypt(c.getAccountCipher());
     }
 
     private final MembershipRepository memberships;
@@ -192,6 +209,60 @@ public class ClubService {
                     );
                 })
                 .toList();
+    }
+
+    @Transactional
+    public ClubDtos.DailyAccessRes trackDashboardAccess(Integer clubId, Integer userId) {
+        // 1. 멤버십 조회
+        Membership membership = membershipRepository.findByClub_IdAndUserId(clubId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 동아리의 멤버가 아닙니다."));
+
+        // 2. 오늘 첫 접속인지 확인
+        boolean isFirstAccessToday = !membership.isAccessedToday();
+        int pointsAwarded = 0;
+
+        // 3. 첫 접속이면 포인트 지급 (10포인트)
+        if (isFirstAccessToday) {
+            pointsAwarded = 100;
+            addDailyAccessPoints(clubId, userId, pointsAwarded, "일일 출석 보상");
+        }
+
+        // 4. 접속 시간 업데이트
+        membership.updateLastAccessedAt();
+        membershipRepository.save(membership);
+
+        return new ClubDtos.DailyAccessRes(isFirstAccessToday, pointsAwarded);
+    }
+
+    private void addDailyAccessPoints(Integer clubId, Integer userId, int points, String memo) {
+        // 1. 현재 포인트 조회
+        Integer currPoint = pointRepository.findTopByUserIdAndClubIdOrderByCreatedAtDesc(userId, clubId)
+                .map(UserPointLedger::getCurrPoint)
+                .orElse(0);
+
+        int newPoint = currPoint + points;
+
+        // 2. 유저 포인트 로그 생성
+        UserPointLedger ledger = UserPointLedger.builder()
+                .userId(userId)
+                .clubId(clubId)
+                .delta(points)
+                .currPoint(newPoint)
+                .codeName("ATTEND")
+                .memo(memo)
+                .build();
+
+        pointRepository.save(ledger);
+
+        // 3. 동아리 포인트도 함께 증가
+        ClubPointsLedger clubPointsLedger = clubPointsLedgerRepository.findByClubId(clubId.longValue())
+                .orElseGet(() -> {
+                    ClubPointsLedger newClubLedger = ClubPointsLedger.createZero(clubId.longValue());
+                    return clubPointsLedgerRepository.save(newClubLedger);
+                });
+
+        clubPointsLedger.addPoints(points);
+        clubPointsLedgerRepository.save(clubPointsLedger);
     }
 
     public static String toIsoKST(java.time.LocalDateTime dt) {

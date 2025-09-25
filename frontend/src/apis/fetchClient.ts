@@ -60,7 +60,10 @@ class TokenManager {
 
         // 로그인 페이지로 리다이렉트 (필요시)
         if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
-          console.warn('토큰 갱신 실패 - 다시 로그인해주세요');
+          alert('로그인 세션이 만료되었습니다!\n다시 로그인 해주세요!');
+          // 로컬스토리지도 완전히 정리
+          localStorage.clear();
+          window.location.href = '/login';
         }
 
         return null;
@@ -70,6 +73,14 @@ class TokenManager {
       this.removeAccessToken();
       this.refreshSubscribers.forEach(callback => callback(null));
       this.refreshSubscribers = [];
+
+      // 토큰 갱신 실패 시 로그인 페이지로 리다이렉트
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+        alert('로그인 세션이 만료되었습니다!\n다시 로그인 해주세요!');
+        localStorage.clear();
+        window.location.href = '/login';
+      }
+
       return null;
     } finally {
       this.isRefreshing = false;
@@ -153,6 +164,23 @@ const fetchClient = async <T>(url: string, options: FetchOptions = {}): Promise<
   }
   if (!res.ok) {
     const responseText = await res.text().catch(() => "");
+
+    // JSON 응답에서 data 필드 추출 시도
+    try {
+      const errorResponse = JSON.parse(responseText);
+      if (errorResponse && errorResponse.data) {
+        const error = new Error(errorResponse.data);
+        (error as any).responseText = responseText;
+        throw error;
+      }
+    } catch (parseError) {
+      // parseError가 Error 객체이고 이미 만든 에러라면 그대로 던지기
+      if (parseError instanceof Error && parseError.message !== responseText) {
+        throw parseError;
+      }
+      // JSON 파싱 실패 시 원본 텍스트 사용
+    }
+
     const error = new Error(responseText || `HTTP_${res.status}`);
     (error as any).responseText = responseText;
     throw error;

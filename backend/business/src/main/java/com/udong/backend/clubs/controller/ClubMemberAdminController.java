@@ -29,6 +29,16 @@ public class ClubMemberAdminController {
         return ResponseEntity.ok(ApiResponse.ok(rows));
     }
 
+    @GetMapping("/management")
+    public ResponseEntity<ApiResponse<List<MemberDtos.ManagementRow>>> listForManagement(
+            @PathVariable Long clubId,
+            @RequestParam(required=false) String q,
+            @RequestParam(required=false) String role) {
+        Integer uid = securityUtils.currentUserId();
+        List<MemberDtos.ManagementRow> rows = members.listForManagement(clubId, uid, q, role);
+        return ResponseEntity.ok(ApiResponse.ok(rows));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<Page<MemberDtos.Row>>> list(@PathVariable Long clubId,
                                                   @RequestParam(defaultValue="0") int page,

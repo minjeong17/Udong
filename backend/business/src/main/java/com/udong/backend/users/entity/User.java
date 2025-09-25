@@ -32,6 +32,10 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 60)
     private String passwordHash;
 
+    // 결제용 2차 비밀번호 (BCrypt 해시, 60자)
+    @Column(name = "payment_password_hash", nullable = false, length = 60)
+    private String paymentPasswordHash;
+
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
@@ -96,6 +100,16 @@ public class User {
     public void updateAccount(String accountCipher, short accountKeyVer) {
         this.accountCipher = accountCipher;
         this.accountKeyVer = accountKeyVer;
+    }
+
+    // 결제 비밀번호 설정 여부 확인
+    public boolean hasPaymentPassword() {
+        return paymentPasswordHash != null && !paymentPasswordHash.trim().isEmpty();
+    }
+
+    // 결제 비밀번호 설정
+    public void setPaymentPassword(String paymentPasswordHash) {
+        this.paymentPasswordHash = paymentPasswordHash;
     }
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)

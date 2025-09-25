@@ -58,6 +58,24 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
     }
   };
 
+  // 카테고리 매핑
+  const categories = [
+    { value: "sports", label: "운동/스포츠" },
+    { value: "hobby", label: "취미/여가" },
+    { value: "study", label: "학습/스터디" },
+    { value: "volunteer", label: "봉사/사회활동" },
+    { value: "culture", label: "문화/예술" },
+    { value: "technology", label: "기술/IT" },
+    { value: "language", label: "언어/외국어" },
+    { value: "other", label: "기타" },
+  ];
+
+  // 카테고리 변환 함수
+  const getCategoryLabel = (categoryValue: string): string => {
+    const category = categories.find(cat => cat.value === categoryValue);
+    return category ? category.label : categoryValue;
+  };
+
   // 내가 가입한 동아리 목록 불러오기
   const fetchMyClubs = async () => {
     try {
@@ -278,7 +296,7 @@ const ClubList: React.FC<ClubListProps> = ({ onNavigateToOnboarding, onNavigateT
                         <div className="flex items-center gap-3 mb-2">
                           <h1 className="text-3xl font-semibold text-gray-700 font-jua">{selectedClub.name}</h1>
                           <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-gowun">
-                            {selectedClub.category}
+                            {getCategoryLabel(selectedClub.category)}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-gray-500 font-gowun">
