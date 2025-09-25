@@ -520,9 +520,66 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
-                  <span>✨</span>
-                  <span>{loading ? "생성 중..." : "MT 계획 생성"}</span>
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                        ></path>
+                      </svg>
+                      <span>생성 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>✨</span>
+                      <span>MT 계획 생성</span>
+                    </>
+                  )}
                 </button>
+                {loading && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-[60]">
+                    <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center">
+                      <svg
+                        className="animate-spin h-10 w-10 text-orange-500 mb-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                        ></path>
+                      </svg>
+                      <p className="text-gray-700 font-jua text-lg">
+                        AI가 MT 계획을 준비 중입니다...
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </form>
           </div>
