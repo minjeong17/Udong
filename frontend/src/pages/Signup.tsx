@@ -276,9 +276,12 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 type="text"
                 name="account"
                 value={formData.account}
-                onChange={handleInputChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+                  setFormData(prev => ({ ...prev, account: value }));
+                }}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="예시 형식) 10002000300045"
+                placeholder="예시 형식) 10002000300045 (숫자만 입력)"
                 required
               />
             </div>
@@ -309,7 +312,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
               />
             </div>
 
-            {/* Residence */}
+            {/* Residence (Optional) */}
             <div>
               <label className="block text-gray-600 text-sm mb-2 font-gowun">거주지 (선택)</label>
               <input
@@ -324,14 +327,18 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
 
             {/* Phone */}
             <div>
-              <label className="block text-gray-600 text-sm mb-2 font-gowun">연락처 (선택)</label>
+              <label className="block text-gray-600 text-sm mb-2 font-gowun">연락처</label>
               <input
-                type="tel"
+                type="text"
                 name="phone"
                 value={formData.phone}
-                onChange={handleInputChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+                  setFormData(prev => ({ ...prev, phone: value }));
+                }}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="예시 형식) 010-1234-8888"
+                placeholder="예시 형식) 01012345678 (숫자만 입력)"
+                maxLength={11}
                 required
               />
             </div>
