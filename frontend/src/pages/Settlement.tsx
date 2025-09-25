@@ -497,10 +497,7 @@ export default function SettlementPage({
                                     </div>
                                     <div className="flex items-center gap-3">
                                       <span className="text-sm text-gray-600 font-gowun">
-                                        {selectedSettlementData.amount /
-                                          selectedSettlementData.participants
-                                            .length}{" "}
-                                        원
+                                        {selectedSettlementData.payAmount} 원
                                       </span>
                                       <span
                                         className={`px-3 py-1 rounded-full text-sm font-semibold font-gowun ${
@@ -544,9 +541,7 @@ export default function SettlementPage({
                                   {selectedSettlementData.participants.filter(
                                     (p) => p.isPaid
                                   ).length *
-                                    (selectedSettlementData.amount /
-                                      selectedSettlementData.participants
-                                        .length)}{" "}
+                                    (selectedSettlementData.payAmount ?? 1)}
                                   원
                                 </span>
                               </div>
