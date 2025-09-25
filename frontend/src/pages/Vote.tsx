@@ -96,8 +96,22 @@ export default function VotingPage({
           totalVotes: 0, // 임시값
           options: [] // 리스트에서는 옵션 없음
         })))
-        if (voteList.length > 0 && !selectedVoteId) {
-          setSelectedVoteId(voteList[0].id)
+        if (voteList.length > 0) {
+          // 자동 선택할 투표가 있는지 확인
+          const autoSelectVoteId = localStorage.getItem('autoSelectVote');
+          if (autoSelectVoteId) {
+            const targetVoteId = parseInt(autoSelectVoteId);
+            const targetVote = voteList.find(vote => vote.id === targetVoteId);
+            if (targetVote) {
+              setSelectedVoteId(targetVoteId);
+              // 한 번 사용한 후 제거
+              localStorage.removeItem('autoSelectVote');
+            } else {
+              setSelectedVoteId(voteList[0].id);
+            }
+          } else if (!selectedVoteId) {
+            setSelectedVoteId(voteList[0].id);
+          }
         }
       } catch (err) {
         console.error('투표 로드 실패:', err)
@@ -173,7 +187,7 @@ export default function VotingPage({
     if (selectedVoteId != null && !visibleVotes.some((v) => v.id === selectedVoteId)) {
       setSelectedVoteId(visibleVotes[0]?.id ?? null)
     }
-  }, [showClosed, votes, selectedVoteId, visibleVotes])
+  }, [showClosed])
 
   // 선택된 투표의 “초안” 초기화 (selectedPoll 바뀔 때 1회)
   useEffect(() => {

@@ -257,7 +257,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             setSelectedChannel(globalRoom.id);
           }
           // 한 번 사용한 후 제거
-          sessionStorage.removeItem('autoSelectRoom');
+          localStorage.removeItem('autoSelectRoom');
         }
 
         // 🔸 추가: Calendar에서 저장한 focusChatId 우선 선택

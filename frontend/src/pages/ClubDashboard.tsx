@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
 import MascotChangeModal from '../components/MascotChangeModal';
 import DuesPaymentModal from '../components/DuesPaymentModal';
+import UnpaidDuesModal from '../components/UnpaidDuesModal';
 import { useRouter } from '../hooks/useRouter';
 import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
@@ -50,6 +51,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showMascotModal, setShowMascotModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showUnpaidDuesModal, setShowUnpaidDuesModal] = useState(false);
   const [selectedDues, setSelectedDues] = useState<MyUnpaidDuesItem | null>(null);
   const [currentMascotId, setCurrentMascotId] = useState(1);
 
@@ -180,6 +182,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   // 회비 칸 클릭 핸들러
   const handleDuesClick = (dues: MyUnpaidDuesItem) => {
     setSelectedDues(dues);
+    setShowUnpaidDuesModal(false); // 미납 회비 모달 닫기
     setShowPaymentModal(true);
   };
 
@@ -399,9 +402,12 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                     </button>
                   ))}
                   {unpaidDues.unpaidDuesList.length > 2 && (
-                    <div className="text-xs text-gray-500 font-jua text-center">
+                    <button
+                      onClick={() => setShowUnpaidDuesModal(true)}
+                      className="text-xs text-gray-500 hover:text-gray-700 font-jua text-center hover:underline cursor-pointer transition-colors"
+                    >
                       외 {unpaidDues.unpaidDuesList.length - 2}건
-                    </div>
+                    </button>
                   )}
                 </div>
               </div>
@@ -419,15 +425,18 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             )}
 
             {/* 진행 중인 정산 - 좌하단, 겹치도록 가깝게 */}
-            <div className="absolute bottom-0 left-48 bg-pink-50 rounded-full shadow-xl border border-pink-200 w-[17rem] h-[17rem] flex flex-col items-center justify-center">
+            <div
+              className="absolute bottom-0 left-48 bg-pink-50 rounded-full shadow-xl border border-pink-200 w-[17rem] h-[17rem] flex flex-col items-center justify-center cursor-pointer hover:bg-pink-100 transition-colors"
+              onClick={() => navigate('settlement')}
+            >
               <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-pink-600 text-lg">💸</span>
               </div>
               <h3 className="text-base font-bold text-gray-700 font-jua mb-2">진행 중인 정산</h3>
-              <div className="space-y-2 text-center max-h-24 overflow-y-auto">
+              <div className="space-y-2 text-center">
                 {dutchpayList.length > 0 ? (
                   <>
-                    {dutchpayList.slice(0, 3).map((dutchpay) => (
+                    {dutchpayList.slice(0, 2).map((dutchpay) => (
                       <div key={dutchpay.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
                         <span className="text-sm text-gray-600 font-jua truncate block" title={dutchpay.eventTitle}>
                           {dutchpay.eventTitle.length > 12 ? `${dutchpay.eventTitle.slice(0, 12)}...` : dutchpay.eventTitle}
@@ -437,6 +446,11 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                         </span>
                       </div>
                     ))}
+                    {dutchpayList.length > 2 && (
+                      <div className="text-xs text-gray-500 font-jua text-center">
+                        외 {dutchpayList.length - 2}개
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
@@ -446,27 +460,43 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
               </div>
               <div className="mt-2">
                 <span className="text-pink-500 text-sm font-jua">
-                  {dutchpayList.length}개 활성
+                  {dutchpayList.length}개 진행중
                 </span>
               </div>
             </div>
 
             {/* 진행 중인 투표 - 우상단, 겹치도록 가깝게 */}
-            <div className="absolute top-8 right-56 bg-purple-50 rounded-full shadow-xl border border-purple-200 w-64 h-64 flex flex-col items-center justify-center">
+            <div
+              className="absolute top-8 right-56 bg-purple-50 rounded-full shadow-xl border border-purple-200 w-64 h-64 flex flex-col items-center justify-center cursor-pointer hover:bg-purple-100 transition-colors"
+              onClick={() => navigate('vote')}
+            >
               <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-purple-600 text-lg">📊</span>
               </div>
               <h3 className="text-base font-bold text-gray-700 font-jua mb-2">진행 중인 투표</h3>
-              <div className="space-y-2 text-center max-h-24 overflow-y-auto">
+              <div className="space-y-2 text-center">
                 {voteList.filter(vote => vote.isActive && !vote.isExpired).length > 0 ? (
                   <>
-                    {voteList.filter(vote => vote.isActive && !vote.isExpired).slice(0, 3).map((vote) => (
-                      <div key={vote.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-purple-100">
+                    {voteList.filter(vote => vote.isActive && !vote.isExpired).slice(0, 2).map((vote) => (
+                      <div
+                        key={vote.id}
+                        className="bg-white rounded-lg px-3 py-1 shadow-sm border border-purple-100 hover:bg-purple-50 hover:border-purple-200 cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation(); // 부모 카드 클릭 이벤트 방지
+                          localStorage.setItem('autoSelectVote', vote.id.toString());
+                          navigate('vote');
+                        }}
+                      >
                         <span className="text-sm text-gray-600 font-jua truncate block" title={vote.title}>
                           {vote.title.length > 15 ? `${vote.title.slice(0, 15)}...` : vote.title}
                         </span>
                       </div>
                     ))}
+                    {voteList.filter(vote => vote.isActive && !vote.isExpired).length > 2 && (
+                      <div className="text-xs text-gray-500 font-jua text-center">
+                        외 {voteList.filter(vote => vote.isActive && !vote.isExpired).length - 2}개
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-purple-100">
@@ -482,15 +512,18 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
             </div>
 
             {/* 진행 중인 모임 - 우하단, 겹치도록 가깝게 */}
-            <div className="absolute bottom-0 right-48 bg-green-50 rounded-full shadow-xl border border-green-200 w-[17rem] h-[17rem] flex flex-col items-center justify-center">
+            <div
+              className="absolute bottom-0 right-48 bg-green-50 rounded-full shadow-xl border border-green-200 w-[17rem] h-[17rem] flex flex-col items-center justify-center cursor-pointer hover:bg-green-100 transition-colors"
+              onClick={() => navigate('calendar')}
+            >
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
                 <span className="text-green-600 text-lg">👥</span>
               </div>
               <h3 className="text-base font-bold text-gray-700 font-jua mb-2">진행 중인 모임</h3>
-              <div className="space-y-2 text-center max-h-24 overflow-y-auto">
+              <div className="space-y-2 text-center">
                 {ongoingEvents.length > 0 ? (
                   <>
-                    {ongoingEvents.slice(0, 3).map((event) => (
+                    {ongoingEvents.slice(0, 2).map((event) => (
                       <div key={event.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
                         <span className="text-sm text-gray-600 font-jua truncate block" title={event.title}>
                           {event.title.length > 12 ? `${event.title.slice(0, 12)}...` : event.title}
@@ -500,6 +533,11 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                         </span>
                       </div>
                     ))}
+                    {ongoingEvents.length > 2 && (
+                      <div className="text-xs text-gray-500 font-jua text-center">
+                        외 {ongoingEvents.length - 2}개
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
@@ -509,7 +547,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
               </div>
               <div className="mt-2">
                 <span className="text-green-500 text-sm font-jua">
-                  {ongoingEvents.length}개 활성
+                  {ongoingEvents.length}개 진행중
                 </span>
               </div>
             </div>
@@ -542,6 +580,14 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
           duesInfo={selectedDues}
         />
       )}
+
+      {/* 미납 회비 전체 목록 모달 */}
+      <UnpaidDuesModal
+        isOpen={showUnpaidDuesModal}
+        onClose={() => setShowUnpaidDuesModal(false)}
+        unpaidDues={unpaidDues}
+        onDuesClick={handleDuesClick}
+      />
     </div>
   );
 };
