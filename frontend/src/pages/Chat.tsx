@@ -249,7 +249,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
         setChannels(rooms); // rooms는 Channel[] 타입
 
         // 채널 목록을 불러온 후 자동 선택 확인
-        const autoSelectRoom = sessionStorage.getItem('autoSelectRoom');
+        const autoSelectRoom = localStorage.getItem('autoSelectRoom');
         if (autoSelectRoom === 'global') {
           // GLOBAL 채팅방을 찾아서 자동 선택
           const globalRoom = rooms.find(room => room.typeCode === 'GLOBAL');
