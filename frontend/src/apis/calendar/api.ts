@@ -89,6 +89,13 @@ export const CalendarApi = {
     return unwrap<EventListItemRes[]>(raw);
   },
 
+  // 진행 중인 모임 조회
+  async getOngoing(clubId: number): Promise<EventListItemRes[]> {
+    const url = withBase(`/clubs/${clubId}/events/ongoing`);
+    const raw = await fetchClient<any>(url, { method: 'GET' });
+    return unwrap<EventListItemRes[]>(raw);
+  },
+
   // 생성
   async create(clubId: number, body: EventCreateReq): Promise<EventRes> {
     const url = withBase(`/clubs/${clubId}/events`);

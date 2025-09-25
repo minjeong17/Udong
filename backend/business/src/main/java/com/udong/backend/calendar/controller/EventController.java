@@ -76,6 +76,12 @@ public class EventController {
         return ApiResponse.ok(service.getUpcoming(clubId, base, limit));
     }
 
+    // 진행 중인 모임 조회: 현재 시간이 startAt과 endAt 사이인 이벤트들
+    @GetMapping("/ongoing")
+    public ApiResponse<List<EventListItemRes>> ongoing(@PathVariable Long clubId) {
+        return ApiResponse.ok(service.getOngoing(clubId));
+    }
+
     @GetMapping("/{eventId}")
     public ApiResponse<EventRes> getOne(@PathVariable Long clubId,
                                         @PathVariable Long eventId) {

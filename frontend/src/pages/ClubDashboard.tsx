@@ -8,8 +8,14 @@ import { useAuthStore } from '../stores/authStore';
 import { ClubApi } from '../apis/clubs';
 import { ClubDuesApi } from '../apis/clubdues';
 import { PointsApi } from '../apis/points';
+import { VoteApi } from '../apis/vote';
+import { DutchpayApi } from '../apis/dutchpay';
+import { CalendarApi } from '../apis/calendar';
 import type { ClubCreateResponse, MascotResponse } from '../apis/clubs/response';
 import type { MyUnpaidDuesResponse, MyUnpaidDuesItem } from '../apis/clubdues/response';
+import type { VoteListResponse } from '../apis/vote';
+import type { DutchpayListResponse } from '../apis/dutchpay';
+import type { EventListItemRes } from '../apis/calendar';
 
 interface ClubDashboardProps {
   onNavigateToOnboarding: () => void;
@@ -51,6 +57,9 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
   const [mascotInfo, setMascotInfo] = useState<MascotResponse | null>(null);
   const [unpaidDues, setUnpaidDues] = useState<MyUnpaidDuesResponse | null>(null);
   const [clubPoints, setClubPoints] = useState<number>(0);
+  const [voteList, setVoteList] = useState<VoteListResponse[]>([]);
+  const [dutchpayList, setDutchpayList] = useState<DutchpayListResponse[]>([]);
+  const [ongoingEvents, setOngoingEvents] = useState<EventListItemRes[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // 동아리 정보와 마스코트 정보 가져오기
@@ -77,6 +86,45 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
         setClubInfo(clubData);
         setMascotInfo(mascotData);
         setClubPoints(clubPointsData);
+
+        // 투표 목록 정보는 별도로 가져오기 (실패해도 다른 데이터에 영향 없음)
+        try {
+          const voteData = await VoteApi.getVoteListByClub(clubId);
+          setVoteList(voteData || []);
+        } catch (error) {
+          console.error('Failed to fetch vote list:', error);
+          // 투표 목록 조회 실패 시 빈 목록으로 설정
+          setVoteList([]);
+        }
+
+        // 정산 목록 정보는 별도로 가져오기 (실패해도 다른 데이터에 영향 없음)
+        try {
+          const dutchpayData = await DutchpayApi.getMyDutchpays(clubId);
+          // 진행 중인 정산만 필터링하고 중복 제거
+          const ongoingDutchpays = (dutchpayData || [])
+            .filter(dutchpay => !dutchpay.isDone)
+            .filter((dutchpay, index, self) =>
+              index === self.findIndex(d => d.id === dutchpay.id)
+            );
+          setDutchpayList(ongoingDutchpays);
+
+          console.log('Ongoing dutchpays:', ongoingDutchpays); // 디버깅용
+        } catch (error) {
+          console.error('Failed to fetch dutchpay list:', error);
+          // 정산 목록 조회 실패 시 빈 목록으로 설정
+          setDutchpayList([]);
+        }
+
+        // 진행 중인 모임 정보는 별도로 가져오기 (실패해도 다른 데이터에 영향 없음)
+        try {
+          const eventsData = await CalendarApi.getOngoing(clubId);
+          setOngoingEvents(eventsData || []);
+          console.log('Ongoing events:', eventsData); // 디버깅용
+        } catch (error) {
+          console.error('Failed to fetch ongoing events:', error);
+          // 진행 중인 모임 조회 실패 시 빈 목록으로 설정
+          setOngoingEvents([]);
+        }
 
         // 미납 회비 정보는 별도로 가져오기 (실패해도 다른 데이터에 영향 없음)
         try {
@@ -376,19 +424,30 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 <span className="text-pink-600 text-lg">💸</span>
               </div>
               <h3 className="text-base font-bold text-gray-700 font-jua mb-2">진행 중인 정산</h3>
-              <div className="space-y-2 text-center">
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
-                  <span className="text-sm text-gray-600 font-jua">정기 회식 정산</span>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
-                  <span className="text-sm text-gray-600 font-jua">MT 정산</span>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
-                  <span className="text-sm text-gray-600 font-jua">번개 모임 정산</span>
-                </div>
+              <div className="space-y-2 text-center max-h-24 overflow-y-auto">
+                {dutchpayList.length > 0 ? (
+                  <>
+                    {dutchpayList.slice(0, 3).map((dutchpay) => (
+                      <div key={dutchpay.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
+                        <span className="text-sm text-gray-600 font-jua truncate block" title={dutchpay.eventTitle}>
+                          {dutchpay.eventTitle.length > 12 ? `${dutchpay.eventTitle.slice(0, 12)}...` : dutchpay.eventTitle}
+                        </span>
+                        <span className="text-xs text-gray-400 font-jua block">
+                          {dutchpay.amount.toLocaleString()}원 · {dutchpay.participantCount}명
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
+                    <span className="text-sm text-gray-400 font-jua">진행 중인 정산이 없습니다</span>
+                  </div>
+                )}
               </div>
               <div className="mt-2">
-                <span className="text-pink-500 text-sm font-jua">3개 활성</span>
+                <span className="text-pink-500 text-sm font-jua">
+                  {dutchpayList.length}개 활성
+                </span>
               </div>
             </div>
 
@@ -398,16 +457,27 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 <span className="text-purple-600 text-lg">📊</span>
               </div>
               <h3 className="text-base font-bold text-gray-700 font-jua mb-2">진행 중인 투표</h3>
-              <div className="space-y-2 text-center">
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-purple-100">
-                  <span className="text-sm text-gray-600 font-jua">스터디 주제</span>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-purple-100">
-                  <span className="text-sm text-gray-600 font-jua">모임 장소 선정</span>
-                </div>
+              <div className="space-y-2 text-center max-h-24 overflow-y-auto">
+                {voteList.filter(vote => vote.isActive && !vote.isExpired).length > 0 ? (
+                  <>
+                    {voteList.filter(vote => vote.isActive && !vote.isExpired).slice(0, 3).map((vote) => (
+                      <div key={vote.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-purple-100">
+                        <span className="text-sm text-gray-600 font-jua truncate block" title={vote.title}>
+                          {vote.title.length > 15 ? `${vote.title.slice(0, 15)}...` : vote.title}
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-purple-100">
+                    <span className="text-sm text-gray-400 font-jua">진행 중인 투표가 없습니다</span>
+                  </div>
+                )}
               </div>
               <div className="mt-2">
-                <span className="text-purple-500 text-sm font-jua">2개 진행중</span>
+                <span className="text-purple-500 text-sm font-jua">
+                  {voteList.filter(vote => vote.isActive && !vote.isExpired).length}개 진행중
+                </span>
               </div>
             </div>
 
@@ -417,19 +487,30 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 <span className="text-green-600 text-lg">👥</span>
               </div>
               <h3 className="text-base font-bold text-gray-700 font-jua mb-2">진행 중인 모임</h3>
-              <div className="space-y-2 text-center">
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
-                  <span className="text-sm text-gray-600 font-jua">프로젝트팀</span>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
-                  <span className="text-sm text-gray-600 font-jua">카페 모임</span>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
-                  <span className="text-sm text-gray-600 font-jua">알고리즘 스터디</span>
-                </div>
+              <div className="space-y-2 text-center max-h-24 overflow-y-auto">
+                {ongoingEvents.length > 0 ? (
+                  <>
+                    {ongoingEvents.slice(0, 3).map((event) => (
+                      <div key={event.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
+                        <span className="text-sm text-gray-600 font-jua truncate block" title={event.title}>
+                          {event.title.length > 12 ? `${event.title.slice(0, 12)}...` : event.title}
+                        </span>
+                        <span className="text-xs text-gray-400 font-jua block">
+                          {event.place && event.place.length > 8 ? `${event.place.slice(0, 8)}...` : event.place || '장소 미정'}
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
+                    <span className="text-sm text-gray-400 font-jua">진행 중인 모임이 없습니다</span>
+                  </div>
+                )}
               </div>
               <div className="mt-2">
-                <span className="text-green-500 text-sm font-jua">3개 활성</span>
+                <span className="text-green-500 text-sm font-jua">
+                  {ongoingEvents.length}개 활성
+                </span>
               </div>
             </div>
           </div>

@@ -24,7 +24,8 @@ export interface DutchpayDetailResponse {
   createdAt: string;  // LocalDateTime을 string으로 변환하여 처리
   createdBy: string;  // User.name
   createdUserId: number;
-  isDone: boolean;
+  done: boolean;
+  isDone?: boolean;
   s3Key: string;
   imageUrl: string;
   event: {

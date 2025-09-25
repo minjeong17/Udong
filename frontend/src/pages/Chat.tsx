@@ -60,13 +60,13 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   );
 
   // 더미 멤버(초기 선택값)
-  const chatMembers = [
-    { id: "1", name: "김민수", avatar: "KM" },
-    { id: "2", name: "이지은", avatar: "LJ" },
-    { id: "3", name: "박준호", avatar: "PJ" },
-    { id: "4", name: "최유진", avatar: "CY" },
-    { id: "5", name: "나", avatar: "ME" },
-  ];
+  // const chatMembers = [
+  //   { id: "1", name: "김민수", avatar: "KM" },
+  //   { id: "2", name: "이지은", avatar: "LJ" },
+  //   { id: "3", name: "박준호", avatar: "PJ" },
+  //   { id: "4", name: "최유진", avatar: "CY" },
+  //   { id: "5", name: "나", avatar: "ME" },
+  // ];
 
   // 옵션 조작
   const addOption = () => setOptions([...options, ""]);
@@ -231,10 +231,10 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   }, [chatMessages]);
 
   // 초기 선택 기본값
-  useEffect(() => {
-    setSelectedMembers(chatMembers.map((m) => m.id));
-    setSettlementParticipants(chatMembers.map((m) => m.id));
-  }, []);
+  // useEffect(() => {
+  //   setSelectedMembers(chatMembers.map((m) => m.id));
+  //   setSettlementParticipants(chatMembers.map((m) => m.id));
+  // }, []);
 
   // 채널 목록 로드
   useEffect(() => {
@@ -548,7 +548,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   // 모달 조작
   const handleCancelMemberCheck = () => {
     setShowMemberCheckModal(false);
-    setSelectedMembers(chatMembers.map((m) => m.id));
+    // setSelectedMembers(chatMembers.map((m) => m.id));
   };
   const handleSettlementParticipantToggle = (memberId: string) => {
     setSettlementParticipants((prev) =>
@@ -768,9 +768,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                         >
                           {/* 왼쪽 아바타는 상대 글일 때만 */}
                           {!msg.isOwn && (
-                            <div
-                              className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-sm font-semibold text-white rounded-full bg-gradient-to-br from-orange-400 to-orange-600"
-                            >
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-sm font-semibold text-white rounded-full bg-gradient-to-br from-orange-400 to-orange-600">
                               {twoLetters(msg.user)}
                             </div>
                           )}
@@ -1084,6 +1082,18 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     )}
                   </p>
                 </div>
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-semibold text-gray-700 font-jua">
+                  메모
+                </label>
+                <textarea
+                  value={settlementMemo}
+                  onChange={(e) => setSettlementMemo(e.target.value)}
+                  className="w-full px-4 py-3 transition-colors border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-400"
+                  placeholder="메모를 작성하세요"
+                  rows={4}
+                />
               </div>
 
               {settlementAmount && settlementParticipants.length > 0 && (
