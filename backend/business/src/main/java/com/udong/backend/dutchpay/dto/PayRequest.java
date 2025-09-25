@@ -14,5 +14,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PayRequest {
     private Integer depositUserId; // 입금 받을 사람
-    private long amount;           // 이체 금액
+    private long amount; // 이체 금액
+    private String paymentPassword;
 }

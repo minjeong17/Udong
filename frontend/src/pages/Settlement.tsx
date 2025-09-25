@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import NotificationModal from "../components/NotificationModal";
-import {
-  DutchpayApi,
-  type DutchpayListResponse,
-  type PayRequest,
-} from "../apis/dutchpay";
+import { DutchpayApi, type DutchpayListResponse } from "../apis/dutchpay";
 import { useAuthStore } from "../stores/authStore";
+import PayPasswordModal from "../components/PayPasswordModal";
 
 // 참여자(결제 현황) 타입: id는 number, isPaid 필수
 export type ParticipantPayment = {
@@ -26,6 +23,7 @@ export type DutchpayDetailResponse = {
   isDone?: boolean;
   s3Key: string;
   imageUrl: string;
+  payAmount?: number;
   event: {
     id: number;
     title: string;
@@ -94,6 +92,9 @@ export default function SettlementPage({
             name: p.name,
             isPaid: (p as any).isPaid ?? (p as any).paid ?? false,
           })),
+          payAmount: Math.ceil(
+            fetchedSettlement.amount / fetchedSettlement.participants.length
+          ),
         };
         console.log(normalized);
 
@@ -121,42 +122,7 @@ export default function SettlementPage({
     fetchSettlementDetails();
   }, [selectedSettlement]);
 
-  const handlePayment = async (settlementId: number) => {
-    try {
-      if (!selectedSettlementData) {
-        alert("정산 데이터를 찾을 수 없습니다.");
-        return;
-      }
-
-      // 2. 결제 요청 데이터 생성
-      const payRequest: PayRequest = {
-        depositUserId: selectedSettlementData.createdUserId, // 결제 받을 사람
-        amount:
-          selectedSettlementData.amount /
-          selectedSettlementData.participants.length, // 결제 금액
-      };
-
-      // 3. '정산하기' API 호출
-      await DutchpayApi.pay(settlementId, payRequest); // API 호출
-
-      // 4. 결제 완료 처리
-      setSelectedSettlementData((prevState) => {
-        if (prevState) {
-          return {
-            ...prevState,
-            isDone: true, // 정산 완료 상태로 업데이트
-          };
-        }
-        return prevState!;
-      });
-
-      setIsPaymentRequired(false);
-      alert("정상적으로 처리되었습니다.");
-    } catch (error) {
-      console.error("정산 중 오류 발생:", error);
-      alert("정산 중 오류가 발생했습니다.");
-    }
-  };
+  const [openPasswordModal, setOpenPasswordModal] = useState(false);
 
   const getPerPersonAmount = (amount: number, participantCount: number) => {
     return Math.ceil(amount / participantCount).toLocaleString(); // 금액을 인당 계산 후 포맷팅
@@ -386,9 +352,7 @@ export default function SettlementPage({
                       <div className="grid grid-cols-3 gap-4">
                         <div className="text-center">
                           <div className="text-lg font-bold text-green-500 mb-1 font-jua">
-                            {selectedSettlementData.amount /
-                              selectedSettlementData.participants.length}
-                            원
+                            {selectedSettlementData.payAmount}원
                           </div>
                           <div className="text-xs text-gray-600 font-gowun">
                             1인당
@@ -477,16 +441,12 @@ export default function SettlementPage({
                                 보낼 금액
                               </p>
                               <p className="text-2xl font-bold text-green-500 font-jua">
-                                {selectedSettlementData.amount /
-                                  selectedSettlementData.participants.length}
-                                원
+                                {selectedSettlementData.payAmount}원
                               </p>
                             </div>
 
                             <button
-                              onClick={() =>
-                                handlePayment(selectedSettlementData.id)
-                              }
+                              onClick={() => setOpenPasswordModal(true)}
                               disabled={!isPaymentRequired}
                               className={`w-full py-4 bg-gradient-to-r from-green-300 to-green-500 text-white rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 font-jua
                                 ${
@@ -618,6 +578,18 @@ export default function SettlementPage({
           )}
         </div>
       </div>
+      {openPasswordModal && (
+        <PayPasswordModal
+          isOpen={openPasswordModal} // 모달 열기 상태
+          onClose={() => setOpenPasswordModal(false)} // 모달 닫기
+          onConfirm={() => {
+            // 결제 완료 후 처리 (예: 상세 조회 다시 불러오기, 토스트 메시지, UI 업데이트 등)
+            setOpenPasswordModal(false); // 모달 닫기
+            setIsPaymentRequired(false);
+          }}
+          payInfo={selectedSettlementData}
+        />
+      )}
       {/* Notification Modal */}
       <NotificationModal
         isOpen={showNotificationModal}
