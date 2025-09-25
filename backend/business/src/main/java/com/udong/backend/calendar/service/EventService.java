@@ -13,7 +13,10 @@ import com.udong.backend.chat.dto.CreateRoomRequest;
 import com.udong.backend.chat.entity.ChatRoom;
 import com.udong.backend.chat.service.ChatRoomService;
 import com.udong.backend.clubs.repository.ClubRepository;
+import com.udong.backend.clubs.repository.MembershipRepository;
 import com.udong.backend.codes.repository.CodeDetailRepository;
+import com.udong.backend.notification.dto.NotificationRequest;
+import com.udong.backend.notification.service.NotificationService;
 import com.udong.backend.global.util.SecurityUtils;
 import com.udong.backend.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,8 @@ public class EventService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final EventMemberRepository eventMemberRepository;
+    private final MembershipRepository membershipRepository;
+    private final NotificationService notificationService;
 
     private Integer currentUserId() {
         return securityUtils.currentUserId();
@@ -124,6 +130,33 @@ public class EventService {
         CreateRoomRequest chatReq = new CreateRoomRequest("EVENT", saved.getId(), saved.getTitle());
 
         chatRoomService.create(userId, chatReq);
+
+        // 행사 생성 알림 발송
+        try {
+            // 클럽 멤버들의 ID 수집
+            List<Long> clubMemberIds = membershipRepository.findUserIdsByClubId(clubId);
+
+            // 생성자는 알림 대상에서 제외 (본인이 만든 행사에 알림 받을 필요 없음)
+            clubMemberIds = clubMemberIds.stream()
+                    .filter(memberId -> !memberId.equals(userId.longValue()))
+                    .collect(Collectors.toList());
+
+            if (!clubMemberIds.isEmpty()) {
+                NotificationRequest notificationRequest = NotificationRequest.builder()
+                        .payload("새로운 행사가 등록되었습니다: [" + saved.getTitle() + "]")
+                        .type("EVENT_OPEN")
+                        .targetId(saved.getId().longValue())
+                        .createdBy(userId.longValue())
+                        .clubId(rawClubId)
+                        .recipientUserIds(clubMemberIds)
+                        .build();
+
+                notificationService.createAndSendNotification(notificationRequest);
+            }
+        } catch (Exception err) {
+            // 알림 발송 실패는 행사 생성 자체를 실패시키지 않음 (로그만 기록)
+            System.err.println("행사 생성 알림 발송 실패: " + err.getMessage());
+        }
 
         return toRes(saved);
     }
