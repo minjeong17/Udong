@@ -164,6 +164,23 @@ const fetchClient = async <T>(url: string, options: FetchOptions = {}): Promise<
   }
   if (!res.ok) {
     const responseText = await res.text().catch(() => "");
+
+    // JSON 응답에서 data 필드 추출 시도
+    try {
+      const errorResponse = JSON.parse(responseText);
+      if (errorResponse && errorResponse.data) {
+        const error = new Error(errorResponse.data);
+        (error as any).responseText = responseText;
+        throw error;
+      }
+    } catch (parseError) {
+      // parseError가 Error 객체이고 이미 만든 에러라면 그대로 던지기
+      if (parseError instanceof Error && parseError.message !== responseText) {
+        throw parseError;
+      }
+      // JSON 파싱 실패 시 원본 텍스트 사용
+    }
+
     const error = new Error(responseText || `HTTP_${res.status}`);
     (error as any).responseText = responseText;
     throw error;

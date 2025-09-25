@@ -230,7 +230,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {inventory.map((inv) => (
+              {inventory.filter(inv => inv.qty > 0).map((inv) => (
                 <div key={inv.id} className="relative flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
                   <div className="text-2xl">{itemIcons[inv.itemId] ?? "❔"}</div>
                   <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
 import fetchClient from '../fetchClient';
 import type { ClubCreateRequest } from './request';
-import type { ClubCreateResponse, ClubListResponse, MascotResponse, MemberResponse, InviteCodeResponse } from './response';
+import type { ClubCreateResponse, ClubListResponse, MascotResponse, MemberResponse, InviteCodeResponse, ClubManagementInfoResponse, DailyAccessResponse } from './response';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api/v1'
@@ -60,7 +60,7 @@ export const ClubApi = {
 
   // 동아리 멤버 관리 API
   getClubMembers: async (clubId: number, query?: string, role?: string): Promise<MemberResponse[]> => {
-    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/members/all`;
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/members/management`;
     const params = new URLSearchParams();
     if (query) params.append('q', query);
     if (role) params.append('role', role);
@@ -138,5 +138,23 @@ export const ClubApi = {
       method: 'POST',
       auth: true
     });
+  },
+
+  getClubManagementInfo: async (clubId: number): Promise<ClubManagementInfoResponse> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/management-info`;
+    const response = await fetchClient<{success: boolean, data: ClubManagementInfoResponse}>(url, {
+      method: 'GET',
+      auth: true
+    });
+    return response.data;
+  },
+
+  trackDashboardAccess: async (clubId: number): Promise<DailyAccessResponse> => {
+    const url = `${BASE_URL}${API_PREFIX}/clubs/${clubId}/access`;
+    const response = await fetchClient<{success: boolean, data: DailyAccessResponse}>(url, {
+      method: 'POST',
+      auth: true
+    });
+    return response.data;
   }
 };

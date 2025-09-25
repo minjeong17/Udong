@@ -10,7 +10,6 @@ import { ClubDuesApi } from '../apis/clubdues';
 import { PointsApi } from '../apis/points';
 import type { ClubCreateResponse, MascotResponse } from '../apis/clubs/response';
 import type { MyUnpaidDuesResponse, MyUnpaidDuesItem } from '../apis/clubdues/response';
-import type { UserPointLedgerResponse } from '../apis/points/response';
 
 interface ClubDashboardProps {
   onNavigateToOnboarding: () => void;
@@ -62,12 +61,18 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
       try {
         setIsLoading(true);
 
-        // 동아리 정보, 마스코트 정보, 동아리 포인트를 병렬로 가져오기
-        const [clubData, mascotData, clubPointsData] = await Promise.all([
+        // 동아리 정보, 마스코트 정보, 동아리 포인트, 일일 접속 추적을 병렬로 가져오기
+        const [clubData, mascotData, clubPointsData, dailyAccessData] = await Promise.all([
           ClubApi.getClubDetails(clubId),
           ClubApi.getActiveMascot(clubId),
-          PointsApi.getClubPoints(clubId)
+          PointsApi.getClubPoints(clubId),
+          ClubApi.trackDashboardAccess(clubId)
         ]);
+
+        // 일일 접속 보상 알림 표시 (선택사항)
+        if (dailyAccessData.isFirstAccessToday && dailyAccessData.pointsAwarded > 0) {
+          console.log(`일일 출석 보상: ${dailyAccessData.pointsAwarded} 포인트 획득!`);
+        }
 
         setClubInfo(clubData);
         setMascotInfo(mascotData);

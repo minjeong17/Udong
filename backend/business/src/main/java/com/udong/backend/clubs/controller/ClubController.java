@@ -113,4 +113,20 @@ public class ClubController {
         );
         return ResponseEntity.ok(ApiResponse.ok(new InviteDtos.JoinRes(memRes)));
     }
+
+    @GetMapping("/{clubId}/management-info")
+    public ResponseEntity<ApiResponse<ManagementInfoRes>> getManagementInfo(@PathVariable("clubId") Integer clubId) {
+        Club c = clubs.get(clubId);
+        String decryptedAccount = clubs.getDecryptedAccount(clubId);
+
+        ManagementInfoRes body = new ManagementInfoRes(c.getCodeUrl(), decryptedAccount);
+        return ResponseEntity.ok(ApiResponse.ok(body));
+    }
+
+    @PostMapping("/{clubId}/access")
+    public ResponseEntity<ApiResponse<DailyAccessRes>> trackDashboardAccess(@PathVariable("clubId") Integer clubId) {
+        Integer userId = securityUtils.currentUserId();
+        DailyAccessRes result = clubs.trackDashboardAccess(clubId, userId);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
 }

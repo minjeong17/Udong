@@ -20,6 +20,9 @@ public class SignUpRequest {
     @NotBlank
     private String password;
 
+    @NotBlank @Pattern(regexp = "^[0-9]{6}$", message = "결제 비밀번호는 6자리 숫자여야 합니다.")
+    private String paymentPassword;
+
     @NotBlank @Size(max = 50)
     private String name;
 

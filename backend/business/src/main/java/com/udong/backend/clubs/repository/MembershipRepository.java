@@ -67,4 +67,19 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
                                      @Param("q") String q,
                                      @Param("role") String role);
 
+    // User와 UserAvailability를 함께 조회하는 관리용 메서드
+    @Query("""
+    select distinct m, u
+    from Membership m
+    join m.club c
+    join User u on u.id = m.userId
+    left join fetch u.availabilities a
+    where c.id = :clubId
+      and (:role is null or :role = '' or m.roleCode = :role)
+      and (:q is null or :q = '' or cast(m.userId as string) like concat('%', :q, '%'))
+""")
+    List<Object[]> searchAllByClubWithUserAvailabilities(@Param("clubId") Integer clubId,
+                                                        @Param("q") String q,
+                                                        @Param("role") String role);
+
 }

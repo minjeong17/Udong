@@ -28,5 +28,19 @@ public class Membership {
     @Column(name="role_code", nullable=false, length=50)
     private String roleCode;
 
+    @Column(name="last_accessed_at")
+    private LocalDateTime lastAccessedAt;
+
+    // 동아리 접속 시간 업데이트
+    public void updateLastAccessedAt() {
+        this.lastAccessedAt = LocalDateTime.now();
+    }
+
+    // 오늘 접속했는지 확인
+    public boolean isAccessedToday() {
+        if (lastAccessedAt == null) return false;
+        return lastAccessedAt.toLocalDate().isEqual(LocalDateTime.now().toLocalDate());
+    }
+
 }
 

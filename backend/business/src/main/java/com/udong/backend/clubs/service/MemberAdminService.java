@@ -20,8 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +48,37 @@ public class MemberAdminService {
                     u.getGender()==null?null:u.getGender().name(),
                     u.getUniversity(), u.getMajor(), u.getResidence(),
                     m.getRoleCode(), ClubService.toIsoKST(m.getCreatedAt())
+            );
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberDtos.ManagementRow> listForManagement(Long rawClubId, Integer actorId, String q, String role) {
+        authz.requireLeader(rawClubId, actorId);
+        Integer clubId = Math.toIntExact(rawClubId);
+
+        // 기본 멤버십 정보 먼저 조회
+        List<Membership> membershipList = memberships.searchAllByClub(clubId, q, role);
+
+        return membershipList.stream().map(m -> {
+            // 각 멤버십에 대해 User와 availabilities 개별 조회
+            User u = users.findById(m.getUserId()).orElseThrow();
+            String lastAccessedAt = m.getLastAccessedAt() != null ? ClubService.toIsoKST(m.getLastAccessedAt()) : null;
+
+            // 활동 가능 시간 정보 변환
+            List<MemberDtos.AvailabilityInfo> availabilities = u.getAvailabilities().stream()
+                    .map(a -> new MemberDtos.AvailabilityInfo(
+                            a.getDayOfWeek(),
+                            a.getStartTime().toString(),
+                            a.getEndTime().toString()
+                    ))
+                    .toList();
+
+            return new MemberDtos.ManagementRow(
+                    m.getId(), u.getId(), u.getName(), u.getPhone(), u.getEmail(),
+                    u.getGender()==null?null:u.getGender().name(),
+                    u.getUniversity(), u.getMajor(), u.getResidence(),
+                    m.getRoleCode(), ClubService.toIsoKST(m.getCreatedAt()), lastAccessedAt, availabilities
             );
         }).toList();
     }

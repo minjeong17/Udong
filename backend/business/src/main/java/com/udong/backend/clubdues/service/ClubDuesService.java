@@ -20,8 +20,10 @@ import com.udong.backend.users.repository.UserRepository;
 import com.udong.backend.dutchpay.dto.FinTransferRequest;
 import com.udong.backend.dutchpay.dto.FinTransferResponse;
 import com.udong.backend.global.exception.TransferException;
+import com.udong.backend.global.exception.PaymentPasswordException;
 import com.udong.backend.shop.dto.UserPointLedgerRequest;
 import com.udong.backend.shop.service.PointService;
+import com.udong.backend.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,7 @@ public class ClubDuesService {
     private final AccountCrypto accountCrypto;
     private final FinApiClient finApiClient;
     private final PointService pointService;
+    private final UserService userService;
 
     @Value("${finapi.institution-code:00100}")
     private String institutionCode;
@@ -300,6 +303,16 @@ public class ClubDuesService {
     // 9. 회비 결제
     @Transactional
     public ClubDuesDtos.PayDuesResponse payDues(Integer clubId, Integer duesId, Integer currentUserId, ClubDuesDtos.PayDuesRequest request) {
+        // 0) 결제 비밀번호 검증
+        if (request.paymentPassword() == null || request.paymentPassword().trim().isEmpty()) {
+            throw new PaymentPasswordException("결제 비밀번호를 입력해주세요.");
+        }
+
+        boolean isValidPassword = userService.validatePaymentPassword(currentUserId, request.paymentPassword());
+        if (!isValidPassword) {
+            throw new PaymentPasswordException("결제 비밀번호가 올바르지 않습니다.");
+        }
+
         // 1) 회비 정보 조회
         ClubDuesStatus duesStatus = clubDuesStatusRepository.findByDuesIdAndUserId(duesId, currentUserId)
                 .orElseThrow(() -> new RuntimeException("회비 납부 정보를 찾을 수 없습니다."));
@@ -339,10 +352,10 @@ public class ClubDuesService {
         FinTransferRequest finReq = FinTransferRequest.builder()
                 .header(header)
                 .depositAccountNo(clubAccount)
-                .depositTransactionSummary("(수시입출금) : 입금(이체)")
+                .depositTransactionSummary(club.getName() + " 회비 납부 입금 : " + user.getName())
                 .transactionBalance(String.valueOf(finalAmount))
                 .withdrawalAccountNo(userAccount)
-                .withdrawalTransactionSummary("(수시입출금) : 출금(이체)")
+                .withdrawalTransactionSummary(club.getName() + " 회비 납부 송금")
                 .build();
 
         // 7) 외부 API 호출
