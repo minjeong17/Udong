@@ -210,7 +210,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   const isGlobal = currentChannel?.typeCode === "GLOBAL";
 
   // 사용자 정보
-  const token = sessionStorage.getItem("accessToken");
+  const token = localStorage.getItem("accessToken");
   const payload = token ? parseJwt(token) : null;
   const myUserId: number | null = payload?.userId
     ? Number(payload.userId)
@@ -283,7 +283,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
         // const WS_BASE = (location.protocol === "https:" ? "wss://" : "ws://") + (import.meta.env.VITE_API_HOST ?? "localhost:8080");
 
-        const token = sessionStorage.getItem("accessToken");
+        const token = localStorage.getItem("accessToken");
         const url = `${WS_BASE}/api/ws/chat?roomId=${selectedChannel}${
           token ? `&token=${encodeURIComponent(token)}` : ""
         }`;
