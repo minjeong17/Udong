@@ -22,15 +22,15 @@ public class VoteController {
     private final SecurityUtils securityUtils;
 
     /**
-     * 채팅방의 투표 목록 조회
+     * 동아리의 투표 목록 조회
      */
-    @GetMapping("/chat-rooms/{chatRoomId}/votes")
-    public ResponseEntity<ApiResponse<List<VoteListResponse>>> getVoteList(
-            @Parameter(description = "채팅방 ID", required = true)
-            @PathVariable Integer chatRoomId) {
+    @GetMapping("/clubs/{clubId}/votes")
+    public ResponseEntity<ApiResponse<List<VoteListResponse>>> getVoteListByClub(
+            @Parameter(description = "동아리 ID", required = true)
+            @PathVariable Integer clubId) {
 
         Integer userId = securityUtils.currentUserId();
-        List<VoteListResponse> votes = voteService.getVoteList(chatRoomId, userId);
+        List<VoteListResponse> votes = voteService.getVoteListByClub(clubId, userId);
 
         return ResponseEntity.ok(ApiResponse.ok(votes));
     }

@@ -75,7 +75,7 @@ public class ChatRoomService {
      * typeCode 예) "GLOBAL", "EVENT" (대소문자 무시)
      */
     @Transactional
-    public void addMember(String typeCode, Integer targetId, Integer userId) {
+    public Integer addMember(String typeCode, Integer targetId, Integer userId) {
         if (typeCode == null || targetId == null || userId == null) {
             throw new IllegalArgumentException("typeCode, targetId, userId는 필수입니다.");
         }
@@ -116,6 +116,8 @@ public class ChatRoomService {
                 .user(userRef)
                 .build();
         chatMemberRepository.save(member);
+
+        return room.getId();
     }
 
     public List<ChatRoomListItem> listMyRoomsByClub(Integer userId, Integer clubId) {

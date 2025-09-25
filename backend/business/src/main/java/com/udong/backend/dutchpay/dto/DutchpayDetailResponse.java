@@ -14,6 +14,7 @@ public class DutchpayDetailResponse {
     private String note;
     private LocalDateTime createdAt;
     private String createdBy;    // User.name
+    private Integer createdUserId;
     private boolean isDone;
     private String s3Key;
     private String imageUrl;

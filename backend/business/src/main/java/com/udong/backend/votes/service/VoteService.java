@@ -1,8 +1,12 @@
 package com.udong.backend.votes.service;
 
+import com.udong.backend.calendar.entity.Event;
+import com.udong.backend.calendar.repository.EventRepository;
 import com.udong.backend.chat.entity.ChatRoom;
 import com.udong.backend.chat.repository.ChatMemberRepository;
 import com.udong.backend.chat.repository.ChatRoomRepository;
+import com.udong.backend.clubs.entity.Club;
+import com.udong.backend.clubs.repository.ClubRepository;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.repository.UserRepository;
 import com.udong.backend.votes.dto.*;
@@ -33,50 +37,48 @@ public class VoteService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final UserRepository userRepository;
+    private final ClubRepository clubRepository;
+    private final EventRepository eventRepository;
 
     /**
-     * 채팅방의 투표 목록 조회
+     * 동아리의 투표 목록 조회
      */
-    public List<VoteListResponse> getVoteList(Integer chatRoomId, Integer currentUserId) {
-        // 채팅방 존재 확인
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
-
-        // 채팅방 멤버인지 확인
-        validateChatMember(chatRoomId, currentUserId);
-
-        List<Vote> votes = voteRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId);
+    public List<VoteListResponse> getVoteListByClub(Integer clubId, Integer currentUserId) {
+        List<Vote> votes = voteRepository.findByClubAndUserMembership(clubId, currentUserId);
         LocalDateTime now = LocalDateTime.now();
 
         return votes.stream()
-                .map(vote -> {
-                    // 생성자 정보 조회
-                    User creator = userRepository.findById(vote.getCreatedBy()).orElse(null);
-                    String creatorName = creator != null ? creator.getName() : "알 수 없음";
-
-                    // 참여 여부 확인
-                    boolean hasParticipated = voteSelectionRepository.existsByVoteIdAndUserId(vote.getId(), currentUserId);
-
-                    // 총 참여자 수
-                    Long totalParticipants = voteSelectionRepository.countDistinctUsersByVoteId(vote.getId());
-
-                    return VoteListResponse.builder()
-                            .id(vote.getId())
-                            .title(vote.getTitle())
-                            .endsAt(vote.getEndsAt())
-                            .multiSelect(vote.isMultiSelect())
-                            .isActive(vote.isActive())
-                            .createdAt(vote.getCreatedAt())
-                            .createdBy(vote.getCreatedBy())
-                            .createdByName(creatorName)
-                            .isExpired(vote.getEndsAt().isBefore(now))
-                            .canParticipate(vote.isActive() && !vote.getEndsAt().isBefore(now))
-                            .hasParticipated(hasParticipated)
-                            .totalParticipants(totalParticipants)
-                            .optionCount(vote.getOptions().size())
-                            .build();
-                })
+                .map(vote -> toVoteListResponse(vote, currentUserId, now))
                 .collect(Collectors.toList());
+    }
+
+    private VoteListResponse toVoteListResponse(Vote vote, Integer currentUserId, LocalDateTime now) {
+        // 생성자 정보 조회
+        User creator = userRepository.findById(vote.getCreatedBy()).orElse(null);
+        String creatorName = creator != null ? creator.getName() : "알 수 없음";
+
+        // 참여 여부 확인
+        boolean hasParticipated = voteSelectionRepository.existsByVoteIdAndUserId(vote.getId(), currentUserId);
+
+        // 총 참여자 수
+        Long totalParticipants = voteSelectionRepository.countDistinctUsersByVoteId(vote.getId());
+
+        return VoteListResponse.builder()
+                .id(vote.getId())
+                .title(vote.getTitle())
+                .endsAt(vote.getEndsAt())
+                .multiSelect(vote.isMultiSelect())
+                .isActive(vote.isActive())
+                .createdAt(vote.getCreatedAt())
+                .createdBy(vote.getCreatedBy())
+                .createdByName(creatorName)
+                .clubId(vote.getClub().getId())
+                .isExpired(vote.getEndsAt().isBefore(now))
+                .canParticipate(vote.isActive() && !vote.getEndsAt().isBefore(now))
+                .hasParticipated(hasParticipated)
+                .totalParticipants(totalParticipants)
+                .optionCount(vote.getOptions().size())
+                .build();
     }
 
     /**
@@ -148,6 +150,7 @@ public class VoteService {
                 .createdByName(creatorName)
                 .chatRoomId(vote.getChatRoom().getId())
                 .chatRoomName(vote.getChatRoom().getName())
+                .clubId(vote.getClub().getId())
                 .isExpired(vote.getEndsAt().isBefore(now))
                 .canParticipate(vote.isActive() && !vote.getEndsAt().isBefore(now))
                 .hasParticipated(!userSelections.isEmpty())
@@ -169,8 +172,22 @@ public class VoteService {
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
         validateChatMember(chatRoomId, currentUserId);
 
+        // 투표가 속한 동아리(Club) 정보 찾기
+        Club club;
+        if ("GLOBAL".equals(chatRoom.getType().getCodeName())) {
+            club = clubRepository.findById(chatRoom.getTargetId())
+                    .orElseThrow(() -> new IllegalStateException("채팅방에 연결된 동아리를 찾을 수 없습니다."));
+        } else if ("EVENT".equals(chatRoom.getType().getCodeName())) {
+            Event event = eventRepository.findById(chatRoom.getTargetId())
+                    .orElseThrow(() -> new IllegalStateException("채팅방에 연결된 이벤트를 찾을 수 없습니다."));
+            club = event.getClub();
+        } else {
+            throw new IllegalStateException("알 수 없는 채팅방 타입입니다: " + chatRoom.getType().getCodeName());
+        }
+
         // 투표 엔티티 생성
         Vote vote = Vote.builder()
+                .club(club)
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .endsAt(request.getEndsAt())
@@ -222,6 +239,7 @@ public class VoteService {
                 .createdByName(creatorName)
                 .chatRoomId(chatRoom.getId())
                 .chatRoomName(chatRoom.getName())
+                .clubId(club.getId())
                 .isExpired(false)
                 .canParticipate(true)
                 .hasParticipated(false)
