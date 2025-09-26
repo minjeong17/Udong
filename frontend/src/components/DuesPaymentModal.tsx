@@ -6,6 +6,7 @@ import { InventoryApi } from '../apis/inventory';
 import type { InventoryResponse } from '../apis/inventory/response';
 import { useAuthStore } from '../stores/authStore';
 import AccountChangeModal from './AccountChangeModal';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface DuesPaymentModalProps {
   isOpen: boolean;
@@ -20,6 +21,9 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
   onConfirm,
   duesInfo
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const clubId = useAuthStore((state) => state.clubId);
   const [inventory, setInventory] = useState<InventoryResponse[]>([]);
   const [useDiscountCoupon, setUseDiscountCoupon] = useState(false);

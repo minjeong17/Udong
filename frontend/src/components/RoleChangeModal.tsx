@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface RoleChangeModalProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ const RoleChangeModal: React.FC<RoleChangeModalProps> = ({
   onLeaderTransfer,
   currentUserRole
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const [selectedRole, setSelectedRole] = useState<string>('MEMBER');
 
   if (!isOpen || !member) return null;

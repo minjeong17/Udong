@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 import com.udong.backend.global.exception.TransferException;
 import com.udong.backend.global.exception.PaymentPasswordException;
+import com.udong.backend.global.exception.ExternalApiException;
 
 import java.util.stream.Collectors;
 
@@ -49,6 +50,12 @@ public class GlobalExceptionHandler {
     // 3-2) 결제 비밀번호 관련 예외 처리
     @ExceptionHandler(PaymentPasswordException.class)
     public ResponseEntity<ApiResponse<?>> handlePaymentPasswordException(PaymentPasswordException ex) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
+    // 3-3) 외부 API 관련 예외 처리 (E4000번대 에러 등)
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<ApiResponse<?>> handleExternalApiException(ExternalApiException ex) {
         return ResponseEntity.badRequest().body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 

@@ -14,7 +14,9 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     paymentPassword: '',
+    confirmPaymentPassword: '',
     gender: '',
     university: '',
     major: '',
@@ -31,6 +33,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
+  const [paymentPasswordMatch, setPaymentPasswordMatch] = useState<boolean | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -39,6 +43,26 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
+
+      // 비밀번호 일치 확인
+      if (name === 'password' || name === 'confirmPassword') {
+        const newFormData = { ...formData, [name]: value };
+        if (newFormData.confirmPassword && newFormData.password) {
+          setPasswordMatch(newFormData.password === newFormData.confirmPassword);
+        } else {
+          setPasswordMatch(null);
+        }
+      }
+
+      // 결제 비밀번호 일치 확인
+      if (name === 'paymentPassword' || name === 'confirmPaymentPassword') {
+        const newFormData = { ...formData, [name]: value };
+        if (newFormData.confirmPaymentPassword && newFormData.paymentPassword) {
+          setPaymentPasswordMatch(newFormData.paymentPassword === newFormData.confirmPaymentPassword);
+        } else {
+          setPaymentPasswordMatch(null);
+        }
+      }
     }
   };
 
@@ -82,6 +106,43 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // 클라이언트 측 유효성 검사
+    if (formData.name.trim().length === 0 || formData.name.length > 50) {
+      setError('이름은 1자 이상 50자 이하로 입력해주세요.');
+      return;
+    }
+
+    if (formData.password.trim().length === 0) {
+      setError('비밀번호를 입력해주세요.');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (formData.paymentPassword !== formData.confirmPaymentPassword) {
+      setError('결제 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (formData.university && formData.university.length > 30) {
+      setError('대학교명은 30자 이하로 입력해주세요.');
+      return;
+    }
+
+    if (formData.major && formData.major.length > 60) {
+      setError('전공은 60자 이하로 입력해주세요.');
+      return;
+    }
+
+    if (formData.residence && formData.residence.length > 60) {
+      setError('거주지는 60자 이하로 입력해주세요.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -126,8 +187,19 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
     } catch (error) {
       console.error('Signup failed:', error);
       if (error instanceof Error) {
-        // 서버에서 오는 구체적인 에러 메시지를 그대로 표시
-        setError(error.message);
+        // E4001 에러는 이메일 형식 문제로 특별 처리
+        if (error.message.includes('E4001') || error.message.includes('빈 데이터이거나 형식에 맞지 않는 데이터입니다')) {
+          setError('이메일 형식이 올바르지 않습니다. example@domain.com 형식으로 입력해주세요.');
+        } else if (error.message.includes('E4003')) {
+          setError('은행에 존재하는 계좌가 없습니다. 이메일과 계좌번호를 확인해주세요.');
+        } else if (error.message.includes('E400') || error.message.includes('형식에 맞지 않는 데이터') || error.message.includes('빈 데이터')) {
+          setError('입력하신 정보에 문제가 있습니다. 모든 필수 필드를 정확히 입력했는지 확인해주세요.');
+        } else if (error.message.includes('duplicate') || error.message.includes('중복')) {
+          setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
+        } else {
+          // 서버에서 오는 구체적인 에러 메시지를 그대로 표시
+          setError(error.message);
+        }
       } else {
         setError('회원가입에 실패했습니다. 다시 시도해주세요.');
       }
@@ -204,7 +276,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="이름을 입력하세요"
+                placeholder="이름을 입력하세요 (최대 50자)"
+                maxLength={50}
                 required
               />
             </div>
@@ -237,6 +310,31 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
               />
             </div>
 
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-gray-600 text-sm mb-2 font-gowun">비밀번호 확인</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
+                placeholder="비밀번호를 다시 입력하세요"
+                required
+              />
+              {/* 비밀번호 일치 상태 표시 */}
+              {formData.confirmPassword && (
+                <div className="mt-1">
+                  {passwordMatch === true && (
+                    <p className="text-green-600 text-xs font-gowun">✓ 비밀번호가 일치합니다</p>
+                  )}
+                  {passwordMatch === false && (
+                    <p className="text-red-600 text-xs font-gowun">✗ 비밀번호가 일치하지 않습니다</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Payment Password */}
             <div>
               <label className="block text-gray-600 text-sm mb-2 font-gowun">결제 비밀번호</label>
@@ -244,13 +342,60 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 type="password"
                 name="paymentPassword"
                 value={formData.paymentPassword}
-                onChange={handleInputChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+                  setFormData(prev => ({ ...prev, paymentPassword: value }));
+
+                  // 결제 비밀번호 일치 확인
+                  if (formData.confirmPaymentPassword && value) {
+                    setPaymentPasswordMatch(value === formData.confirmPaymentPassword);
+                  } else {
+                    setPaymentPasswordMatch(null);
+                  }
+                }}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
                 placeholder="6자리 숫자로 입력하세요"
                 pattern="[0-9]{6}"
                 maxLength={6}
                 required
               />
+            </div>
+
+            {/* Confirm Payment Password */}
+            <div>
+              <label className="block text-gray-600 text-sm mb-2 font-gowun">결제 비밀번호 확인</label>
+              <input
+                type="password"
+                name="confirmPaymentPassword"
+                value={formData.confirmPaymentPassword}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+                  setFormData(prev => ({ ...prev, confirmPaymentPassword: value }));
+
+                  // 결제 비밀번호 일치 확인
+                  if (formData.paymentPassword && value) {
+                    setPaymentPasswordMatch(formData.paymentPassword === value);
+                  } else {
+                    setPaymentPasswordMatch(null);
+                  }
+                }}
+                className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
+                placeholder="결제 비밀번호를 다시 입력하세요"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                required
+              />
+              {/* 결제 비밀번호 일치 상태 표시 */}
+              {formData.confirmPaymentPassword && (
+                <div className="mt-1">
+                  {paymentPasswordMatch === true && (
+                    <p className="text-green-600 text-xs font-gowun">✓ 결제 비밀번호가 일치합니다</p>
+                  )}
+                  {paymentPasswordMatch === false && (
+                    <p className="text-red-600 text-xs font-gowun">✗ 결제 비밀번호가 일치하지 않습니다</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Gender */}
@@ -295,7 +440,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 value={formData.university}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="대학교명을 입력하세요"
+                placeholder="대학교명을 입력하세요 (최대 30자)"
+                maxLength={30}
               />
             </div>
 
@@ -308,7 +454,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 value={formData.major}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="전공을 입력하세요"
+                placeholder="전공을 입력하세요 (최대 60자)"
+                maxLength={60}
               />
             </div>
 
@@ -321,7 +468,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigateToOnboarding, onNavigateToLog
                 value={formData.residence}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-md text-gray-500 font-gowun focus:outline-none focus:border-orange-300 placeholder-gray-400 text-sm"
-                placeholder="거주지를 입력하세요"
+                placeholder="거주지를 입력하세요 (최대 60자)"
+                maxLength={60}
               />
             </div>
 

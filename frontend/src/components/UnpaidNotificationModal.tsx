@@ -1,5 +1,6 @@
 import React from 'react';
 import type { MemberStatusItem } from '../apis/clubdues';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface UnpaidNotificationModalProps {
   isOpen: boolean;
@@ -18,6 +19,9 @@ const UnpaidNotificationModal: React.FC<UnpaidNotificationModalProps> = ({
   duesNo,
   amount
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   if (!isOpen) return null;
 
   const handleConfirm = () => {

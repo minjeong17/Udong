@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import Notification from '../pages/Notification';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -12,15 +13,11 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
   onClose,
   onNavigateToOnboarding
 }) => {
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
 
+  useEffect(() => {
     if (isOpen) {
-      document.addEventListener('keydown', handleEscapeKey);
       // 모달이 열릴 때 body 스크롤 방지
       document.body.style.overflow = 'hidden';
     } else {
@@ -29,11 +26,10 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
       // 컴포넌트 언마운트 시 스크롤 복원
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

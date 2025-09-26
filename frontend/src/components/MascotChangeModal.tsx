@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ClubApi } from '../apis/clubs';
 import type { MascotResponse } from '../apis/clubs/response';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface Mascot {
   id: number;
@@ -25,6 +26,9 @@ const MascotChangeModal: React.FC<MascotChangeModalProps> = ({
   currentMascotId = 1,
   clubId,
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const [selectedMascotId, setSelectedMascotId] = useState(currentMascotId);
   const [currentPage, setCurrentPage] = useState(0);
   const [mascots, setMascots] = useState<Mascot[]>([]);

@@ -7,3 +7,11 @@ export interface UserPointLedgerResponse {
   description: string;
   createdAt: string;
 }
+
+export interface PointHistoryResponse {
+  codeName: string;
+  memo: string;
+  currPoint: number;
+  delta: number;
+  createdAt: string;
+}

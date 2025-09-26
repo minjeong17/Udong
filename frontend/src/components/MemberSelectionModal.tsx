@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { MemberResponse } from '../apis/clubs';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface MemberSelectionModalProps {
   isOpen: boolean;
@@ -18,6 +19,9 @@ const MemberSelectionModal: React.FC<MemberSelectionModalProps> = ({
   totalMembers,
   initialSelectedUserIds
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(true);
 

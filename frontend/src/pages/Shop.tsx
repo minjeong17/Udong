@@ -7,6 +7,7 @@ import { ClubApi } from "../apis/clubs";
 import { InventoryApi } from "../apis/inventory";
 import type { ItemResponse, InventoryResponse } from "../apis/shop";
 import { useAuthStore } from "../stores/authStore";
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 /** 텍스트만 링크 (밑줄은 hover 때만) */
 function MyPageTextLink({ onClick, className = "" }: { onClick?: () => void; className?: string }) {
@@ -59,6 +60,9 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
   const [isRerolling, setIsRerolling] = useState(false);
   const clubId = useAuthStore((state) => state.clubId);
 
+  // ESC 키로 모달 닫기
+  useEscapeKey(() => setShowMascotRerollModal(false), showMascotRerollModal);
+
   const itemIcons: Record<number, string> = {
     1: "🎫",  // 회비 감면권
     2: "✅",  // 검
@@ -92,7 +96,11 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
       setInventory(updatedInventory);
       setPoints(updatedLedger.currPoint);
 
-      alert(`[${itemName}] 구매 완룼!`);
+      if (itemId === 4) {
+        alert(`[${itemName}] 구매 완료!\n동돌이를 마스코트로 사용해보실 수 있습니다!`);
+      } else {
+        alert(`[${itemName}] 구매 완료!`);
+      }
 
     } catch (err) {
       console.error(err);

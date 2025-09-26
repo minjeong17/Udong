@@ -73,6 +73,24 @@ export default function SettlementPage({
         const fetchedSettlements = await DutchpayApi.getMyDutchpays(clubId); // API 호출
         console.log(fetchedSettlements);
         setSettlements(fetchedSettlements); // 상태에 정산 목록 저장
+
+        // 자동 선택 로직
+        if (fetchedSettlements.length > 0) {
+          const autoSelectSettlementId = localStorage.getItem('autoSelectSettlement');
+          if (autoSelectSettlementId) {
+            const targetSettlementId = parseInt(autoSelectSettlementId);
+            const targetSettlement = fetchedSettlements.find(settlement => settlement.id === targetSettlementId);
+            if (targetSettlement) {
+              setSelectedSettlement(targetSettlementId);
+              // 한 번 사용한 후 제거
+              localStorage.removeItem('autoSelectSettlement');
+            } else {
+              setSelectedSettlement(fetchedSettlements[0].id);
+            }
+          } else if (!selectedSettlement) {
+            setSelectedSettlement(fetchedSettlements[0].id);
+          }
+        }
       } catch (error) {
         console.error("정산 목록 조회 실패:", error);
       }

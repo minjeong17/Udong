@@ -33,8 +33,8 @@ public class GmsImageClient {
     private String dalleEndpoint;           // ★ 완전 URL (…/api.openai.com/v1/images/generations)
 
     // ====== [추가] Imagen 전용 ENV ======
-    @Value("${IMAGEN_ENDPOINT:}")           // 예) https://gms.ssafy.io/gmsapi/generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=XXXX
-    private String imagenEndpoint;          // ★ 완전 URL (?key=...까지 포함)
+    @Value("${imagen.endpoint}")
+    private String imagenEndpoint;
 
     @Value("${app.gms.sample-count:1}")     // Imagen 동시 샘플 수
     private int sampleCount;
@@ -115,7 +115,7 @@ public class GmsImageClient {
 
         try (Response res = http.newCall(req).execute()) {
             String resBody = res.body() != null ? res.body().string() : null;
-            log.info("[GMS] POST {}  --> status={}", imagenEndpoint, res.code());
+            log.info("[GMS] POST IMAGEN  --> status={}", imagenEndpoint, res.code());
 
             if (!res.isSuccessful()) {
                 log.error("[GMS->Imagen] status={} body={}", res.code(), resBody);

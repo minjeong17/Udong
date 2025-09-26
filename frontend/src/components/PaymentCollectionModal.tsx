@@ -3,6 +3,7 @@ import MemberSelectionModal from './MemberSelectionModal';
 import { ClubApi } from '../apis/clubs';
 import { useAuthStore } from '../stores/authStore';
 import type { MemberResponse } from '../apis/clubs';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface PaymentCollectionModalProps {
   isOpen: boolean;
@@ -19,6 +20,9 @@ const PaymentCollectionModal: React.FC<PaymentCollectionModalProps> = ({
   nextDuesNo,
   totalMembers
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const { clubId } = useAuthStore();
   const [amount, setAmount] = useState<number>(25000);
   const [showMemberSelection, setShowMemberSelection] = useState(false);

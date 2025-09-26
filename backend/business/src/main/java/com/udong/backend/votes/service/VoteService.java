@@ -9,6 +9,9 @@ import com.udong.backend.chat.repository.ChatMessageRepository;
 import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.clubs.repository.ClubRepository;
+import com.udong.backend.clubs.service.ClubService;
+import com.udong.backend.shop.dto.UserPointLedgerRequest;
+import com.udong.backend.shop.service.PointService;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.repository.UserRepository;
 import com.udong.backend.votes.dto.*;
@@ -18,6 +21,8 @@ import com.udong.backend.votes.entity.VoteSelection;
 import com.udong.backend.votes.repository.VoteOptionRepository;
 import com.udong.backend.votes.repository.VoteRepository;
 import com.udong.backend.votes.repository.VoteSelectionRepository;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import com.udong.backend.notification.dto.NotificationRequest;
 import com.udong.backend.notification.service.NotificationService;
 import com.udong.backend.chat.websocket.ChatWebSocketHandler;
@@ -47,6 +52,8 @@ public class VoteService {
     private final EventRepository eventRepository;
     private final NotificationService notificationService;
     private final ChatWebSocketHandler chatWebSocketHandler;
+
+    private final PointService pointService;
 
     /**
      * 동아리의 투표 목록 조회
@@ -342,6 +349,17 @@ public class VoteService {
                 .collect(Collectors.toList());
 
         voteSelectionRepository.saveAll(newSelections);
+        if(vote.getChatRoom().getType().getName().equals("GLOBAL")) {
+            UserPointLedgerRequest userPointLedgerRequest = UserPointLedgerRequest.builder()
+                    .voteId(voteId)
+                    .clubId(vote.getClub().getId())
+                    .codeName("VOTE")
+                    .delta(50)
+                    .memo("투표 참여 보상")
+                    .build();
+
+            pointService.addPoints(currentUserId, userPointLedgerRequest);
+        }
         return getVoteDetail(voteId, currentUserId);
     }
 

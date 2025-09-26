@@ -69,8 +69,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Current Club Info */}
         {clubInfo ? (
           <div
-            className="w-16 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-2xl p-2 mb-2"
-            title={`${clubInfo.name} - 현재 동아리`}
+            className="w-16 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-2xl p-2 mb-2 cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-105"
+            title={`${clubInfo.name} - 현재 동아리 (클릭해서 홈으로)`}
+            onClick={() => navigate('club-dashboard')}
           >
             <div className="w-12 h-12 bg-orange-200 rounded-xl flex items-center justify-center mb-1">
               {mascotInfo?.imageUrl ? (
@@ -111,26 +112,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         )}
-        {/* Logout Button */}
-        <button
-          onClick={() => handleLogout(onNavigateToOnboarding)}
-          className="w-14 h-14 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-2 border-red-200 hover:border-red-300 rounded-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl cursor-pointer group"
-          title="로그아웃"
-        >
-          <img src="/images/button/Logout.png" alt="로그아웃" className="w-14 h-14" />
-        </button>
+        
 
         {/* Navigation Items */}
         <div className="flex flex-col space-y-4">
-          {/* 1. 동아리 목록으로 이동 */}
-          <button
-            onClick={() => navigate('club-list')}
-            className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group"
-            title="동아리 목록"
-          >
-            <img src="/images/button/ClubList.png" alt="동아리 목록" className="w-14 h-14" />
-          </button>
-
           {/* 2. 대시보드로 돌아가기 */}
           <button
             onClick={() => navigate('club-dashboard')}
@@ -206,6 +191,30 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => navigate('mt-planner')}
             className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl flex items-center justify-center cursor-pointer hover:from-orange-100 hover:to-orange-150 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group" title="MT추천">
             <img src="/images/button/Mt.png" alt="MT추천" className="w-14 h-14" />
+          </button>
+
+          {/* 1. 동아리 목록으로 이동 */}
+          <div className="relative">
+            <div className="absolute -inset-2 bg-gradient-to-r from-blue-50 via-purple-50 to-red-50 rounded-3xl blur-sm opacity-60"></div>
+            <button
+              onClick={() => navigate('club-list')}
+              className="relative w-14 h-14 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-150 border border-blue-200 hover:border-blue-300 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl group"
+              title="동아리 목록"
+            >
+              <img src="/images/button/ClubList.png" alt="동아리 목록" className="w-14 h-14" />
+            </button>
+          </div>
+        </div>
+
+        {/* Logout Button */}
+        <div className="relative">
+          <div className="absolute -inset-2 bg-gradient-to-r from-blue-50 via-purple-50 to-red-50 rounded-3xl blur-sm opacity-60"></div>
+          <button
+            onClick={() => handleLogout(onNavigateToOnboarding)}
+            className="relative w-14 h-14 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-150 border border-red-200 hover:border-red-300 rounded-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl cursor-pointer group"
+            title="로그아웃"
+          >
+            <img src="/images/button/Logout.png" alt="로그아웃" className="w-14 h-14" />
           </button>
         </div>
       </div>
