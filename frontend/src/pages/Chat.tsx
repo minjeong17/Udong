@@ -66,8 +66,9 @@ const renderSystemMessage = (content: string) => {
         <div
           className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-lg cursor-pointer hover:from-green-100 hover:to-green-200 transition-all"
           onClick={() => {
-            // 정산 페이지로 이동 (settlement ID를 이용)
-            window.location.href = `/settlement?id=${id}`;
+            // 정산 페이지로 이동 (localStorage에 autoSelectSettlement 설정)
+            localStorage.setItem('autoSelectSettlement', id);
+            window.location.href = `/settlement`;
           }}
         >
           <div className="text-2xl">💰</div>
