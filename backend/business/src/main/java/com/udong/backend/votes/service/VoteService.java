@@ -3,7 +3,9 @@ package com.udong.backend.votes.service;
 import com.udong.backend.calendar.entity.Event;
 import com.udong.backend.calendar.repository.EventRepository;
 import com.udong.backend.chat.entity.ChatRoom;
+import com.udong.backend.chat.entity.ChatMessage;
 import com.udong.backend.chat.repository.ChatMemberRepository;
+import com.udong.backend.chat.repository.ChatMessageRepository;
 import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.clubs.repository.ClubRepository;
@@ -21,6 +23,9 @@ import com.udong.backend.votes.repository.VoteRepository;
 import com.udong.backend.votes.repository.VoteSelectionRepository;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import com.udong.backend.notification.dto.NotificationRequest;
+import com.udong.backend.notification.service.NotificationService;
+import com.udong.backend.chat.websocket.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,9 +46,12 @@ public class VoteService {
     private final VoteSelectionRepository voteSelectionRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final ClubRepository clubRepository;
     private final EventRepository eventRepository;
+    private final NotificationService notificationService;
+    private final ChatWebSocketHandler chatWebSocketHandler;
 
     private final PointService pointService;
 
@@ -216,6 +224,55 @@ public class VoteService {
 
         voteOptionRepository.saveAll(options);
         savedVote.getOptions().addAll(options);
+
+        // 투표 생성 알림 발송
+        try {
+            // 채팅방 멤버들의 ID 수집
+            List<Long> chatMemberIds = chatMemberRepository.findUserIdsByChatId(chatRoom.getId());
+
+            // 생성자는 알림 대상에서 제외 (본인이 만든 투표에 알림 받을 필요 없음)
+            chatMemberIds = chatMemberIds.stream()
+                    .filter(memberId -> !memberId.equals(currentUserId.longValue()))
+                    .collect(Collectors.toList());
+
+            if (!chatMemberIds.isEmpty()) {
+                NotificationRequest notificationRequest = NotificationRequest.builder()
+                        .payload("새로운 투표가 시작되었습니다: " + "["+savedVote.getTitle()+"]")
+                        .type("VOTE_OPEN")
+                        .targetId(savedVote.getId().longValue())
+                        .createdBy(currentUserId.longValue())
+                        .clubId(club.getId().longValue())
+                        .recipientUserIds(chatMemberIds)
+                        .build();
+
+                notificationService.createAndSendNotification(notificationRequest);
+            }
+        } catch (Exception e) {
+            // 알림 발송 실패는 투표 생성 자체를 실패시키지 않음 (로그만 기록)
+            System.err.println("투표 생성 알림 발송 실패: " + e.getMessage());
+        }
+
+        // 채팅방에 시스템 메시지 추가
+        try {
+            User creator = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new IllegalStateException("Creator not found"));
+
+            ChatMessage systemMessage = ChatMessage.builder()
+                    .chat(chatRoom)
+                    .sender(creator) // 투표 생성자가 발송한 것으로 처리
+                    .content("∈★ω투표:" + savedVote.getId() + "ω★∋")
+                    .build();
+
+            ChatMessage savedSystemMessage = chatMessageRepository.save(systemMessage);
+
+            // WebSocket으로 실시간 브로드캐스트
+            System.out.println("🚀 시스템 메시지 WebSocket 전송 시도: " + savedSystemMessage.getContent());
+            chatWebSocketHandler.broadcastSystemMessage(savedSystemMessage);
+            System.out.println("✅ 시스템 메시지 WebSocket 전송 완료");
+        } catch (Exception e) {
+            // 시스템 메시지 발송 실패는 투표 생성 자체를 실패시키지 않음 (로그만 기록)
+            System.err.println("투표 시스템 메시지 발송 실패: " + e.getMessage());
+        }
 
         // 생성자 정보
         User creator = userRepository.findById(currentUserId).orElse(null);

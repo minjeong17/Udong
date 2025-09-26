@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 import NotificationModal from "../components/NotificationModal";
 import { MtPlannerApi } from "../apis/mt";
 import type { MtPlannerRequest, MtPlannerResponse } from "../apis/mt";
+import ExcelJS from "exceljs";
 
 interface MtPlannerProps {
   onNavigateToOnboarding: () => void;
@@ -37,7 +38,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
 
     setLoading(true);
     try {
-      const result: MtPlannerResponse = await MtPlannerApi.generatePlan(formData);
+      const result: MtPlannerResponse = await MtPlannerApi.generatePlan(
+        formData
+      );
       console.log("API 응답:", result);
       setMtPlan(result);
       setShowPlanModal(false);
@@ -49,35 +52,119 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
     }
   };
 
-  /** ---------- CSV helpers (엑셀 자동변환 방지 & 한글 헤더) ---------- */
-  const toCell = (v: unknown) => {
-    if (v == null) return "";
-    const s = String(v);
-    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  /** Excel이 날짜/숫자를 변환하지 못하게 탭 prefix */
-  const asExcelText = (s: string) => `\t${s}`;
+  /** ---------- XLSX helpers (엑셀 내보내기) ---------- */
+  const downloadScheduleXLSX = async (
+    filename: string,
+    schedule: MtPlannerResponse["schedule"]
+  ) => {
+    const wb = new ExcelJS.Workbook();
+    wb.created = new Date();
 
-  const buildScheduleCSV = (schedule: MtPlannerResponse["schedule"]) => {
-    const header = ["일차", "순서", "일정 제목", "시작", "종료", "장소", "비고/세부"];
-    const rows = schedule.map((item, idx) => [
-      asExcelText(`${item.day}일차`),
-      idx + 1,
-      item.title ?? "",
-      asExcelText(item.timeStart ?? ""),
-      asExcelText(item.timeEnd ?? ""),
-      item.place ?? "",
-      item.notes ?? "",
-    ]);
+    const ws = wb.addWorksheet("MT 일정표", {
+      views: [{ state: "frozen", ySplit: 1 }], // 헤더 1행 고정
+      properties: { defaultRowHeight: 18 },
+    });
 
-    const lines: string[] = [header.map(toCell).join(",")];
-    for (const r of rows) lines.push(r.map(toCell).join(","));
-    return lines.join("\r\n");
-  };
+    // 열 정의
+    ws.columns = [
+      { header: "일차", key: "day", width: 10 },
+      { header: "순서", key: "order", width: 8 },
+      { header: "일정 제목", key: "title", width: 28 },
+      { header: "시작", key: "start", width: 10 },
+      { header: "종료", key: "end", width: 10 },
+      { header: "장소", key: "place", width: 22 },
+      { header: "비고/세부", key: "notes", width: 40 },
+    ];
 
-  const triggerDownload = (filename: string, csv: string) => {
-    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" }); // BOM 포함
+    // 헤더 스타일
+    const headerRow = ws.getRow(1);
+    headerRow.height = 22;
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFEFEFEF" },
+      };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFCCCCCC" } },
+        left: { style: "thin", color: { argb: "FFCCCCCC" } },
+        bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+        right: { style: "thin", color: { argb: "FFCCCCCC" } },
+      };
+    });
+
+    // 데이터 행 추가
+    schedule.forEach((item, idx) => {
+      ws.addRow({
+        day: `${item.day}일차`,
+        order: idx + 1,
+        title: item.title ?? "",
+        start: item.timeStart ?? "",
+        end: item.timeEnd ?? "",
+        place: item.place ?? "",
+        notes: item.notes ?? "",
+      });
+    });
+
+    // 본문 스타일
+    ws.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      row.eachCell((cell) => {
+        cell.alignment = { vertical: "middle", wrapText: true };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFEEEEEE" } },
+          left: { style: "thin", color: { argb: "FFEEEEEE" } },
+          bottom: { style: "thin", color: { argb: "FFEEEEEE" } },
+          right: { style: "thin", color: { argb: "FFEEEEEE" } },
+        };
+      });
+    });
+
+    // 시작/종료 가운데 정렬
+    ["D", "E"].forEach((col) => {
+      for (let r = 2; r <= ws.rowCount; r++) {
+        ws.getCell(`${col}${r}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+      }
+    });
+
+    // 자동필터
+    ws.autoFilter = { from: "A1", to: "G1" };
+
+    // (containsText → expression + SEARCH) + priority 추가
+    if (ws.rowCount >= 2) {
+      ws.addConditionalFormatting({
+        ref: `G2:G${ws.rowCount}`,
+        rules: [
+          {
+            type: "expression",
+            priority: 1, // ✅ Required in TS types for expression rule
+            // 셀에 "주의" 문자열이 포함되어 있으면 TRUE
+            formulae: ['ISNUMBER(SEARCH("주의",G2))'],
+            style: {
+              font: { color: { argb: "FFB00000" }, bold: true },
+              fill: {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFFFE5E5" },
+              },
+            },
+          },
+        ],
+      });
+    }
+
+    // 버퍼 -> Blob -> 다운로드
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
@@ -85,11 +172,6 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  };
-
-  const downloadScheduleCSV = (filename: string, schedule: MtPlannerResponse["schedule"]) => {
-    const csv = buildScheduleCSV(schedule);
-    triggerDownload(filename, csv);
   };
 
   return (
@@ -113,16 +195,23 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20"></div>
                 <div className="absolute bottom-6 left-6 text-white">
-                  <h2 className="text-4xl font-bold mb-2 drop-shadow-lg font-jua">완벽한 MT 계획</h2>
-                  <p className="text-xl opacity-90 drop-shadow-md font-gowun">AI가 도와주는 맞춤형 MT 플래닝</p>
+                  <h2 className="text-4xl font-bold mb-2 drop-shadow-lg font-jua">
+                    완벽한 MT 계획
+                  </h2>
+                  <p className="text-xl opacity-90 drop-shadow-md font-gowun">
+                    AI가 도와주는 맞춤형 MT 플래닝
+                  </p>
                 </div>
               </div>
 
               <div className="text-center mb-12">
                 <div className="text-6xl mb-6">🏕️</div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-4 font-jua">MT 계획 생성기</h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-4 font-jua">
+                  MT 계획 생성기
+                </h2>
                 <p className="text-lg text-gray-600 mb-8 font-gowun">
-                  몇 가지 정보만 입력하면 완벽한 MT 계획을 자동으로 생성해드립니다
+                  몇 가지 정보만 입력하면 완벽한 MT 계획을 자동으로
+                  생성해드립니다
                 </p>
                 <button
                   onClick={() => {
@@ -138,8 +227,12 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
             <div className="max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-8 pt-10">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2 font-jua">MT 계획서</h2>
-                  <p className="text-gray-600 font-gowun">생성된 MT 계획을 확인하고 수정하세요</p>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2 font-jua">
+                    MT 계획서
+                  </h2>
+                  <p className="text-gray-600 font-gowun">
+                    생성된 MT 계획을 확인하고 수정하세요
+                  </p>
                 </div>
                 <div className="flex gap-3">
                   <button
@@ -175,31 +268,44 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                     </h3>
 
                     <button
-                    onClick={() => {
-                      if (!mtPlan) return;
-                      const stamp = new Date().toISOString().slice(0,10).replace(/-/g,"");
-                      downloadScheduleCSV(`mt_상세일정_${stamp}.csv`, mtPlan.schedule);
-                    }}
-                    title="현재 일정표를 CSV로 저장"
-                    className="rounded-full px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200"
+                      onClick={async () => {
+                        if (!mtPlan) return;
+                        const stamp = new Date()
+                          .toISOString()
+                          .slice(0, 10)
+                          .replace(/-/g, "");
+                        await downloadScheduleXLSX(
+                          `mt_상세일정_${stamp}.xlsx`,
+                          mtPlan.schedule
+                        );
+                      }}
+                      title="현재 일정표를 엑셀로 저장"
+                      className="rounded-full px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200"
                     >
-                      ⬇️ CSV 내보내기
+                      ⬇️ 엑셀로 내보내기
                     </button>
                   </div>
 
                   <div className="space-y-3">
                     {mtPlan.schedule.map((item, index) => (
-                      <div key={index} className="flex items-center gap-4 p-3 bg-orange-50 rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center gap-4 p-3 bg-orange-50 rounded-lg"
+                      >
                         <div className="text-orange-600 font-bold text-sm w-20 font-jua">
                           {item.day}일차
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-gray-800 font-jua">{item.title}</div>
+                          <div className="font-medium text-gray-800 font-jua">
+                            {item.title}
+                          </div>
                           <div className="text-gray-600 text-sm font-gowun">
                             {item.timeStart} ~ {item.timeEnd} / {item.place}
                           </div>
                           {item.notes && (
-                            <div className="text-xs text-gray-500 font-gowun">{item.notes}</div>
+                            <div className="text-xs text-gray-500 font-gowun">
+                              {item.notes}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -215,7 +321,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold text-red-500 mb-2 font-jua">필수 준비물</h4>
+                      <h4 className="font-semibold text-red-500 mb-2 font-jua">
+                        필수 준비물
+                      </h4>
                       <ul className="space-y-1">
                         {mtPlan.packingList.essential.map((item, idx) => (
                           <li
@@ -229,7 +337,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-orange-500 mb-2 font-jua">권장 준비물</h4>
+                      <h4 className="font-semibold text-orange-500 mb-2 font-jua">
+                        권장 준비물
+                      </h4>
                       <ul className="space-y-1">
                         {mtPlan.packingList.recommended.map((item, idx) => (
                           <li
@@ -243,7 +353,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-green-500 mb-2 font-jua">제공 물품</h4>
+                      <h4 className="font-semibold text-green-500 mb-2 font-jua">
+                        제공 물품
+                      </h4>
                       <ul className="space-y-1">
                         {mtPlan.packingList.provided.map((item, idx) => (
                           <li
@@ -285,7 +397,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                       </div>
                       <div className="flex justify-between text-gray-700 font-jua text-sm">
                         <span>1인당</span>
-                        <span>{mtPlan.budget.perPerson.toLocaleString()}원</span>
+                        <span>
+                          {mtPlan.budget.perPerson.toLocaleString()}원
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -304,7 +418,8 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                         className="flex justify-between text-sm text-gray-700 font-gowun"
                       >
                         <span>
-                          [{supply.category}] {supply.item} ({supply.qtyPerPerson} × {formData.people}
+                          [{supply.category}] {supply.item} (
+                          {supply.qtyPerPerson} × {formData.people}
                           명)
                         </span>
                         <span className="font-medium">{supply.qtyTotal}</span>
@@ -340,7 +455,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <span className="text-white text-xl">🏕️</span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-800 font-jua">MT 정보 입력</h3>
+                  <h3 className="text-2xl font-bold text-gray-800 font-jua">
+                    MT 정보 입력
+                  </h3>
                   <p className="text-gray-600 text-sm mt-1 font-gowun">
                     MT 계획 생성을 위한 기본 정보를 입력해주세요
                   </p>
@@ -364,7 +481,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   </label>
                   <select
                     value={formData.period}
-                    onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, period: e.target.value })
+                    }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     required
                   >
@@ -383,7 +502,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   </label>
                   <select
                     value={formData.season}
-                    onChange={(e) => setFormData({ ...formData, season: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, season: e.target.value })
+                    }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     required
                   >
@@ -400,8 +521,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 font-jua">
-                    <span className="text-orange-600">👥</span>
-                    총 참여 인원
+                    <span className="text-orange-600">👥</span>총 참여 인원
                   </label>
                   <input
                     type="number"
@@ -419,7 +539,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <input
                     type="number"
                     value={formData.male}
-                    onChange={(e) => setFormData({ ...formData, male: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, male: Number(e.target.value) })
+                    }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     placeholder="남자 인원"
                     min="0"
@@ -433,7 +555,12 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <input
                     type="number"
                     value={formData.female}
-                    onChange={(e) => setFormData({ ...formData, female: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        female: Number(e.target.value),
+                      })
+                    }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     placeholder="여자 인원"
                     min="0"
@@ -451,7 +578,10 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <select
                     value={formData.outdoorEnabled}
                     onChange={(e) =>
-                      setFormData({ ...formData, outdoorEnabled: e.target.value as "Y" | "N" })
+                      setFormData({
+                        ...formData,
+                        outdoorEnabled: e.target.value as "Y" | "N",
+                      })
                     }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                   >
@@ -470,7 +600,10 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                     type="number"
                     value={formData.lodgingTotal}
                     onChange={(e) =>
-                      setFormData({ ...formData, lodgingTotal: Number(e.target.value) })
+                      setFormData({
+                        ...formData,
+                        lodgingTotal: Number(e.target.value),
+                      })
                     }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     placeholder="숙박 총액을 입력하세요"
@@ -488,7 +621,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                 </label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200 resize-none"
                   rows={3}
                   placeholder="특별한 요청사항이나 고려사항을 입력하세요 (선택사항)"

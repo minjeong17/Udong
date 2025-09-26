@@ -2,6 +2,10 @@ package com.udong.backend.dutchpay.service;
 
 import com.udong.backend.calendar.entity.Event;
 import com.udong.backend.calendar.repository.EventRepository;
+import com.udong.backend.chat.entity.ChatMessage;
+import com.udong.backend.chat.entity.ChatRoom;
+import com.udong.backend.chat.repository.ChatMessageRepository;
+import com.udong.backend.chat.repository.ChatRoomRepository;
 import com.udong.backend.dutchpay.dto.*;
 import com.udong.backend.dutchpay.entity.Dutchpay;
 import com.udong.backend.dutchpay.entity.DutchpayParticipant;
@@ -17,6 +21,9 @@ import com.udong.backend.users.entity.User;
 import com.github.f4b6a3.ulid.UlidCreator;
 import com.udong.backend.users.repository.UserRepository;
 import com.udong.backend.users.service.UserService;
+import com.udong.backend.notification.dto.NotificationRequest;
+import com.udong.backend.notification.service.NotificationService;
+import com.udong.backend.chat.websocket.ChatWebSocketHandler;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +56,10 @@ public class DutchpayService {
     private final DutchpayParticipantRepository participantRepository;
     private final EventRepository eventRepository;
     private final EntityManager em;
+    private final NotificationService notificationService;
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatWebSocketHandler chatWebSocketHandler;
     private final S3Uploader s3Uploader;
     private final AccountCrypto accountCrypto;
     private final FinApiClient finApiClient; // 외부 API 호출용 (WebClient 감싼 클래스)
@@ -129,7 +141,68 @@ public class DutchpayService {
             );
         }
 
-        dutchpayRepository.save(dutchpay);
+        Dutchpay savedDutchpay = dutchpayRepository.save(dutchpay);
+
+        // 더치페이 생성 알림 발송
+        try {
+            // 참여자들의 ID를 Long 타입으로 변환
+            List<Long> participantIds = uniqueUserIds.stream()
+                    .map(Integer::longValue)
+                    .filter(memberId -> !memberId.equals((long) createdByUserId)) // 생성자 제외
+                    .collect(Collectors.toList());
+
+            if (!participantIds.isEmpty()) {
+                // 이벤트에서 클럽 ID 가져오기
+                Event event = eventRepository.findById(eventId)
+                        .orElseThrow(() -> new IllegalStateException("Event not found"));
+
+                NotificationRequest notificationRequest = NotificationRequest.builder()
+                        .payload("새로운 더치페이 정산이 시작되었습니다: [" + savedDutchpay.getNote() + "]")
+                        .type("DUTCHPAY_OPEN")
+                        .targetId(savedDutchpay.getId().longValue())
+                        .createdBy((long) createdByUserId)
+                        .clubId(event.getClub().getId().longValue())
+                        .recipientUserIds(participantIds)
+                        .build();
+
+                notificationService.createAndSendNotification(notificationRequest);
+            }
+        } catch (Exception e) {
+            // 알림 발송 실패는 더치페이 생성 자체를 실패시키지 않음 (로그만 기록)
+            System.err.println("더치페이 생성 알림 발송 실패: " + e.getMessage());
+        }
+
+        // 채팅방에 시스템 메시지 추가
+        try {
+            System.out.println("🚀 정산 시스템 메시지 WebSocket 전송 시도: ∈★ω정산:" + savedDutchpay.getId() + "ω★∋");
+
+            // Event의 채팅방 찾기 (chatId 파라미터로 받은 채팅방)
+            ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+                    .orElseThrow(() -> new IllegalStateException("ChatRoom not found"));
+
+            User creator = userRepository.findById(createdByUserId)
+                    .orElseThrow(() -> new IllegalStateException("Creator not found"));
+
+            String systemMessageContent = "∈★ω정산:" + savedDutchpay.getId() + "ω★∋";
+            System.out.println("📝 정산 시스템 메시지 내용: " + systemMessageContent);
+
+            ChatMessage systemMessage = ChatMessage.builder()
+                    .chat(chatRoom)
+                    .sender(creator) // 더치페이 생성자가 발송한 것으로 처리
+                    .content(systemMessageContent)
+                    .build();
+
+            ChatMessage savedSystemMessage = chatMessageRepository.save(systemMessage);
+            System.out.println("💾 정산 시스템 메시지 DB 저장 완료: messageId=" + savedSystemMessage.getId());
+
+            // WebSocket으로 실시간 브로드캐스트
+            System.out.println("📡 정산 시스템 메시지 WebSocket 브로드캐스트 시작...");
+            chatWebSocketHandler.broadcastSystemMessage(savedSystemMessage);
+            System.out.println("✅ 정산 시스템 메시지 WebSocket 브로드캐스트 완료");
+        } catch (Exception e) {
+            // 시스템 메시지 발송 실패는 더치페이 생성 자체를 실패시키지 않음 (로그만 기록)
+            System.err.println("더치페이 시스템 메시지 발송 실패: " + e.getMessage());
+        }
     }
 
     /**

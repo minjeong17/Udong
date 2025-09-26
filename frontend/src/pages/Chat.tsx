@@ -18,6 +18,76 @@ interface ChatProps {
   onNavigateToOnboarding: () => void;
 }
 
+// 시스템 메시지 패턴 인식 및 렌더링 함수
+const renderSystemMessage = (content: string) => {
+  // ∈★ω투표:19ω★∋ 또는 ∈★ω정산:25ω★∋ 패턴 체크
+  const systemPattern = /∈★ω(.+?):(\d+)ω★∋/;
+  const match = content.match(systemPattern);
+
+  // 디버깅용 콘솔 로그
+  console.log('Checking message:', content);
+  console.log('Pattern match:', match);
+
+  // WebSocket 메시지 확인용 추가 로그
+  if (content.includes('∈★ω')) {
+    console.log('System message detected in content!');
+  }
+
+  if (match) {
+    const [, type, id] = match;
+    console.log('System message detected:', type, id);
+
+    if (type === '투표') {
+      return (
+        <div
+          className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-all"
+          onClick={() => {
+            // 투표 페이지로 이동 (localStorage에 autoSelect 설정)
+            localStorage.setItem('autoSelectVote', id);
+            window.location.href = `/vote`;
+          }}
+        >
+          <div className="text-2xl">📊</div>
+          <div>
+            <div className="font-semibold text-blue-700 font-jua">새로운 투표</div>
+            <div className="text-sm text-blue-600 font-gowun">투표에 참여해보세요</div>
+          </div>
+          <div className="ml-auto text-blue-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === '정산') {
+      return (
+        <div
+          className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-lg cursor-pointer hover:from-green-100 hover:to-green-200 transition-all"
+          onClick={() => {
+            // 정산 페이지로 이동 (settlement ID를 이용)
+            window.location.href = `/settlement?id=${id}`;
+          }}
+        >
+          <div className="text-2xl">💰</div>
+          <div>
+            <div className="font-semibold text-green-700 font-jua">새로운 정산</div>
+            <div className="text-sm text-green-600 font-gowun">정산에 참여해보세요</div>
+          </div>
+          <div className="ml-auto text-green-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  return null;
+};
+
 export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
   // 선택된 채널
   const [selectedChannel, setSelectedChannel] = useState<number | null>(null);
@@ -346,6 +416,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
           if (closedByEffect) return;
           try {
             const data: WsChatIn = JSON.parse(ev.data);
+            console.log("🔥 WebSocket 메시지 받음:", data);
             if (data.type !== "CHAT") return;
 
             setChatMessages((prev) => [
@@ -759,57 +830,76 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                 {/* ▼ 기존 메시지 영역 그대로 */}
                 <div className="flex-1 min-h-0 p-6 overflow-y-auto bg-gradient-to-b from-orange-50 to-white scroll-smooth">
                   <div className="space-y-4">
-                    {chatMessages.map((msg) => (
-                      <div key={msg.id} className="w-full mb-3">
-                        <div
-                          className={`flex w-full ${
-                            msg.isOwn ? "justify-end" : "justify-start"
-                          } gap-3`}
-                        >
-                          {/* 왼쪽 아바타는 상대 글일 때만 */}
-                          {!msg.isOwn && (
-                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-sm font-semibold text-white rounded-full bg-gradient-to-br from-orange-400 to-orange-600">
-                              {twoLetters(msg.user)}
-                            </div>
-                          )}
+                    {chatMessages.map((msg) => {
+                      // 시스템 메시지인지 확인
+                      const systemMessageUI = renderSystemMessage(msg.message);
 
-                          <div className="max-w-[70%]">
+                      if (systemMessageUI) {
+                        // 시스템 메시지는 완전히 다른 레이아웃
+                        return (
+                          <div key={msg.id} className="w-full mb-4">
+                            <div className="flex justify-center">
+                              <div className="w-full max-w-md">
+                                {systemMessageUI}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // 일반 메시지는 기존 레이아웃
+                      return (
+                        <div key={msg.id} className="w-full mb-3">
+                          <div
+                            className={`flex w-full ${
+                              msg.isOwn ? "justify-end" : "justify-start"
+                            } gap-3`}
+                          >
+                            {/* 왼쪽 아바타는 상대 글일 때만 */}
                             {!msg.isOwn && (
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-semibold text-gray-800 font-jua">
-                                  {msg.user}
-                                </span>
-                                <span className="text-xs text-gray-500 font-gowun">
-                                  {msg.timestamp}
-                                </span>
+                              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-sm font-semibold text-white rounded-full bg-gradient-to-br from-orange-400 to-orange-600">
+                                {twoLetters(msg.user)}
                               </div>
                             )}
 
-                            <div
-                              className={`rounded-2xl px-4 py-3 shadow-sm inline-block ${
-                                msg.isOwn
-                                  ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white"
-                                  : "bg-white border border-orange-100"
-                              }`}
-                            >
-                              <p
-                                className={`font-gowun ${
-                                  msg.isOwn ? "text-white" : "text-gray-800"
-                                } whitespace-pre-wrap break-keep`}
+                            <div className="max-w-[70%]">
+                              {!msg.isOwn && (
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-semibold text-gray-800 font-jua">
+                                    {msg.user}
+                                  </span>
+                                  <span className="text-xs text-gray-500 font-gowun">
+                                    {msg.timestamp}
+                                  </span>
+                                </div>
+                              )}
+
+                              <div
+                                className={`rounded-2xl px-4 py-3 shadow-sm inline-block ${
+                                  msg.isOwn
+                                    ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white"
+                                    : "bg-white border border-orange-100"
+                                }`}
                               >
-                                {msg.message}
-                              </p>
-                            </div>
-
-                            {msg.isOwn && (
-                              <div className="mt-1 text-xs text-right text-gray-500 font-gowun">
-                                {msg.timestamp}
+                                <p
+                                  className={`font-gowun ${
+                                    msg.isOwn ? "text-white" : "text-gray-800"
+                                  } whitespace-pre-wrap break-keep`}
+                                >
+                                  {msg.message}
+                                </p>
                               </div>
-                            )}
+
+                              {msg.isOwn && (
+                                <div className="mt-1 text-xs text-right text-gray-500 font-gowun">
+                                  {msg.timestamp}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div ref={messagesEndRef} />
                   </div>
                 </div>

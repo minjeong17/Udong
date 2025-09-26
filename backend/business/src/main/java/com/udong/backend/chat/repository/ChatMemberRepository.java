@@ -38,6 +38,15 @@ public interface ChatMemberRepository extends JpaRepository<ChatMember, Integer>
     """)
     List<ChatMember> findByChatRoomId(@Param("chatId") Integer chatId);
 
+    /** 특정 채팅방의 모든 멤버 ID 조회 (알림 발송용) */
+    @Query("""
+        select u.id
+        from ChatMember m
+        join m.user u
+        where m.chat.id = :chatId
+    """)
+    List<Long> findUserIdsByChatId(@Param("chatId") Integer chatId);
+
     /** chat_members 에서 (chat_id, user_id)로 삭제 */
     int deleteByChat_IdAndUser_Id(Integer chatId, Integer userId);
 

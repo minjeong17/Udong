@@ -67,6 +67,14 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
                                      @Param("q") String q,
                                      @Param("role") String role);
 
+    /** 특정 클럽의 모든 멤버 ID 조회 (알림 발송용) */
+    @Query("""
+        select m.userId
+        from Membership m
+        where m.club.id = :clubId
+    """)
+    List<Long> findUserIdsByClubId(@Param("clubId") Integer clubId);
+
     // User와 UserAvailability를 함께 조회하는 관리용 메서드
     @Query("""
     select distinct m, u
