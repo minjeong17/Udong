@@ -11,6 +11,7 @@ import {
 } from "../apis/calendar";
 import { useAuthStore } from "../stores/authStore";
 import { RouterContext } from "../hooks/useRouter";
+import FeedbackDialog from "../components/FeedbackDialog";
 
 /* =========================================
   Types
@@ -426,70 +427,70 @@ function JoinConfirmModal({
   );
 }
 
-function FeedbackDialog({
-  open,
-  title,
-  message,
-  onClose,
-  actions,
-}: {
-  open: boolean;
-  title: string;
-  message: string;
-  onClose: () => void;
-  actions?: Array<{
-    label: string;
-    onClick: () => void;
-    tone?: "primary" | "default";
-  }>;
-}) {
-  if (!open) return null;
-  return (
-    <div
-      className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
-        <div className="px-6 py-4 border-b">
-          <div className="text-lg font-bold text-gray-900 font-jua">
-            {title}
-          </div>
-        </div>
-        <div className="px-6 py-5">
-          <p className="text-sm text-gray-800 whitespace-pre-line font-gowun">
-            {message}
-          </p>
-        </div>
-        <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun"
-          >
-            닫기
-          </button>
-          {actions?.map((a, i) => (
-            <button
-              key={i}
-              onClick={a.onClick}
-              className={`px-4 py-2 rounded-lg text-sm font-jua ${
-                a.tone === "primary"
-                  ? "bg-orange-500 hover:bg-orange-600 text-white"
-                  : "border border-gray-300 bg-white hover:bg-gray-100"
-              }`}
-            >
-              {a.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+// function FeedbackDialog({
+//   open,
+//   title,
+//   message,
+//   onClose,
+//   actions,
+// }: {
+//   open: boolean;
+//   title: string;
+//   message: string;
+//   onClose: () => void;
+//   actions?: Array<{
+//     label: string;
+//     onClick: () => void;
+//     tone?: "primary" | "default";
+//   }>;
+// }) {
+//   if (!open) return null;
+//   return (
+//     <div
+//       className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+//       onClick={onClose}
+//     >
+//       <div
+//         className="w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden"
+//         onClick={(e) => e.stopPropagation()}
+//         role="dialog"
+//         aria-modal="true"
+//       >
+//         <div className="px-6 py-4 border-b">
+//           <div className="text-lg font-bold text-gray-900 font-jua">
+//             {title}
+//           </div>
+//         </div>
+//         <div className="px-6 py-5">
+//           <p className="text-sm text-gray-800 whitespace-pre-line font-gowun">
+//             {message}
+//           </p>
+//         </div>
+//         <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-end gap-2">
+//           <button
+//             onClick={onClose}
+//             className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun"
+//           >
+//             닫기
+//           </button>
+//           {actions?.map((a, i) => (
+//             <button
+//               key={i}
+//               onClick={a.onClick}
+//               className={`px-4 py-2 rounded-lg text-sm font-jua ${
+//                 a.tone === "primary"
+//                   ? "bg-orange-500 hover:bg-orange-600 text-white"
+//                   : "border border-gray-300 bg-white hover:bg-gray-100"
+//               }`}
+//             >
+//               {a.label}
+//             </button>
+//           ))}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 
 /* =========================================
   Component
