@@ -135,15 +135,16 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
     // 자동필터
     ws.autoFilter = { from: "A1", to: "G1" };
 
-    // (선택) '주의' 포함 시 강조 예시
+    // (containsText → expression + SEARCH) + priority 추가
     if (ws.rowCount >= 2) {
       ws.addConditionalFormatting({
         ref: `G2:G${ws.rowCount}`,
         rules: [
           {
-            type: "containsText",
-            operator: "containsText",
-            text: "주의",
+            type: "expression",
+            priority: 1, // ✅ Required in TS types for expression rule
+            // 셀에 "주의" 문자열이 포함되어 있으면 TRUE
+            formulae: ['ISNUMBER(SEARCH("주의",G2))'],
             style: {
               font: { color: { argb: "FFB00000" }, bold: true },
               fill: {
