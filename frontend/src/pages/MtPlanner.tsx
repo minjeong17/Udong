@@ -116,15 +116,6 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <h2 className="text-4xl font-bold mb-2 drop-shadow-lg font-jua">완벽한 MT 계획</h2>
                   <p className="text-xl opacity-90 drop-shadow-md font-gowun">AI가 도와주는 맞춤형 MT 플래닝</p>
                 </div>
-                <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/30">
-                  <div className="flex items-center gap-2 text-white">
-                    <span className="text-2xl">🗺️</span>
-                    <div>
-                      <div className="text-sm font-semibold font-jua">AI 분석</div>
-                      <div className="text-xs opacity-80 font-gowun">최적 장소 탐색 중...</div>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <div className="text-center mb-12">

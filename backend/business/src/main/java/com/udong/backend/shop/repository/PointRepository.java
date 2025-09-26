@@ -11,6 +11,8 @@ public interface PointRepository extends JpaRepository<UserPointLedger, Integer>
 
 	List<UserPointLedger> findByUserIdAndClubId(Integer userId, Integer clubId);
 
+	List<UserPointLedger> findByUserIdAndClubIdOrderByCreatedAtDesc(Integer userId, Integer clubId);
+
 	Optional<UserPointLedger> findTopByUserIdAndClubIdOrderByCreatedAtDesc(Integer userId, Integer clubId);
 
 }

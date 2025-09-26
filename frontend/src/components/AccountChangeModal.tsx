@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface AccountChangeModalProps {
   isOpen: boolean;
@@ -11,6 +12,9 @@ const AccountChangeModal: React.FC<AccountChangeModalProps> = ({
   onClose,
   onConfirm
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const [accountNumber, setAccountNumber] = useState('');
 
   if (!isOpen) return null;

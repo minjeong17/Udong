@@ -254,7 +254,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                   </div>
                 </div>
                 {/* 회장만 동아리원 관리 버튼 표시 */}
-                {myRole === 'LEADER' ? (
+                {myRole === 'LEADER' && (
                   <button
                     onClick={() => navigate('member-management')}
                     className="bg-slate-400 hover:bg-slate-500 text-gray-800 px-6 py-3 rounded-xl font-jua transition-colors flex items-center gap-2 shadow-md"
@@ -265,13 +265,6 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                     </svg>
                     동아리원 관리
                   </button>
-                ) : (
-                  <div className="bg-gray-200 text-gray-500 px-6 py-3 rounded-xl font-jua flex items-center gap-2 shadow-md cursor-not-allowed">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    회장 전용 기능
-                  </div>
                 )}
               </div>
             </div>
@@ -418,8 +411,7 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 </div>
                 <h3 className="text-base font-bold text-gray-700 font-jua mb-2">회비 납부 현황</h3>
                 <p className="text-sm text-gray-600 font-jua text-center px-2">
-                  모든 회비가<br />
-                  납부 완료되었습니다!
+                  납부할 회비가 없습니다!
                 </p>
               </div>
             )}
@@ -437,7 +429,15 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 {dutchpayList.length > 0 ? (
                   <>
                     {dutchpayList.slice(0, 2).map((dutchpay) => (
-                      <div key={dutchpay.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100">
+                      <div
+                        key={dutchpay.id}
+                        className="bg-white rounded-lg px-3 py-1 shadow-sm border border-pink-100 hover:bg-pink-50 hover:border-pink-200 cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation(); // 부모 카드 클릭 이벤트 방지
+                          localStorage.setItem('autoSelectSettlement', dutchpay.id.toString());
+                          navigate('settlement');
+                        }}
+                      >
                         <span className="text-sm text-gray-600 font-jua truncate block" title={dutchpay.eventTitle}>
                           {dutchpay.eventTitle.length > 12 ? `${dutchpay.eventTitle.slice(0, 12)}...` : dutchpay.eventTitle}
                         </span>
@@ -524,7 +524,15 @@ const ClubDashboard: React.FC<ClubDashboardProps> = ({
                 {ongoingEvents.length > 0 ? (
                   <>
                     {ongoingEvents.slice(0, 2).map((event) => (
-                      <div key={event.id} className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100">
+                      <div
+                        key={event.id}
+                        className="bg-white rounded-lg px-3 py-1 shadow-sm border border-green-100 hover:bg-green-50 hover:border-green-200 cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation(); // 부모 카드 클릭 이벤트 방지
+                          localStorage.setItem('autoSelectEvent', event.id.toString());
+                          navigate('calendar');
+                        }}
+                      >
                         <span className="text-sm text-gray-600 font-jua truncate block" title={event.title}>
                           {event.title.length > 12 ? `${event.title.slice(0, 12)}...` : event.title}
                         </span>

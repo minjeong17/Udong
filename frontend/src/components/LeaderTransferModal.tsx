@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface LeaderTransferModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ const LeaderTransferModal: React.FC<LeaderTransferModalProps> = ({
   onConfirm,
   targetMemberName
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const [isTransferring, setIsTransferring] = useState(false);
   const [newAccountNumber, setNewAccountNumber] = useState('');
 

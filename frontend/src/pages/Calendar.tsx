@@ -572,7 +572,23 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
     const month = cursor.getMonth() + 1;
     try {
       const list = await CalendarApi.getMonth({ clubId, year, month });
-      setEvents(list.map(mapListItem));
+      const mappedEvents = list.map(mapListItem);
+      setEvents(mappedEvents);
+
+      // 자동 선택 로직
+      const autoSelectEventId = localStorage.getItem('autoSelectEvent');
+      if (autoSelectEventId && mappedEvents.length > 0) {
+        const targetEventId = parseInt(autoSelectEventId);
+        const targetEvent = mappedEvents.find(event => event.id == targetEventId);
+        if (targetEvent) {
+          // 이벤트 모달 자동으로 열기
+          setTimeout(() => {
+            openEventModal(targetEvent);
+          }, 100);
+          // 한 번 사용한 후 제거
+          localStorage.removeItem('autoSelectEvent');
+        }
+      }
     } catch (e) {
       console.error("getMonth failed", e);
     }

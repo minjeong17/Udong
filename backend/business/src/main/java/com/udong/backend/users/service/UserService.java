@@ -6,6 +6,7 @@ import com.udong.backend.users.dto.SignUpRequest;
 import com.udong.backend.users.entity.User;
 import com.udong.backend.users.entity.UserAvailability;
 import com.udong.backend.users.repository.UserRepository;
+import com.udong.backend.global.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +39,23 @@ public class UserService {
         if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다.");
 
         // 2) 외부 API로 userKey 가져오기
-        String plainUserKey = finApiClient.fetchUserKeyByEmail(req.getEmail());
+        String plainUserKey;
+        try {
+            plainUserKey = finApiClient.fetchUserKeyByEmail(req.getEmail());
+        } catch (RuntimeException e) {
+            // E4000번대 에러나 외부 API 에러를 구체적으로 전달
+            String message = e.getMessage();
+            if (message != null && (
+                message.contains("E400") ||
+                message.contains("빈 데이터이거나 형식에 맞지 않는 데이터입니다") ||
+                message.contains("Fin userKey API") ||
+                message.contains("BAD_REQUEST")
+            )) {
+                throw new ExternalApiException(message);
+            }
+            // 기타 RuntimeException은 다시 던지기
+            throw e;
+        }
 
         // 3) 계좌 소유권 검증 - 이메일로 받은 userKey와 입력한 계좌번호가 매칭되는지 확인
         if (!finApiClient.validateAccount(plainUserKey, normalized)) {

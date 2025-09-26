@@ -15,6 +15,7 @@ import com.udong.backend.global.dto.response.ApiResponse;
 import com.udong.backend.global.util.SecurityUtils;
 import com.udong.backend.shop.dto.UserPointLedgerRequest;
 import com.udong.backend.shop.dto.UserPointLedgerResponse;
+import com.udong.backend.shop.dto.PointHistoryResponse;
 import com.udong.backend.shop.entity.UserPointLedger;
 import com.udong.backend.shop.entity.ClubPointsLedger;
 import com.udong.backend.shop.service.PointService;
@@ -78,6 +79,16 @@ public class PointController {
     public ResponseEntity<ApiResponse<Integer>> getClubPoints(@PathVariable("clubId") Integer clubId) {
         Integer clubPoints = pointService.getClubPoints(clubId.longValue());
         return ResponseEntity.ok(ApiResponse.ok(clubPoints));
+    }
+
+    /**
+     * 포인트 히스토리 조회
+     */
+    @GetMapping("/{clubId}/history")
+    public ResponseEntity<ApiResponse<List<PointHistoryResponse>>> getPointHistory(@PathVariable("clubId") Integer clubId) {
+        Integer userId = securityUtils.currentUserId();
+        List<PointHistoryResponse> history = pointService.getPointHistory(userId, clubId);
+        return ResponseEntity.ok(ApiResponse.ok(history));
     }
 }
 	

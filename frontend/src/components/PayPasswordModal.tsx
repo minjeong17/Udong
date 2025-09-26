@@ -3,6 +3,7 @@ import { UserApi } from "../apis/user/api";
 import AccountChangeModal from "./AccountChangeModal";
 import type { DutchpayDetailResponse } from "../pages/Settlement";
 import { DutchpayApi, type PayRequest } from "../apis/dutchpay";
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface PayPasswordModalProps {
   isOpen: boolean;
@@ -17,6 +18,9 @@ const PayPasswordModal: React.FC<PayPasswordModalProps> = ({
   onConfirm,
   payInfo,
 }) => {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   const [userAccount, setUserAccount] = useState({
     bankName: "로딩중...",
     accountNumber: "로딩중...",

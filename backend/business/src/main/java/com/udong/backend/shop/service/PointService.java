@@ -2,12 +2,14 @@ package com.udong.backend.shop.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.udong.backend.clubs.entity.Club;
 import com.udong.backend.clubs.repository.ClubRepository;
 import org.springframework.stereotype.Service;
 
 import com.udong.backend.shop.dto.UserPointLedgerRequest;
+import com.udong.backend.shop.dto.PointHistoryResponse;
 import com.udong.backend.shop.entity.UserPointLedger;
 import com.udong.backend.shop.entity.ClubPointsLedger;
 import com.udong.backend.shop.entity.Item;
@@ -132,5 +134,19 @@ public class PointService {
             // 리롤권 지급 실패 시 로그만 남기고 메인 로직은 계속 진행
             System.err.println("Failed to give reroll ticket to leader: " + e.getMessage());
         }
+    }
+
+    public List<PointHistoryResponse> getPointHistory(Integer userId, Integer clubId) {
+        List<UserPointLedger> ledgers = pointRepository.findByUserIdAndClubIdOrderByCreatedAtDesc(userId, clubId);
+
+        return ledgers.stream()
+                .map(ledger -> PointHistoryResponse.builder()
+                        .codeName(ledger.getCodeName())
+                        .memo(ledger.getMemo())
+                        .currPoint(ledger.getCurrPoint())
+                        .delta(ledger.getDelta())
+                        .createdAt(ledger.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

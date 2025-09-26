@@ -28,11 +28,7 @@ public class MascotImageService {
     @Value("${app.gms.enabled:true}")
     private boolean gmsEnabled;
 
-    @Value("${app.mascot.prompt-template:Create an ultra-cute baby animal mascot in a Pixar-inspired 3D style that represents a {{club category}} club.\n" +
-            "Make the character friendly and expressive with big sparkling eyes, soft rounded body, and playful details.\n" +
-            "The animal should be designed as a charming companion, not realistic but stylized, emphasizing warmth and approachability. \n" +
-            "Full-body, centered composition, soft studio lighting, high detail, clean silhouette. Plain light (or transparent) background.\n" +
-            "No extra text or watermarks anywhere in the image. Generate exactly ONE character.}")
+    @Value("${app.mascot.prompt-template:Create one ultra-cute baby animal mascot in a Pixar-inspired 3D style for a {{club category}} club. The character must be the only focus: full-body, centered, with big sparkling eyes, soft rounded shapes, and playful details. Make it friendly, warm, and expressive, with slight randomness in colors, poses, or small accessories so each generation feels unique. Use soft studio lighting, high detail, and a clean silhouette. Background should be a simple pastel backdrop, with random variations in soft colors or gradients (pink, mint, lavender, sky blue, cream, etc.) to keep results fresh. No text, no watermarks, no extra characters.}")
     private String tpl;
 
     // 공개 URL 생성 시 보조 (CDN > S3_BASE > S3 region URL)

@@ -1,4 +1,5 @@
 import type { MyUnpaidDuesResponse, MyUnpaidDuesItem } from '../apis/clubdues/response';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface UnpaidDuesModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ export default function UnpaidDuesModal({
   unpaidDues,
   onDuesClick
 }: UnpaidDuesModalProps) {
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose, isOpen);
+
   if (!isOpen) return null;
 
   return (
