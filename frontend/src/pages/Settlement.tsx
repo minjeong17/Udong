@@ -51,6 +51,16 @@ export default function SettlementPage({
     useState<DutchpayDetailResponse | null>(null);
 
   const userId = useAuthStore.getState().user?.id;
+
+  // URL 파라미터에서 정산 ID 확인
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const settlementId = urlParams.get('id');
+    if (settlementId) {
+      setSelectedSettlement(Number(settlementId));
+    }
+  }, []);
+
   // 정산 목록을 API에서 가져오는 함수
   useEffect(() => {
     const fetchSettlements = async () => {

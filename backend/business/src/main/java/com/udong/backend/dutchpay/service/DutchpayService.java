@@ -174,6 +174,8 @@ public class DutchpayService {
 
         // 채팅방에 시스템 메시지 추가
         try {
+            System.out.println("🚀 정산 시스템 메시지 WebSocket 전송 시도: ∈★ω정산:" + savedDutchpay.getId() + "ω★∋");
+
             // Event의 채팅방 찾기 (chatId 파라미터로 받은 채팅방)
             ChatRoom chatRoom = chatRoomRepository.findById(chatId)
                     .orElseThrow(() -> new IllegalStateException("ChatRoom not found"));
@@ -181,16 +183,22 @@ public class DutchpayService {
             User creator = userRepository.findById(createdByUserId)
                     .orElseThrow(() -> new IllegalStateException("Creator not found"));
 
+            String systemMessageContent = "∈★ω정산:" + savedDutchpay.getId() + "ω★∋";
+            System.out.println("📝 정산 시스템 메시지 내용: " + systemMessageContent);
+
             ChatMessage systemMessage = ChatMessage.builder()
                     .chat(chatRoom)
                     .sender(creator) // 더치페이 생성자가 발송한 것으로 처리
-                    .content("∈★ω정산:" + savedDutchpay.getId() + "ω★∋")
+                    .content(systemMessageContent)
                     .build();
 
             ChatMessage savedSystemMessage = chatMessageRepository.save(systemMessage);
+            System.out.println("💾 정산 시스템 메시지 DB 저장 완료: messageId=" + savedSystemMessage.getId());
 
             // WebSocket으로 실시간 브로드캐스트
+            System.out.println("📡 정산 시스템 메시지 WebSocket 브로드캐스트 시작...");
             chatWebSocketHandler.broadcastSystemMessage(savedSystemMessage);
+            System.out.println("✅ 정산 시스템 메시지 WebSocket 브로드캐스트 완료");
         } catch (Exception e) {
             // 시스템 메시지 발송 실패는 더치페이 생성 자체를 실패시키지 않음 (로그만 기록)
             System.err.println("더치페이 시스템 메시지 발송 실패: " + e.getMessage());
