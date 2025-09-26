@@ -95,6 +95,35 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         log.info("WS closed: room={}, session={}, code={}", roomId, session.getId(), status.getCode());
     }
 
+    /**
+     * 시스템 메시지 브로드캐스트 (외부에서 호출용)
+     */
+    public void broadcastSystemMessage(ChatMessage systemMessage) {
+        try {
+            Integer roomId = systemMessage.getChat().getId();
+            System.out.println("📡 브로드캐스트 시작: roomId=" + roomId + ", 연결된 세션 수=" + roomSessions.getOrDefault(roomId, Collections.emptySet()).size());
+
+            // 기존 채팅 메시지와 동일한 형식으로 브로드캐스트
+            var out = om.createObjectNode();
+            out.put("type", "CHAT");
+            out.put("roomId", roomId);
+            out.put("messageId", systemMessage.getId());
+            out.put("senderUserId", systemMessage.getSender().getId());
+            out.put("senderName", systemMessage.getSender().getName() == null ? "익명" : systemMessage.getSender().getName());
+            out.put("content", systemMessage.getContent());
+            out.put("createdAt", systemMessage.getCreatedAt().toString());
+
+            String jsonMessage = om.writeValueAsString(out);
+            System.out.println("📤 전송할 JSON: " + jsonMessage);
+
+            broadcast(roomId, new TextMessage(jsonMessage));
+            System.out.println("✅ broadcast() 호출 완료");
+        } catch (Exception e) {
+            System.err.println("❌ 시스템 메시지 브로드캐스트 실패: " + e.getMessage());
+            log.error("시스템 메시지 브로드캐스트 실패", e);
+        }
+    }
+
     /* helpers */
 
     private void broadcast(Integer roomId, TextMessage text) {
