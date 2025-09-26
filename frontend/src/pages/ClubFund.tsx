@@ -334,12 +334,14 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
             type: "cellIs",
             operator: "greaterThan",
             formulae: ["0"],
+            priority: 1, // ✅ 추가
             style: { font: { color: { argb: "FF1F7A1F" }, bold: true } },
           },
           {
             type: "cellIs",
             operator: "lessThan",
             formulae: ["0"],
+            priority: 2, // ✅ 추가
             style: { font: { color: { argb: "FFB00000" }, bold: true } },
           },
         ],
