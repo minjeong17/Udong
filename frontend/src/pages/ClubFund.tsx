@@ -162,8 +162,9 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [loadingTx, setLoadingTx] = useState(false);
 
-  // UI 상태
-  const [from, setFrom] = useState("2024-01-01");
+  // UI 상태 - 페이지 진입 시 1년치로 초기화
+  const oneYearAgo = toISO(shiftMonths(new Date(), 12));
+  const [from, setFrom] = useState(oneYearAgo);
   const [to, setTo] = useState(todayISO);
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -172,9 +173,10 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
   const [memo, setMemo] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  /** ✅ 페이지 진입 시 잔액 자동 조회 */
+  /** ✅ 페이지 진입 시 잔액 및 1년치 거래내역 자동 조회 */
   useEffect(() => {
     refreshBalance();
+    queryTransactions(); // 1년치 거래내역 자동 조회
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

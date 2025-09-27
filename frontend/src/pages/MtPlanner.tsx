@@ -26,12 +26,23 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
     notes: "",
   });
 
+  const [inputValues, setInputValues] = useState({
+    male: "",
+    female: "",
+    lodgingTotal: "",
+  });
+
   useEffect(() => {
+    const male = Number(inputValues.male) || 0;
+    const female = Number(inputValues.female) || 0;
     setFormData((prev) => ({
       ...prev,
-      people: (prev.male || 0) + (prev.female || 0),
+      male,
+      female,
+      people: male + female,
+      lodgingTotal: Number(inputValues.lodgingTotal) || 0,
     }));
-  }, [formData.male, formData.female]);
+  }, [inputValues]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,7 +186,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="flex min-h-screen bg-[#fcf9f5]">
       {/* Left Sidebar */}
       <Sidebar
         onNavigateToOnboarding={onNavigateToOnboarding}
@@ -247,6 +258,11 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                         outdoorEnabled: "Y",
                         lodgingTotal: 0,
                         notes: "",
+                      });
+                      setInputValues({
+                        male: "",
+                        female: "",
+                        lodgingTotal: "",
                       });
                       setShowPlanModal(true);
                     }}
@@ -441,10 +457,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
       />
 
       {showPlanModal && (
-        <div
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm"
-          onClick={() => setShowPlanModal(false)}
-        >
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
           <div
             className="bg-white rounded-3xl p-8 max-w-2xl w-full mx-4 shadow-2xl border border-orange-200"
             onClick={(e) => e.stopPropagation()}
@@ -538,9 +551,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   </label>
                   <input
                     type="number"
-                    value={formData.male}
+                    value={inputValues.male}
                     onChange={(e) =>
-                      setFormData({ ...formData, male: Number(e.target.value) })
+                      setInputValues({ ...inputValues, male: e.target.value })
                     }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     placeholder="남자 인원"
@@ -554,12 +567,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   </label>
                   <input
                     type="number"
-                    value={formData.female}
+                    value={inputValues.female}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        female: Number(e.target.value),
-                      })
+                      setInputValues({ ...inputValues, female: e.target.value })
                     }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     placeholder="여자 인원"
@@ -598,12 +608,9 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   </label>
                   <input
                     type="number"
-                    value={formData.lodgingTotal}
+                    value={inputValues.lodgingTotal}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        lodgingTotal: Number(e.target.value),
-                      })
+                      setInputValues({ ...inputValues, lodgingTotal: e.target.value })
                     }
                     className="w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200"
                     placeholder="숙박 총액을 입력하세요"

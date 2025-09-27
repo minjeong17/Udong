@@ -106,7 +106,7 @@ export const CalendarApi = {
   // 수정
   async update(clubId: number, eventId: number, body: EventUpdateReq): Promise<EventRes> {
     const url = withBase(`/clubs/${clubId}/events/${eventId}`);
-    const raw = await fetchClient<any>(url, { method: 'PATCH', body: JSON.stringify(body) });
+    const raw = await fetchClient<any>(url, { method: 'PUT', body: JSON.stringify(body) });
     return unwrap<EventRes>(raw);
   },
 

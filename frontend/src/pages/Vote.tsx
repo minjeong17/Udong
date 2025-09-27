@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
+import FeedbackDialog from '../components/FeedbackDialog';
 import { VoteApi } from '../apis/vote';
 import type { VoteParticipateRequest, VoteSelectionRequest, VoteResponse } from '../apis/vote';
 import { ItemApi } from '../apis/item';
@@ -59,6 +60,31 @@ export default function VotingPage({
   const [selectedVoteId, setSelectedVoteId] = useState<number | null>(null)
   const [showClosed, setShowClosed] = useState(false)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
+
+  // FeedbackDialog 상태
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>;
+  }>({ title: "", message: "" });
+
+  const showFeedback = (
+    title: string,
+    message: string,
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>
+  ) => {
+    setFeedback({ title, message, actions });
+    setFeedbackOpen(true);
+  };
 
   // 내 투표 초안, 제출 상태
   const [draftByVote, setDraftByVote] =
@@ -259,15 +285,41 @@ export default function VotingPage({
 
     // 사용할 추가 투표권이 있으면 확인 요청
     if (additionalVotesNeeded > 0) {
-      const confirmMessage = `추가 투표권 ${additionalVotesNeeded}개를 사용하여 투표하시겠습니까?`
-      if (!confirm(confirmMessage)) return
-
       // 투표권 보유 수량 확인
       if (additionalVotesNeeded > additionalVoteItems) {
-        alert('추가 투표권이 부족합니다.')
+        showFeedback('투표권 부족', '추가 투표권이 부족합니다.');
         return
       }
+
+      showFeedback(
+        '추가 투표권 사용 확인',
+        `추가 투표권 ${additionalVotesNeeded}개를 사용하여 투표하시겠습니까?`,
+        [
+          {
+            label: "취소",
+            onClick: () => setFeedbackOpen(false),
+            tone: "default"
+          },
+          {
+            label: "투표",
+            onClick: () => {
+              setFeedbackOpen(false);
+              performVoteSubmission(v, draft, additionalVotesNeeded);
+            },
+            tone: "primary"
+          }
+        ]
+      );
+      return;
     }
+
+    // 추가 투표권이 필요 없는 경우 바로 투표 진행
+    performVoteSubmission(v, draft, additionalVotesNeeded);
+  }
+
+  // 실제 투표 제출 함수
+  const performVoteSubmission = async (v: Vote, draft: Record<number, number>, additionalVotesNeeded: number) => {
+    if (!clubId) return;
 
     // API 요구에 맞는 payload 생성
     const selections: VoteSelectionRequest[] = []
@@ -305,7 +357,7 @@ export default function VotingPage({
       setDraftByVote(d => ({ ...d, [v.id]: {} }))
       setUserVoteCapacity(prev => ({ ...prev, [v.id]: 0 }))
 
-      alert("투표가 확정되었습니다.")
+      showFeedback("투표 완료", "투표가 확정되었습니다.");
     } catch (e) {
       console.error('투표 제출 실패:', e)
 
@@ -320,7 +372,7 @@ export default function VotingPage({
         }
       }
 
-      alert("제출 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.")
+      showFeedback("투표 실패", "제출 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.")
     } finally {
       setSubmitting(s => ({ ...s, [v.id]: false }))
     }
@@ -387,7 +439,7 @@ export default function VotingPage({
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="min-h-screen bg-[#fcf9f5]">
       <div className="flex">
         {/* Left Sidebar */}
         <Sidebar
@@ -488,7 +540,7 @@ export default function VotingPage({
           </div>
 
           {/* 상세 */}
-          <div className="flex-1 bg-gradient-to-br from-orange-50 to-orange-100">
+          <div className="flex-1 bg-[#fcf9f5]">
             {selectedVote ? (
               <div className="p-8">
                 {/* 헤더 */}
@@ -599,7 +651,7 @@ export default function VotingPage({
                               <span className="font-jua">
                                 {(userVoteCapacity[selectedVote.id] || 0) < additionalVoteItems
                                   ? "🎫 추가 투표권 +"
-                                  : "🎫 추가 투표권 없음"
+                                  : "🎫 투표권없음"
                                 }
                               </span>
                             </button>
@@ -863,6 +915,15 @@ export default function VotingPage({
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
         onNavigateToOnboarding={onNavigateToOnboarding}
+      />
+
+      {/* 피드백 다이얼로그 */}
+      <FeedbackDialog
+        open={feedbackOpen}
+        title={feedback.title}
+        message={feedback.message}
+        actions={feedback.actions}
+        onClose={() => setFeedbackOpen(false)}
       />
 
     </div>

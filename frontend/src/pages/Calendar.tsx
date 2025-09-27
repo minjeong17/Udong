@@ -11,6 +11,7 @@ import {
 } from "../apis/calendar";
 import { useAuthStore } from "../stores/authStore";
 import { RouterContext } from "../hooks/useRouter";
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import FeedbackDialog from "../components/FeedbackDialog";
 
 /* =========================================
@@ -553,6 +554,13 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
   const [editOpen, setEditOpen] = useState(false);
   const [joinConfirmOpen, setJoinConfirmOpen] = useState(false);
 
+  // ESC 키로 모달 닫기
+  useEscapeKey(() => setEventModalOpen(false), eventModalOpen);
+  useEscapeKey(() => setDayModalOpen(false), dayModalOpen);
+  useEscapeKey(() => setCreateOpen(false), createOpen);
+  useEscapeKey(() => setEditOpen(false), editOpen);
+  useEscapeKey(() => setJoinConfirmOpen(false), joinConfirmOpen);
+
   // ★ 참여자 상태 (목록/로딩/에러)
   const calStart = startOfCalendar(cursor);
   const calEnd = endOfCalendar(cursor);
@@ -566,14 +574,25 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
     return out;
   }, [calStart.getTime(), calEnd.getTime()]);
 
-  /* ============ API: 월 목록 로드 ============ */
+  /* ============ API: 월 목록 로드 (현재 달 + 다음 달) ============ */
   const refreshMonth = async () => {
     if (!clubId) return;
     const year = cursor.getFullYear();
     const month = cursor.getMonth() + 1;
+
     try {
-      const list = await CalendarApi.getMonth({ clubId, year, month });
-      const mappedEvents = list.map(mapListItem);
+      // 현재 달과 다음 달 데이터를 동시에 가져오기
+      const nextMonth = month === 12 ? 1 : month + 1;
+      const nextYear = month === 12 ? year + 1 : year;
+
+      const [currentMonthList, nextMonthList] = await Promise.all([
+        CalendarApi.getMonth({ clubId, year, month }),
+        CalendarApi.getMonth({ clubId, year: nextYear, month: nextMonth })
+      ]);
+
+      // 두 달의 데이터를 합치기
+      const combinedList = [...currentMonthList, ...nextMonthList];
+      const mappedEvents = combinedList.map(mapListItem);
       setEvents(mappedEvents);
 
       // 자동 선택 로직
@@ -598,17 +617,16 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
     refreshMonth(); /* eslint-disable-next-line */
   }, [clubId, cursor]);
 
-  // 현재 달 이벤트
+  // 캘린더에 표시되는 모든 날짜 범위의 이벤트 (이전달 끝 + 현재달 + 다음달 시작)
   const monthEvents = useMemo(() => {
-    const y = cursor.getFullYear();
-    const m = cursor.getMonth();
-    const monthStart = new Date(y, m, 1).getTime();
-    const monthEnd = new Date(y, m + 1, 0).getTime();
+    // 캘린더에 실제로 표시되는 전체 범위 사용
+    const calendarStart = calStart.getTime();
+    const calendarEnd = calEnd.getTime();
     return events
       .filter((e) => {
         const s = parseYMD(e.date).getTime();
         const eEnd = parseYMD(e.endDate ?? e.date).getTime();
-        return !(eEnd < monthStart || s > monthEnd);
+        return !(eEnd < calendarStart || s > calendarEnd);
       })
       .sort(
         (a, b) =>
@@ -783,7 +801,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
           onShowNotification={() => setShowNotificationModal(true)}
         />
 
-        <main className="flex-1 px-6 py-2 bg-gradient-to-br from-orange-50 via-white to-orange-100">
+        <main className="flex-1 px-6 py-2">
           {/* 헤더 */}
           <div className="mb-2">
             <div className="flex items-center gap-4">

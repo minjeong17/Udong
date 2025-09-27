@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
+import FeedbackDialog from '../components/FeedbackDialog';
 import { useRouter } from '../hooks/useRouter';
 import { ShopApi } from "../apis/shop";
 import { ClubApi } from "../apis/clubs";
@@ -60,6 +61,31 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
   const [isRerolling, setIsRerolling] = useState(false);
   const clubId = useAuthStore((state) => state.clubId);
 
+  // FeedbackDialog 상태
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>;
+  }>({ title: "", message: "" });
+
+  const showFeedback = (
+    title: string,
+    message: string,
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>
+  ) => {
+    setFeedback({ title, message, actions });
+    setFeedbackOpen(true);
+  };
+
   // ESC 키로 모달 닫기
   useEscapeKey(() => setShowMascotRerollModal(false), showMascotRerollModal);
 
@@ -80,31 +106,52 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
 
   const handleBuy = async (itemId: number, itemName: string) => {
     if (clubId == null) {
-      alert("클럽 정보가 없습니다. 다시 로그인해주세요.");
+      showFeedback("로그인 필요", "클럽 정보가 없습니다. 다시 로그인해주세요.");
       return;
     }
 
-    if (!window.confirm(`정말 '${itemName}'을 구매하시겠습니까?`)) return;
+    // 구매 확인 다이얼로그
+    showFeedback(
+      "구매 확인",
+      `정말 '${itemName}'을 구매하시겠습니까?`,
+      [
+        {
+          label: "취소",
+          onClick: () => setFeedbackOpen(false),
+          tone: "default"
+        },
+        {
+          label: "구매",
+          onClick: async () => {
+            setFeedbackOpen(false);
+            await performPurchase(itemId, itemName);
+          },
+          tone: "primary"
+        }
+      ]
+    );
+  };
 
+  const performPurchase = async (itemId: number, itemName: string) => {
     try {
-      await ShopApi.purchase(clubId, itemId);
+      await ShopApi.purchase(clubId!, itemId);
       const [updatedInventory, updatedLedger] = await Promise.all([
-        ShopApi.getInventory(clubId),
-        ShopApi.getPoint(clubId),
+        ShopApi.getInventory(clubId!),
+        ShopApi.getPoint(clubId!),
       ]);
 
       setInventory(updatedInventory);
       setPoints(updatedLedger.currPoint);
 
       if (itemId === 4) {
-        alert(`[${itemName}] 구매 완료!\n동돌이를 마스코트로 사용해보실 수 있습니다!`);
+        showFeedback("구매 완료", `[${itemName}] 구매 완료!\n동돌이를 마스코트로 사용해보실 수 있습니다!`);
       } else {
-        alert(`[${itemName}] 구매 완료!`);
+        showFeedback("구매 완료", `[${itemName}] 구매 완료!`);
       }
 
     } catch (err) {
       console.error(err);
-      alert("구매에 실패했습니다.");
+      showFeedback("구매 실패", "구매에 실패했습니다.");
     }
   };
 
@@ -171,7 +218,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
   }, [clubId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="min-h-screen bg-[#fcf9f5]">
       <div className="flex">
         {/* Left Sidebar */}
         <Sidebar
@@ -318,6 +365,15 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
           </div>
         </div>
       )}
+
+      {/* 피드백 다이얼로그 */}
+      <FeedbackDialog
+        open={feedbackOpen}
+        title={feedback.title}
+        message={feedback.message}
+        actions={feedback.actions}
+        onClose={() => setFeedbackOpen(false)}
+      />
     </div>
   );
 }

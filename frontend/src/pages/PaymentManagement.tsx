@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import NotificationModal from '../components/NotificationModal';
 import PaymentCollectionModal from '../components/PaymentCollectionModal';
 import UnpaidNotificationModal from '../components/UnpaidNotificationModal';
+import FeedbackDialog from '../components/FeedbackDialog';
 import { useRouter } from '../hooks/useRouter';
 import { useAuthStore } from '../stores/authStore';
 import { ClubDuesApi } from '../apis/clubdues';
@@ -25,6 +26,31 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
   const [showUnpaidNotificationModal, setShowUnpaidNotificationModal] = useState(false);
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'completed' | 'unpaid'>('all');
   const [searchName, setSearchName] = useState('');
+
+  // FeedbackDialog 상태
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>;
+  }>({ title: "", message: "" });
+
+  const showFeedback = (
+    title: string,
+    message: string,
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>
+  ) => {
+    setFeedback({ title, message, actions });
+    setFeedbackOpen(true);
+  };
 
   // API 데이터 상태
   const [duesList, setDuesList] = useState<DuesListResponse | null>(null);
@@ -216,10 +242,10 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
     try {
       setLoading(true);
       await ClubDuesApi.notifyUnpaidMembers(clubId, currentDuesStatus.duesId);
-      alert('미납자들에게 알림이 전송되었습니다.');
+      showFeedback('알림 전송 완료', '미납자들에게 알림이 전송되었습니다.');
     } catch (error) {
       console.error('미납자 알림 전송 실패:', error);
-      alert('미납자 알림 전송에 실패했습니다.');
+      showFeedback('알림 전송 실패', '미납자 알림 전송에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -448,6 +474,15 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
           unpaidMembers={unpaidMembers}
           duesNo={currentDuesStatus?.duesNo || 0}
           amount={currentDuesStatus?.membershipDues || 0}
+        />
+
+        {/* 피드백 다이얼로그 */}
+        <FeedbackDialog
+          open={feedbackOpen}
+          title={feedback.title}
+          message={feedback.message}
+          actions={feedback.actions}
+          onClose={() => setFeedbackOpen(false)}
         />
       </div>
     </div>

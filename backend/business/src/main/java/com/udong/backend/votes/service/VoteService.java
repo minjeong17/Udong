@@ -349,17 +349,16 @@ public class VoteService {
                 .collect(Collectors.toList());
 
         voteSelectionRepository.saveAll(newSelections);
-        if(vote.getChatRoom().getType().getName().equals("GLOBAL")) {
+
             UserPointLedgerRequest userPointLedgerRequest = UserPointLedgerRequest.builder()
                     .voteId(voteId)
                     .clubId(vote.getClub().getId())
                     .codeName("VOTE")
-                    .delta(50)
+                    .delta(100)
                     .memo("투표 참여 보상")
                     .build();
 
             pointService.addPoints(currentUserId, userPointLedgerRequest);
-        }
         return getVoteDetail(voteId, currentUserId);
     }
 

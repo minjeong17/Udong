@@ -6,6 +6,7 @@ import { InventoryApi } from '../apis/inventory';
 import type { InventoryResponse } from '../apis/inventory/response';
 import { useAuthStore } from '../stores/authStore';
 import AccountChangeModal from './AccountChangeModal';
+import FeedbackDialog from './FeedbackDialog';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface DuesPaymentModalProps {
@@ -34,6 +35,31 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
   const [isAccountChangeModalOpen, setIsAccountChangeModalOpen] = useState(false);
   const [paymentPassword, setPaymentPassword] = useState('');
   const [showPasswordInput, setShowPasswordInput] = useState(false);
+
+  // FeedbackDialog 상태
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>;
+  }>({ title: "", message: "" });
+
+  const showFeedback = (
+    title: string,
+    message: string,
+    actions?: Array<{
+      label: string;
+      onClick: () => void;
+      tone?: "primary" | "default";
+    }>
+  ) => {
+    setFeedback({ title, message, actions });
+    setFeedbackOpen(true);
+  };
 
   useEffect(() => {
     if (isOpen && clubId) {
@@ -101,9 +127,21 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
 
       const result = await ClubDuesApi.payDues(clubId, duesInfo.duesId, paymentRequest);
 
-      alert(`결제가 완료되었습니다!\n결제 금액: ${result.finalAmount.toLocaleString()}원`);
-      onConfirm();
-      onClose();
+      showFeedback(
+        '결제 완료',
+        `결제가 완료되었습니다!\n결제 금액: ${result.finalAmount.toLocaleString()}원`,
+        [
+          {
+            label: "확인",
+            onClick: () => {
+              setFeedbackOpen(false);
+              onConfirm();
+              onClose();
+            },
+            tone: "primary"
+          }
+        ]
+      );
     } catch (error: any) {
       console.error('결제 실패:', error);
 
@@ -375,6 +413,15 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
         isOpen={isAccountChangeModalOpen}
         onClose={() => setIsAccountChangeModalOpen(false)}
         onConfirm={handleAccountUpdate}
+      />
+
+      {/* 피드백 다이얼로그 */}
+      <FeedbackDialog
+        open={feedbackOpen}
+        title={feedback.title}
+        message={feedback.message}
+        actions={feedback.actions}
+        onClose={() => setFeedbackOpen(false)}
       />
     </div>
   );

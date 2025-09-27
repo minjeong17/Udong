@@ -194,7 +194,7 @@ export default function SettlementPage({
     }
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="min-h-screen bg-[#fcf9f5]">
       <div className="flex">
         {/* Left Sidebar */}
         <Sidebar
@@ -325,7 +325,7 @@ export default function SettlementPage({
 
           {/* 상세 뷰 부분 */}
           {!selectedSettlementData ? (
-            <div className="flex-1 bg-gradient-to-br from-orange-50 to-orange-100">
+            <div className="flex-1 bg-[#fcf9f5]">
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="text-6xl mb-4">💰</div>
@@ -340,7 +340,7 @@ export default function SettlementPage({
               </div>
             </div>
           ) : (
-            <div className="flex-1 bg-gradient-to-br from-orange-50 to-orange-100">
+            <div className="flex-1 bg-[#fcf9f5]">
               {selectedSettlementData ? (
                 <div className="p-6">
                   {/* 헤더 */}
