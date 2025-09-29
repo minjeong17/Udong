@@ -1,0 +1,85 @@
+spring:
+  config:
+    # ...env 파일 또는 환경 변수에서 값을 가져오도록 설정
+    import: "optional:file:./.env[.properties]"
+  application:
+    name: backend
+  datasource:
+    # ...env 파일에서 데이터베이스 정보를 읽어옵니다.
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 여기에 HikariCP 설정 추가
+    hikari:
+      maximum-pool-size: 3      # 기본 10 → 3으로 줄임
+      minimum-idle: 1           # 최소 유지 연결
+      connection-timeout: 20000 # 20초
+      idle-timeout: 300000      # 5분
+      max-lifetime: 1200000     # 20분
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  servlet:
+    context-path: /api
+  error:
+    include-stacktrace: never
+    include-message: always
+
+jwt:
+  secret:
+    # ...env 파일에서 JWT 비밀 키를 읽어옵니다.
+    key: ${JWT_SECRET_KEY}
+
+app:
+  crypto:
+    # ...env 파일에서 AES256 키를 읽어옵니다.
+    aes256_key_b64: ${APP_AES_KEY_B64}
+    key_version: 1
+
+logging:
+  level:
+    com.udong.backend.external.gms: DEBUG
+    org.springframework.web.client: DEBUG
+
+cloud:
+  aws:
+    # 이 값도 민감하다면 .env로 옮길 수 있습니다.
+    region: ap-southeast-2
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus,health"
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+finapi:
+  base-url: https://finopenapi.ssafy.io/ssafy/api/v1
+  userkey-path: /member/search
+  api-key: ${FIN_API_KEY}
+  institution-code: "00100"
+  app-no: "001"
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+imagen:
+  endpoint: "https://gms.ssafy.io/gmsapi/generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${IMA_GMS_KEY}"

@@ -1,0 +1,272 @@
+package com.udong.backend.clubs.service;
+
+import com.udong.backend.chat.dto.CreateRoomRequest;
+import com.udong.backend.chat.service.ChatRoomService;
+import com.udong.backend.clubs.dto.ClubDtos;
+import com.udong.backend.clubs.dto.MascotCreateReq;
+import com.udong.backend.clubs.entity.Club;
+import com.udong.backend.clubs.entity.Membership;
+import com.udong.backend.clubs.repository.ClubRepository;
+import com.udong.backend.clubs.repository.MembershipRepository;
+import com.udong.backend.codes.entity.CodeDetail;
+import com.udong.backend.codes.repository.CodeDetailRepository;
+import com.udong.backend.global.config.AccountCrypto;
+import com.udong.backend.shop.entity.ClubPointsLedger;
+import com.udong.backend.shop.repository.ClubPointsLedgerRepository;
+import com.udong.backend.shop.entity.UserPointLedger;
+import com.udong.backend.shop.repository.PointRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
+import java.util.List;
+import java.util.Locale;
+
+@Service @RequiredArgsConstructor
+public class ClubService {
+    private final ClubRepository clubs;
+    private final AccountCrypto accountCrypto;        // ✅ 추가
+    private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final SecureRandom RND = new SecureRandom();
+
+    private final CodeDetailRepository codeDetails;
+    private final MembershipRepository membershipRepository;
+    private final MascotService mascotService;
+    private final ChatRoomService chatRoomService;
+    private final ClubPointsLedgerRepository clubPointsLedgerRepository;
+    private final PointRepository pointRepository;
+
+    private final String GLOBAL_CODE = "GLOBAL";
+    private final String GLOBAL_CHATROOM_NAME = "전체 채팅방";
+
+    @Transactional
+    public Club create(String name, String category, String description,
+                       Integer leaderUserId, String accountNumber) {
+
+        if (clubs.existsByName(name)) throw new IllegalArgumentException("동아리명이 이미 존재합니다");
+
+        String normalized = accountCrypto.normalize(accountNumber);
+        if (normalized.length() < 8) throw new IllegalArgumentException("계좌번호 형식이 올바르지 않습니다");
+
+        String code = generateCode();
+        String cipher = accountCrypto.encrypt(normalized);
+
+        Club saved = clubs.save(
+                Club.builder()
+                        .name(name).category(category).description(description)
+                        .codeUrl(code).leaderUserId(leaderUserId)
+                        .accountCipher(cipher)
+                        .accountKeyVer((short) accountCrypto.keyVersion())
+                        .build()
+        );
+
+        // ✅ LEADER 코드 존재 검증 (group_name = 'memberships')
+        codeDetails.findByCodeGroup_GroupNameAndCodeName("memberships", "LEADER")
+                .orElseThrow(() -> new IllegalStateException("공통코드(memberships/LEADER)가 없습니다"));
+
+        // 리더 멤버십 자동 등록
+        memberships.save(
+                Membership.builder()
+                        .club(saved)
+                        .userId(leaderUserId)
+                        .roleCode("LEADER")   // 문자열 코드 저장
+                        .build()
+        );
+
+        mascotService.reroll(saved.getId(),new MascotCreateReq(saved.getCategory(), null));
+
+        // ClubPointsLedger 초기화
+        clubPointsLedgerRepository.save(ClubPointsLedger.createZero(saved.getId().longValue()));
+
+        chatRoomService.create(saved.getLeaderUserId(),new CreateRoomRequest(GLOBAL_CODE,saved.getId(),GLOBAL_CHATROOM_NAME));
+        return saved;
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public Club get(Integer id) { return clubs.findById(id).orElseThrow(() -> new IllegalArgumentException("동아리를 찾을 수 없습니다")); }
+
+    @Transactional
+    public Club update(Integer id, String name, String category, String description) {
+        Club c = get(id);
+        if (name != null) c.setName(name);
+        if (category != null) c.setCategory(category);
+        if (description != null) c.setDescription(description);
+        return c;
+    }
+
+    @Transactional
+    public void delete(Integer id) { clubs.delete(get(id)); }
+
+    @Transactional
+    public String reissueInviteCode(Integer id) {
+        Club c = get(id);
+        c.setCodeUrl(generateCode());
+        return c.getCodeUrl();
+    }
+
+    private String generateCode() {
+        String code;
+        int attempts = 0;
+        final int MAX_ATTEMPTS = 10;
+
+        do {
+            StringBuilder sb = new StringBuilder(8);
+            for (int i = 0; i < 8; i++) sb.append(CODE_CHARS.charAt(RND.nextInt(CODE_CHARS.length())));
+            code = sb.toString();
+            attempts++;
+
+            if (attempts >= MAX_ATTEMPTS) {
+                throw new IllegalStateException("고유한 초대코드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+            }
+        } while (clubs.existsByCodeUrl(code));
+
+        return code;
+    }
+
+    // ✅ 조회용: 마스킹된 계좌 반환
+    @Transactional(readOnly = true)
+    public String getMaskedAccount(Integer clubId) {
+        Club c = get(clubId);
+        if (c.getAccountCipher() == null || c.getAccountCipher().isBlank()) return null;
+        String plain = accountCrypto.decrypt(c.getAccountCipher());
+        return accountCrypto.mask(plain);
+    }
+
+    // ✅ 관리용: 복호화된 계좌번호 반환 (민감정보 - 권한 체크 필요)
+    @Transactional(readOnly = true)
+    public String getDecryptedAccount(Integer clubId) {
+        Club c = get(clubId);
+        if (c.getAccountCipher() == null || c.getAccountCipher().isBlank()) return null;
+        return accountCrypto.decrypt(c.getAccountCipher());
+    }
+
+    private final MembershipRepository memberships;
+
+    @Transactional
+    public Membership joinByCode(String rawCode, Integer userId) {
+        String code = rawCode.trim().toUpperCase(Locale.ROOT);
+
+        Club club = clubs.findByCodeUrl(code)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 초대코드입니다."));
+
+        if (memberships.existsByUserIdAndClub_Id(userId, club.getId())) {
+            throw new IllegalStateException("이미 가입된 동아리입니다.");
+        }
+
+        // ✅ 공통코드에서 MEMBERSHIPS::MEMBER 검증
+        CodeDetail memberCode = codeDetails.findById("MEMBER")
+                .filter(cd -> cd.getCodeGroup().getGroupName().equals("memberships"))
+                .orElseThrow(() -> new IllegalStateException("회원 역할 코드가 유효하지 않습니다."));
+
+        Membership m = Membership.builder()
+                .userId(userId)
+                .club(club)
+                .roleCode(memberCode.getCodeName())   // "MEMBER"
+                .build();
+
+        Membership res = memberships.save(m);
+        chatRoomService.addMember("GLOBAL", club.getId(), res.getUserId());
+
+        return res;
+    }
+
+    /** ISO8601(Z) 포맷 문자열로 */
+    public static String toIsoZ(java.time.OffsetDateTime odt) {
+        return odt.toInstant().toString(); // 예: 2025-09-10T09:00:00Z
+    }
+
+    @Transactional(readOnly = true)
+    public List<Club> getClubsByUserId(Integer userId) {
+        List<Membership> memberships = membershipRepository.findByUserIdFetchClub(userId);
+        return memberships.stream()
+                .map(Membership::getClub)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClubDtos.ClubListRes> getClubsWithMascotByUserId(Integer userId) {
+        List<Membership> memberships = membershipRepository.findByUserIdFetchClubAndMascot(userId);
+        return memberships.stream()
+                .map(membership -> {
+                    Club club = membership.getClub();
+                    String masUrl = null;
+                    if (club.getActiveMascot() != null) {
+                        masUrl = club.getActiveMascot().getImageUrl();
+                    }
+                    return new ClubDtos.ClubListRes(
+                            club.getId(),
+                            club.getName(),
+                            club.getCategory(),
+                            club.getDescription(),
+                            club.getCodeUrl(),
+                            club.getActiveMascot() == null ? null : club.getActiveMascot().getId(),
+                            masUrl,
+                            toIsoKST(membership.getCreatedAt()),
+                            membership.getRoleCode()
+                    );
+                })
+                .toList();
+    }
+
+    @Transactional
+    public ClubDtos.DailyAccessRes trackDashboardAccess(Integer clubId, Integer userId) {
+        // 1. 멤버십 조회
+        Membership membership = membershipRepository.findByClub_IdAndUserId(clubId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 동아리의 멤버가 아닙니다."));
+
+        // 2. 오늘 첫 접속인지 확인
+        boolean isFirstAccessToday = !membership.isAccessedToday();
+        int pointsAwarded = 0;
+
+        // 3. 첫 접속이면 포인트 지급 (10포인트)
+        if (isFirstAccessToday) {
+            pointsAwarded = 100;
+            addDailyAccessPoints(clubId, userId, pointsAwarded, "일일 출석 보상");
+        }
+
+        // 4. 접속 시간 업데이트
+        membership.updateLastAccessedAt();
+        membershipRepository.save(membership);
+
+        return new ClubDtos.DailyAccessRes(isFirstAccessToday, pointsAwarded);
+    }
+
+    private void addDailyAccessPoints(Integer clubId, Integer userId, int points, String memo) {
+        // 1. 현재 포인트 조회
+        Integer currPoint = pointRepository.findTopByUserIdAndClubIdOrderByCreatedAtDesc(userId, clubId)
+                .map(UserPointLedger::getCurrPoint)
+                .orElse(0);
+
+        int newPoint = currPoint + points;
+
+        // 2. 유저 포인트 로그 생성
+        UserPointLedger ledger = UserPointLedger.builder()
+                .userId(userId)
+                .clubId(clubId)
+                .delta(points)
+                .currPoint(newPoint)
+                .codeName("ATTEND")
+                .memo(memo)
+                .build();
+
+        pointRepository.save(ledger);
+
+        // 3. 동아리 포인트도 함께 증가
+        ClubPointsLedger clubPointsLedger = clubPointsLedgerRepository.findByClubId(clubId.longValue())
+                .orElseGet(() -> {
+                    ClubPointsLedger newClubLedger = ClubPointsLedger.createZero(clubId.longValue());
+                    return clubPointsLedgerRepository.save(newClubLedger);
+                });
+
+        clubPointsLedger.addPoints(points);
+        clubPointsLedgerRepository.save(clubPointsLedger);
+    }
+
+    public static String toIsoKST(java.time.LocalDateTime dt) {
+        return dt.atZone(java.time.ZoneId.of("Asia/Seoul"))
+                .format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+}

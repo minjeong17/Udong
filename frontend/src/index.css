@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 사이드바 스크롤바 스타일 */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: #fef3e2;
+  border-radius: 10px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: #fbbf24;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}
+
+/* 캘린더 스크롤바 스타일 */
+.calendar-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.calendar-scrollbar::-webkit-scrollbar-track {
+  background: #fef3e2;
+  border-radius: 10px;
+}
+
+.calendar-scrollbar::-webkit-scrollbar-thumb {
+  background: #fbbf24;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.calendar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}
