@@ -677,9 +677,17 @@ export default function VotingPage({
 
                     <div className="space-y-4">
                       {selectedVote.options.map((opt) => {
-                        const total = opt.voteCount
-                        const pct = opt.percentage
                         const myCount = getMyDraftCount(selectedVote, opt.id)
+                        const myOriginalCount = opt.myVoteCount ?? 0
+                        const myAddedCount = myCount - myOriginalCount
+                        const total = opt.voteCount + myAddedCount // 드래프트 변경사항 반영
+                        const totalVotesWithDraft = selectedVote.options.reduce((sum, o) => {
+                          const oMyCount = getMyDraftCount(selectedVote, o.id)
+                          const oOriginalCount = o.myVoteCount ?? 0
+                          const oAddedCount = oMyCount - oOriginalCount
+                          return sum + o.voteCount + oAddedCount
+                        }, 0)
+                        const pct = totalVotesWithDraft > 0 ? Math.round((total / totalVotesWithDraft) * 100) : 0
                         const myUsed = getMyDraftUsed(selectedVote)
                         const remaining = getMyDraftRemaining(selectedVote)
 
