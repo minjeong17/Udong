@@ -185,7 +185,7 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
     try {
       setLoadingBalance(true);
       const data = await ClubFundApi.getBalance(CLUB_ID);
-      setBalance(data.balance - 20000); // 수수료 2만원 차감
+      setBalance(data.balance - 40000); // 수수료 2만원 차감
     } catch (e: any) {
       console.error(e);
       alert(e?.message || "잔액 조회 중 오류가 발생했습니다.");
@@ -222,7 +222,7 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
         })
         .map(mapDtoToUi);
 
-      setTxs(sorted.slice(1)); // 첫 번째 항목 제외
+      setTxs(sorted.slice(2)); // 첫 번째 항목 제외
       setHasQueried(true);
     } catch (e: any) {
       console.error(e);
