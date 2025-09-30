@@ -30,11 +30,16 @@ public class MtPlannerService {
         // 1) 수량 계산
         String meatKg = String.format(java.util.Locale.US, "%.2fkg", ppl * 0.25);
 
-        double beerPerPerson = 0.2 + (0.5 - 0.2) * (1 - femaleRatio);
-        String beerCans = String.format("%d캔", Math.round(ppl * beerPerPerson));
+//        double beerPerPerson = 0.2 + (0.5 - 0.2) * (1 - femaleRatio);
+//        String beerCans = String.format("%d병", Math.round(ppl * beerPerPerson));
 
-        double sojuPerPerson = 1.0 + (1.5 - 1.0) * (1 - femaleRatio);
-        String sojuBottles = String.format(java.util.Locale.US, "%.1f병", ppl * sojuPerPerson);
+        int beerPerPerson = (int) Math.ceil(0.2 + (0.5 - 0.2) * (1 - femaleRatio));
+        String beerCans = String.format("%d병", ppl * beerPerPerson);
+
+//        double sojuPerPerson = 1.0 + (1.5 - 1.0) * (1 - femaleRatio);
+//        String sojuBottles = String.format(java.util.Locale.US, "%.1f병", ppl * sojuPerPerson);
+        int sojuPerPerson = (int) Math.ceil(1.0 + (1.5 - 1.0) * (1 - femaleRatio));
+        String sojuBottles = String.format(java.util.Locale.US, "%d병", ppl * sojuPerPerson);
 
         String liters = ppl + "L";
         String sets   = ppl + "세트";
@@ -68,13 +73,13 @@ public class MtPlannerService {
 [식자재/주류/소모품 수량 규칙]
 - 아래 **수량 문자열은 그대로 사용**한다(모델이 임의 변경 금지).
   - 고기 총량: "%s" (예: "5.00kg")
-  - 맥주 총량: "%s" (예: "18캔")
+  - 맥주 총량: "%s" (예: "18병")
   - 소주 총량: "%s" (예: "24.0병")
   - 생수 총량: "%s" (예: "20L")
   - 일회용품 총량: "%s" (예: "20세트")
 - 주류 인당 기준(표시는 참고용이며, 실제 출력은 아래 supplies 예시처럼 넣는다):
-  - 맥주 인당: "%.1f" 캔
-  - 소주 인당: "%.1f" 병
+  - 맥주 인당: "%s" 병 (예: "1병")
+  - 소주 인당: "%s" 병 (예: "1병")
 - outdoorEnabled='N'이면 바비큐/레크리에이션 항목에 **실내 대체 문구**를 포함한다(예: 전기그릴, 보드게임 위주 등).
 
 [예산 계산 규칙 - 숫자만, 콤마 없이, 원 단위 정수]
@@ -106,8 +111,8 @@ public class MtPlannerService {
   ],
   "supplies": [
     {"category":"고기","item":"삼겹살","qtyPerPerson":"250g","qtyTotal":"%s","notes":"여유 5%% 포함"},
-    {"category":"주류","item":"맥주","qtyPerPerson":"%.1f캔","qtyTotal":"%s","notes":"성비 고려"},
-    {"category":"주류","item":"소주","qtyPerPerson":"%.1f병","qtyTotal":"%s","notes":"성비 고려"},
+    {"category":"주류","item":"맥주","qtyPerPerson":"%s병","qtyTotal":"%s","notes":"성비 고려"},
+    {"category":"주류","item":"소주","qtyPerPerson":"%s병","qtyTotal":"%s","notes":"성비 고려"},
     {"category":"음료","item":"생수","qtyPerPerson":"1L","qtyTotal":"%s","notes":"추가 확보 권장"},
     {"category":"기타","item":"일회용품","qtyPerPerson":"1세트","qtyTotal":"%s","notes":"컵/접시/젓가락"}
   ],
