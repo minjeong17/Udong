@@ -211,8 +211,8 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
       <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 w-[500px] max-h-[700px] relative overflow-y-auto">
         {/* 헤더 */}
         <div className="text-center pt-6 pb-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-700 font-jua">회비 결제</h2>
-          <p className="text-sm text-gray-600 font-gowun mt-2">
+          <h2 className="text-2xl font-bold text-black font-jua">회비 결제</h2>
+          <p className="text-sm text-black font-maplestory font-bold mt-2">
             제 {duesInfo.duesNo}회차 회비를 결제합니다
           </p>
         </div>
@@ -220,7 +220,7 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-4 w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+          className="absolute top-2 right-4 w-6 h-6 flex items-center justify-center text-black hover:text-black transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -231,11 +231,11 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-blue-700 font-gowun">결제 대상</span>
+              <span className="font-semibold text-blue-700 font-maplestory font-bold">결제 대상</span>
               <span className="text-blue-600 font-jua">제 {duesInfo.duesNo}회차</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-blue-600 font-gowun">회비 금액</span>
+              <span className="text-sm text-blue-600 font-maplestory font-bold">회비 금액</span>
               <span className="text-lg font-bold text-blue-700 font-jua">
                 {duesInfo.membershipDues.toLocaleString()}원
               </span>
@@ -245,16 +245,16 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
 
         {/* 회비 감면권 사용 */}
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-base font-bold text-gray-700 font-jua mb-3">회비 감면권 사용</h3>
+          <h3 className="text-base font-bold text-black font-jua mb-3">회비 감면권 사용</h3>
 
           {hasDiscountCoupon ? (
             <div className="space-y-3">
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-green-600">🎫</span>
-                  <span className="font-medium text-green-700 font-gowun">회비 감면권 보유</span>
+                  <span className="font-medium text-green-700 font-maplestory font-bold">회비 감면권 보유</span>
                 </div>
-                <div className="text-sm text-green-600 font-gowun">
+                <div className="text-sm text-green-600 font-maplestory font-bold">
                   사용 가능한 감면권: {discountCouponCount}개 (10% 할인)
                 </div>
               </div>
@@ -269,7 +269,7 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                     onChange={() => setUseDiscountCoupon(false)}
                     className="text-orange-500"
                   />
-                  <span className="font-gowun text-sm">감면권 사용 안함</span>
+                  <span className="font-maplestory font-bold text-sm">감면권 사용 안함</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -280,7 +280,7 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                     onChange={() => setUseDiscountCoupon(true)}
                     className="text-orange-500"
                   />
-                  <span className="font-gowun text-sm">
+                  <span className="font-maplestory font-bold text-sm">
                     감면권 1개 사용 (10% 할인 - {Math.floor(duesInfo.membershipDues * 0.1).toLocaleString()}원 할인)
                   </span>
                 </label>
@@ -290,9 +290,9 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">🎫</span>
-                <span className="text-gray-500 font-gowun text-sm">보유한 회비 감면권이 없습니다</span>
+                <span className="text-black font-maplestory font-bold text-sm">보유한 회비 감면권이 없습니다</span>
               </div>
-              <p className="text-xs text-gray-400 font-gowun mt-1">
+              <p className="text-xs text-gray-400 font-maplestory font-bold mt-1">
                 활동 포인트로 상점에서 감면권을 구매할 수 있습니다
               </p>
             </div>
@@ -301,14 +301,14 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
 
         {/* 결제 계좌 정보 */}
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-base font-bold text-gray-700 font-jua mb-3">결제 계좌 정보</h3>
+          <h3 className="text-base font-bold text-black font-jua mb-3">결제 계좌 정보</h3>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-blue-600 text-lg">🏦</span>
                 <div>
-                  <div className="font-medium text-blue-700 font-gowun text-sm">
+                  <div className="font-medium text-blue-700 font-maplestory font-bold text-sm">
                     {userAccount.bankName}
                   </div>
                   <div className="text-blue-600 font-jua">
@@ -318,12 +318,12 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
               </div>
               <button
                 onClick={handleAccountChange}
-                className="bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                className="bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-maplestory font-bold text-xs transition-colors"
               >
                 계좌 변경
               </button>
             </div>
-            <p className="text-xs text-blue-500 font-gowun mt-2">
+            <p className="text-xs text-blue-500 font-maplestory font-bold mt-2">
               위 계좌에서 회비가 자동 출금됩니다
             </p>
           </div>
@@ -333,20 +333,20 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 font-gowun">원래 금액</span>
-              <span className="text-sm text-gray-700 font-jua">{duesInfo.membershipDues.toLocaleString()}원</span>
+              <span className="text-sm text-black font-maplestory font-bold">원래 금액</span>
+              <span className="text-sm text-black font-jua">{duesInfo.membershipDues.toLocaleString()}원</span>
             </div>
 
             {discountAmount > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-green-600 font-gowun">감면권 할인</span>
+                <span className="text-sm text-green-600 font-maplestory font-bold">감면권 할인</span>
                 <span className="text-sm text-green-600 font-jua">-{discountAmount.toLocaleString()}원</span>
               </div>
             )}
 
             <div className="border-t border-gray-200 pt-2">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-700 font-gowun">최종 결제 금액</span>
+                <span className="font-semibold text-black font-maplestory font-bold">최종 결제 금액</span>
                 <span className="text-xl font-bold text-orange-500 font-jua">
                   {finalAmount.toLocaleString()}원
                 </span>
@@ -358,11 +358,11 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
         {/* 결제 비밀번호 입력 */}
         {showPasswordInput && (
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-base font-bold text-gray-700 font-jua mb-3">결제 비밀번호 입력</h3>
+            <h3 className="text-base font-bold text-black font-jua mb-3">결제 비밀번호 입력</h3>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-yellow-600 text-lg">🔒</span>
-                <span className="font-medium text-yellow-700 font-gowun text-sm">
+                <span className="font-medium text-yellow-700 font-maplestory font-bold text-sm">
                   결제를 위해 비밀번호를 입력하세요
                 </span>
               </div>
@@ -371,11 +371,11 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                 value={paymentPassword}
                 onChange={(e) => setPaymentPassword(e.target.value)}
                 placeholder="결제 비밀번호를 입력하세요"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg font-gowun text-center text-lg tracking-widest focus:outline-none focus:border-orange-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg font-maplestory font-bold text-center text-lg tracking-widest focus:outline-none focus:border-orange-500"
                 maxLength={6}
                 autoFocus
               />
-              <p className="text-xs text-yellow-600 font-gowun mt-2 text-center">
+              <p className="text-xs text-yellow-600 font-maplestory font-bold mt-2 text-center">
                 회원가입 시 설정한 6자리 결제 비밀번호를 입력하세요
               </p>
             </div>
@@ -394,7 +394,7 @@ const DuesPaymentModal: React.FC<DuesPaymentModalProps> = ({
                   onClose();
                 }
               }}
-              className="bg-white border-2 border-gray-300 text-gray-600 rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-gray-50 transition-colors"
+              className="bg-white border-2 border-gray-300 text-black rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-gray-50 transition-colors"
             >
               {showPasswordInput ? '이전' : '취소'}
             </button>

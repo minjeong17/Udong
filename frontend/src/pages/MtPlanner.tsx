@@ -209,7 +209,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <h2 className="text-4xl font-bold mb-2 drop-shadow-lg font-jua">
                     완벽한 MT 계획
                   </h2>
-                  <p className="text-xl opacity-90 drop-shadow-md font-gowun">
+                  <p className="text-xl opacity-90 drop-shadow-md font-maplestory font-bold">
                     AI가 도와주는 맞춤형 MT 플래닝
                   </p>
                 </div>
@@ -220,7 +220,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                 <h2 className="text-3xl font-bold text-gray-800 mb-4 font-jua">
                   MT 계획 생성기
                 </h2>
-                <p className="text-lg text-gray-600 mb-8 font-gowun">
+                <p className="text-lg text-gray-600 mb-8 font-maplestory font-bold">
                   몇 가지 정보만 입력하면 완벽한 MT 계획을 자동으로
                   생성해드립니다
                 </p>
@@ -241,7 +241,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <h2 className="text-2xl font-bold text-gray-800 mb-2 font-jua">
                     MT 계획서
                   </h2>
-                  <p className="text-gray-600 font-gowun">
+                  <p className="text-black font-maplestory font-bold">
                     생성된 MT 계획을 확인하고 수정하세요
                   </p>
                 </div>
@@ -315,11 +315,11 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                           <div className="font-medium text-gray-800 font-jua">
                             {item.title}
                           </div>
-                          <div className="text-gray-600 text-sm font-gowun">
+                          <div className="text-black text-sm font-maplestory font-bold">
                             {item.timeStart} ~ {item.timeEnd} / {item.place}
                           </div>
                           {item.notes && (
-                            <div className="text-xs text-gray-500 font-gowun">
+                            <div className="text-xs text-black font-maplestory font-bold">
                               {item.notes}
                             </div>
                           )}
@@ -344,7 +344,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                         {mtPlan.packingList.essential.map((item, idx) => (
                           <li
                             key={idx}
-                            className="text-sm text-gray-700 flex items-center gap-2 font-gowun"
+                            className="text-sm text-black flex items-center gap-2 font-maplestory font-bold"
                           >
                             <span className="text-red-400">•</span>
                             {item}
@@ -360,7 +360,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                         {mtPlan.packingList.recommended.map((item, idx) => (
                           <li
                             key={idx}
-                            className="text-sm text-gray-700 flex items-center gap-2 font-gowun"
+                            className="text-sm text-black flex items-center gap-2 font-maplestory font-bold"
                           >
                             <span className="text-orange-400">•</span>
                             {item}
@@ -376,7 +376,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                         {mtPlan.packingList.provided.map((item, idx) => (
                           <li
                             key={idx}
-                            className="text-sm text-gray-700 flex items-center gap-2 font-gowun"
+                            className="text-sm text-black flex items-center gap-2 font-maplestory font-bold"
                           >
                             <span className="text-green-400">•</span>
                             {item}
@@ -395,13 +395,13 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-600 font-gowun">숙박비</span>
+                      <span className="text-black font-maplestory font-bold">숙박비</span>
                       <span className="font-medium font-jua">
                         {mtPlan.budget.lodging.toLocaleString()}원
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 font-gowun">식비</span>
+                      <span className="text-black font-maplestory font-bold">식비</span>
                       <span className="font-medium font-jua">
                         {mtPlan.budget.food.toLocaleString()}원
                       </span>
@@ -411,7 +411,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                         <span>총 예산</span>
                         <span>{mtPlan.budget.total.toLocaleString()}원</span>
                       </div>
-                      <div className="flex justify-between text-gray-700 font-jua text-sm">
+                      <div className="flex justify-between text-black font-jua text-sm">
                         <span>1인당</span>
                         <span>
                           {mtPlan.budget.perPerson.toLocaleString()}원
@@ -431,7 +431,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                     {mtPlan.supplies.map((supply, idx) => (
                       <li
                         key={idx}
-                        className="flex justify-between text-sm text-gray-700 font-gowun"
+                        className="flex justify-between text-sm text-black font-maplestory font-bold"
                       >
                         <span>
                           [{supply.category}] {supply.item} (
@@ -471,7 +471,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                   <h3 className="text-2xl font-bold text-gray-800 font-jua">
                     MT 정보 입력
                   </h3>
-                  <p className="text-gray-600 text-sm mt-1 font-gowun">
+                  <p className="text-black text-sm mt-1 font-maplestory font-bold">
                     MT 계획 생성을 위한 기본 정보를 입력해주세요
                   </p>
                 </div>
@@ -540,7 +540,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                     type="number"
                     value={formData.people}
                     readOnly
-                    className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-600 cursor-not-allowed"
+                    className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-black cursor-not-allowed"
                     placeholder="남자/여자 인원 입력 시 자동 계산됩니다"
                   />
                 </div>
@@ -641,7 +641,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
               <div className="flex justify-end gap-4 pt-6 border-t border-orange-200">
                 <button
                   type="button"
-                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-200 font-jua"
+                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-semibold transition-all duration-200 font-jua"
                   onClick={() => setShowPlanModal(false)}
                 >
                   취소
@@ -707,7 +707,7 @@ const MtPlanner: React.FC<MtPlannerProps> = ({ onNavigateToOnboarding }) => {
                           d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
                         ></path>
                       </svg>
-                      <p className="text-gray-700 font-jua text-lg">
+                      <p className="text-black font-jua text-lg">
                         AI가 MT 계획을 준비 중입니다...
                       </p>
                     </div>

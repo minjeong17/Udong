@@ -347,7 +347,7 @@ const Notification: React.FC<NotificationProps> = () => {
               <Bell className="w-8 h-8 text-orange-600" />
               알림
               {totalUnreadCount > 0 && (
-                <span className="px-3 py-1 text-sm text-white bg-orange-500 rounded-full font-gowun">
+                <span className="px-3 py-1 text-sm text-white bg-orange-500 rounded-full font-maplestory font-bold">
                   {totalUnreadCount}개의 새 알림
                 </span>
               )}
@@ -383,7 +383,7 @@ const Notification: React.FC<NotificationProps> = () => {
                 className={`px-4 py-2 rounded-xl text-sm transition-all duration-200 font-jua shadow-md hover:shadow-lg transform hover:scale-105 ${
                   filter === type
                     ? "bg-orange-500 text-white border-2 border-orange-400"
-                    : "bg-white border-2 border-orange-200 text-gray-700 hover:bg-orange-50 hover:border-orange-300"
+                    : "bg-white border-2 border-orange-200 text-black hover:bg-orange-50 hover:border-orange-300"
                 }`}
               >
                 {type === "all"
@@ -404,7 +404,7 @@ const Notification: React.FC<NotificationProps> = () => {
         <div className="flex flex-col flex-1 min-h-0 p-6 pt-4">
           {/* 페이지네이션 헤더 */}
           <div className="flex items-center justify-between flex-shrink-0 p-4 mb-4 shadow-sm bg-gray-50 rounded-xl">
-            <div className="text-sm text-gray-600 font-gowun">
+            <div className="text-sm text-black font-maplestory font-bold">
               {totalPages > 0
                 ? `${currentPage + 1} / ${totalPages} 페이지`
                 : "0 / 0 페이지"}
@@ -437,7 +437,7 @@ const Notification: React.FC<NotificationProps> = () => {
                   <h3 className="mb-2 text-lg font-semibold text-gray-800 font-jua">
                     알림이 없습니다
                   </h3>
-                  <p className="text-gray-600 font-gowun">
+                  <p className="text-black font-maplestory font-bold">
                     새로운 알림이 있으면 여기에 표시됩니다.
                   </p>
                 </div>
@@ -467,26 +467,26 @@ const Notification: React.FC<NotificationProps> = () => {
                         className={`font-semibold font-jua ${
                           !notification.isRead
                             ? "text-gray-800"
-                            : "text-gray-600"
+                            : "text-black"
                         }`}
                       >
                         {notification.title}
                       </h3>
                       {getPriorityIndicator(notification.priority)}
                       {!notification.isRead && (
-                        <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full font-gowun">
+                        <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full font-maplestory font-bold">
                           새 알림
                         </span>
                       )}
                     </div>
                     <p
-                      className={`text-sm mb-3 font-gowun ${
-                        !notification.isRead ? "text-gray-700" : "text-gray-600"
+                      className={`text-sm mb-3 font-maplestory font-bold ${
+                        !notification.isRead ? "text-black" : "text-black"
                       }`}
                     >
                       {notification.message}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 font-gowun">
+                    <div className="flex items-center gap-2 text-xs text-black font-maplestory font-bold">
                       <Clock className="w-3 h-3" />
                       {formatTimestamp(notification.timestamp)}
                     </div>

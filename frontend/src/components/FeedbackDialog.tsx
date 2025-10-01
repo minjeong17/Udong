@@ -51,7 +51,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
         <div className="px-6 py-4 border-b">
           <div
             id="feedback-dialog-title"
-            className="text-lg font-bold text-gray-900 font-jua"
+            className="text-lg font-bold text-black font-jua"
           >
             {title}
           </div>
@@ -59,7 +59,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
         <div className="px-6 py-5">
           <p
             id="feedback-dialog-desc"
-            className="text-base text-gray-800 whitespace-pre-line font-gowun leading-relaxed"
+            className="text-base text-black whitespace-pre-line font-maplestory font-bold leading-relaxed"
           >
             {message}
           </p>
@@ -68,7 +68,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
           {actions.length === 0 && (
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-base font-gowun"
+              className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-base font-maplestory font-bold"
             >
               닫기
             </button>

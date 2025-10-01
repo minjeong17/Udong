@@ -629,7 +629,7 @@ export default function VotingPage({
                         {selectedVote && !isClosed(selectedVote) && (
                           <div className="flex items-center gap-2">
                             {/* 보유 및 사용 예정 투표권 표시 */}
-                            <div className="text-sm text-gray-600 font-jua">
+                            <div className="text-sm text-gray-600 font-black font-maplestory">
                               보유: {additionalVoteItems}개
                               {userVoteCapacity[selectedVote.id] > 0 && (
                                 <span className="text-orange-600 ml-1">
@@ -708,7 +708,7 @@ export default function VotingPage({
                             <div className="flex items-center justify-between mb-2">
                               <div className="font-semibold text-gray-800 font-jua">{opt.text}</div>
                               <div className="flex items-center gap-3">
-                                <span className="text-sm text-gray-600 font-gowun">{total}표 ({pct}%)</span>
+                                <span className="text-sm text-black font-maplestroy font-bold">{total}표 ({pct}%)</span>
 
                                 <div className="flex items-center gap-1">
                                   <button

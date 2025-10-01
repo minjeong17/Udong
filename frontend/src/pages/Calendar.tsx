@@ -386,19 +386,19 @@ function JoinConfirmModal({
         </div>
         <div className="p-6 space-y-4">
           <div className="space-y-1">
-            <div className="text-sm text-gray-500 font-gowun">이벤트</div>
+            <div className="text-sm text-black font-maplestory font-bold">이벤트</div>
             <div className="text-base font-semibold text-gray-900 font-jua">
               {eventItem.title}
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-sm text-gray-500 font-gowun">일시</div>
-            <div className="text-sm text-gray-900 font-gowun">{whenText}</div>
+            <div className="text-sm text-black font-maplestory font-bold">일시</div>
+            <div className="text-sm text-black font-maplestory font-bold">{whenText}</div>
           </div>
           {eventItem.description && (
             <div className="space-y-1">
-              <div className="text-sm text-gray-500 font-gowun">설명</div>
-              <div className="text-sm text-gray-800 whitespace-pre-wrap font-gowun">
+              <div className="text-sm text-black font-maplestory font-bold">설명</div>
+              <div className="text-sm text-black whitespace-pre-wrap font-maplestory font-bold">
                 {eventItem.description}
               </div>
             </div>
@@ -410,7 +410,7 @@ function JoinConfirmModal({
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-gray-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun"
+            className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-maplestory font-bold"
             disabled={submitting}
           >
             취소
@@ -463,14 +463,14 @@ function JoinConfirmModal({
 //           </div>
 //         </div>
 //         <div className="px-6 py-5">
-//           <p className="text-sm text-gray-800 whitespace-pre-line font-gowun">
+//           <p className="text-sm text-gray-800 whitespace-pre-line font-maplestory font-bold">
 //             {message}
 //           </p>
 //         </div>
 //         <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-end gap-2">
 //           <button
 //             onClick={onClose}
-//             className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun"
+//             className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-maplestory font-bold"
 //           >
 //             닫기
 //           </button>
@@ -801,14 +801,14 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
           onShowNotification={() => setShowNotificationModal(true)}
         />
 
-        <main className="flex-1 px-6 py-2">
+        <main className="flex-1 px-6 pt-12 pb-8">
           {/* 헤더 */}
-          <div className="mb-2">
+          <div className="mb-6">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-extrabold text-gray-900 font-jua">
                 일정 관리
               </h1>
-              <p className="text-sm text-gray-600 font-gowun">
+              <p className="text-m text-gray-800  font-maplestory">
                 동아리 모임과 일정을 체계적으로 관리하세요
               </p>
             </div>
@@ -864,9 +864,6 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                   >
                     <ChevronRight className="w-5 h-5 text-gray-600" />
                   </button>
-                  <span className="ml-2 text-xs text-gray-500 font-gowun">
-                    단축키: 월·연 이동(←/→) | 오늘(T/Home)
-                  </span>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -898,7 +895,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
               {/* 본문(월/연/십년) */}
               {view === "month" && (
                 <>
-                  <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-4 pt-1 font-gowun">
+                  <div className="grid grid-cols-7 text-center text-[13px] text-gray-600 px-4 pt-1 font-maplestory font-bold">
                     {korWeek.map((w) => (
                       <div key={w} className="py-0.5 font-medium">
                         {w}
@@ -969,10 +966,10 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                                       before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${color.left}
                                       bg-white/70 border-gray-200/60 hover:bg-white`}
                                   >
-                                    <span className="font-medium text-gray-900 truncate font-gowun">
+                                    <span className="font-medium text-gray-900 truncate font-maplestory font-bold">
                                       {ev.title}
                                     </span>
-                                    <span className="ml-1 text-gray-500 font-gowun">
+                                    <span className="ml-1 text-gray-500 font-maplestory font-bold">
                                       {ev.timeLabel}
                                     </span>
                                   </button>
@@ -984,7 +981,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                                     e.stopPropagation();
                                     openDayModal(d);
                                   }}
-                                  className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left font-gowun"
+                                  className="w-full text-[11px] text-gray-600 hover:text-gray-900 text-left font-maplestory font-bold"
                                 >
                                   +{more}개 더 보기
                                 </button>
@@ -1059,7 +1056,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                 <div className="text-base font-semibold text-gray-900 font-jua">
                   이번 달 일정
                 </div>
-                <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-gowun">
+                <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-maplestory font-bold">
                   {monthEvents.length}개
                 </div>
               </div>
@@ -1088,7 +1085,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                         } hover:shadow-sm`}
                     >
                       <div className="w-12 text-center">
-                        <div className="text-[11px] text-gray-500 font-gowun">
+                        <div className="text-[11px] text-gray-500 font-maplestory font-bold">
                           {d.getMonth() + 1}월
                         </div>
                         <div className="text-lg font-bold text-gray-800 font-jua">
@@ -1098,7 +1095,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span
-                            className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ring-1 ${color.bg} ${color.text} ${color.ring} font-gowun`}
+                            className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ring-1 ${color.bg} ${color.text} ${color.ring} font-maplestory font-bold`}
                           >
                             {ev.category}
                           </span>
@@ -1107,27 +1104,27 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
-                          <span className="inline-flex items-center gap-1 font-gowun">
+                          <span className="inline-flex items-center gap-1 font-maplestory font-bold">
                             <Clock className="w-3.5 h-3.5" />
                             {formatWhen(ev)}
                           </span>
                           {ev.location && (
-                            <span className="inline-flex items-center gap-1 font-gowun">
+                            <span className="inline-flex items-center gap-1 font-maplestory font-bold">
                               <Pin className="w-3.5 h-3.5" />
                               {ev.location}
                             </span>
                           )}
                           {/* 참석 수 표기: 정원 있으면 A/B, 없으면 A명 */}
                           {hasAtt && hasCap && (
-                            <span className="font-gowun">
+                            <span className="font-maplestory font-bold">
                               {ev.attendees}/{ev.capacity}명
                             </span>
                           )}
                           {hasAtt && !hasCap && (
-                            <span className="font-gowun">{ev.attendees}명</span>
+                            <span className="font-maplestory font-bold">{ev.attendees}명</span>
                           )}
                           {ev.note && (
-                            <span className="text-gray-500 font-gowun">
+                            <span className="text-black font-maplestory font-bold">
                               · {ev.note}
                             </span>
                           )}
@@ -1137,7 +1134,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                   );
                 })}
                 {monthEvents.length === 0 && (
-                  <div className="text-center text-gray-500 py-16 font-gowun">
+                  <div className="text-center text-gray-500 py-16 font-maplestory font-bold">
                     이번 달에는 등록된 일정이 없습니다.
                   </div>
                 )}
@@ -1194,29 +1191,29 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                           {ev.title}
                         </div>
                         {hasAtt && hasCap && (
-                          <span className="ml-auto text-xs text-gray-600 font-gowun">
+                          <span className="ml-auto text-xs text-gray-600 font-maplestory font-bold">
                             {ev.attendees}/{ev.capacity}명
                           </span>
                         )}
                         {hasAtt && !hasCap && (
-                          <span className="ml-auto text-xs text-gray-600 font-gowun">
+                          <span className="ml-auto text-xs text-gray-600 font-maplestory font-bold">
                             {ev.attendees}명
                           </span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
-                        <span className="inline-flex items-center gap-1 font-gowun">
+                        <span className="inline-flex items-center gap-1 font-maplestory font-bold">
                           <Clock className="w-4 h-4" />
                           {ev.timeLabel}
                         </span>
                         {ev.location && (
-                          <span className="inline-flex items-center gap-1 font-gowun">
+                          <span className="inline-flex items-center gap-1 font-maplestory font-bold">
                             <Pin className="w-4 h-4" />
                             {ev.location}
                           </span>
                         )}
                         {ev.note && (
-                          <span className="text-gray-600 font-gowun">
+                          <span className="text-gray-600 font-maplestory font-bold">
                             · {ev.note}
                           </span>
                         )}
@@ -1225,7 +1222,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                   );
                 })}
                 {(byDay.get(ymd(dayModalDate)) ?? []).length === 0 && (
-                  <div className="text-center text-gray-500 py-10 font-gowun">
+                  <div className="text-center text-gray-500 py-10 font-maplestory font-bold">
                     등록된 일정이 없습니다.
                   </div>
                 )}
@@ -1234,7 +1231,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
               <div className="p-4 border-t bg-gray-50 text-right">
                 <button
                   onClick={() => setDayModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 font-gowun"
+                  className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 font-maplestory font-bold"
                 >
                   닫기
                 </button>
@@ -1268,7 +1265,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 <dl className="space-y-3">
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                    <dt className="text-sm text-gray-500 font-gowun">
+                    <dt className="text-sm text-gray-500 font-maplestory font-bold">
                       카테고리
                     </dt>
                     <dd>
@@ -1285,14 +1282,14 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                   </div>
 
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                    <dt className="text-sm text-gray-500 font-gowun">일시</dt>
+                    <dt className="text-sm text-gray-500 font-maplestory font-bold">일시</dt>
                     <dd className="text-sm text-gray-900 font-jua">
                       {formatWhen(eventModalItem)}
                     </dd>
                   </div>
 
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                    <dt className="text-sm text-gray-500 font-gowun">장소</dt>
+                    <dt className="text-sm text-gray-500 font-maplestory font-bold">장소</dt>
                     <dd className="text-sm text-gray-900 font-jua">
                       {eventModalItem.location ?? "미정"}
                     </dd>
@@ -1300,7 +1297,7 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
 
                   {/* 참가 인원 */}
                   <div className="grid grid-cols-[120px,1fr] items-center gap-4">
-                    <dt className="text-sm text-gray-500 font-gowun">
+                    <dt className="text-sm text-gray-500 font-maplestory font-bold">
                       참가 인원
                     </dt>
                     <dd className="text-sm text-gray-900 font-jua">
@@ -1314,11 +1311,11 @@ const Calendar: React.FC<{ onNavigateToOnboarding: () => void }> = ({
                   </div>
 
                   <div className="grid grid-cols-[120px,1fr] items-start gap-4">
-                    <dt className="text-sm text-gray-500 font-gowun">
+                    <dt className="text-sm text-gray-500 font-maplestory font-bold">
                       상세 내용
                     </dt>
                     <dd>
-                      <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 min-h-[64px] font-gowun">
+                      <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 min-h-[64px] font-maplestory font-bold">
                         {eventModalItem.description ?? "내용 없음"}
                       </div>
                     </dd>
@@ -1743,7 +1740,7 @@ function EventFormModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* 카테고리 */}
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-maplestory font-bold">
               카테고리 *
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1767,11 +1764,11 @@ function EventFormModal({
                     <div className="font-semibold text-gray-900 font-jua">
                       {c.label}
                     </div>
-                    <div className="text-xs text-gray-500 font-gowun">
+                    <div className="text-xs text-gray-500 font-maplestory font-bold">
                       {c.desc}
                     </div>
                     {c.adminOnly && (
-                      <span className="absolute right-2 top-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-gowun">
+                      <span className="absolute right-2 top-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-maplestory font-bold">
                         관리자 전용
                       </span>
                     )}
@@ -1783,7 +1780,7 @@ function EventFormModal({
 
           {/* 제목 */}
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-maplestory font-bold">
               모임 제목 *
             </div>
             <input
@@ -1792,7 +1789,7 @@ function EventFormModal({
                 setForm((f) => ({ ...f, title: e.target.value }))
               }
               placeholder="모임 제목을 입력하세요"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-maplestory font-bold"
             />
           </div>
 
@@ -1800,7 +1797,7 @@ function EventFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-gray-800 font-gowun">
+                <div className="text-sm font-semibold text-gray-800 font-maplestory font-bold">
                   시작 날짜 *
                 </div>
               </div>
@@ -1810,15 +1807,15 @@ function EventFormModal({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, startDate: e.target.value }))
                 }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-maplestory font-bold"
               />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-gray-800 font-gowun">
+                <div className="text-sm font-semibold text-gray-800 font-maplestory font-bold">
                   종료 날짜 *
                 </div>
-                <label className="flex items-center gap-2 text-xs text-gray-600 font-gowun">
+                <label className="flex items-center gap-2 text-xs text-gray-600 font-maplestory font-bold">
                   <input
                     type="checkbox"
                     checked={sameDate}
@@ -1834,7 +1831,7 @@ function EventFormModal({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, endDate: e.target.value }))
                 }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-maplestory font-bold"
               />
             </div>
           </div>
@@ -1843,10 +1840,10 @@ function EventFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-gray-800 font-gowun">
+                <div className="text-sm font-semibold text-gray-800 font-maplestory font-bold">
                   시작 시간 (선택)
                 </div>
-                <label className="flex items-center gap-2 text-xs text-gray-600 font-gowun">
+                <label className="flex items-center gap-2 text-xs text-gray-600 font-maplestory font-bold">
                   <input
                     type="checkbox"
                     checked={form.allDay}
@@ -1862,11 +1859,11 @@ function EventFormModal({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, startTime: e.target.value }))
                 }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-maplestory font-bold"
               />
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-maplestory font-bold">
                 종료 시간 (선택)
               </div>
               <input
@@ -1876,7 +1873,7 @@ function EventFormModal({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, endTime: e.target.value }))
                 }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-gowun"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white disabled:bg-gray-50 font-maplestory font-bold"
               />
             </div>
           </div>
@@ -1884,7 +1881,7 @@ function EventFormModal({
           {/* 기타 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-maplestory font-bold">
                 장소
               </div>
               <input
@@ -1893,11 +1890,11 @@ function EventFormModal({
                   setForm((f) => ({ ...f, location: e.target.value }))
                 }
                 placeholder="장소"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-maplestory font-bold"
               />
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
+              <div className="text-sm font-semibold text-gray-800 mb-2 font-maplestory font-bold">
                 정원(명)
               </div>
               <input
@@ -1908,12 +1905,12 @@ function EventFormModal({
                   setForm((f) => ({ ...f, capacity: e.target.value }))
                 }
                 placeholder="예: 20"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-gowun"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white font-maplestory font-bold"
               />
             </div>
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2 font-gowun">
+            <div className="text-sm font-semibold text-gray-800 mb-2 font-maplestory font-bold">
               상세 내용
             </div>
             <textarea
@@ -1922,7 +1919,7 @@ function EventFormModal({
                 setForm((f) => ({ ...f, description: e.target.value }))
               }
               placeholder="모임에 대한 상세한 설명을 입력하세요"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white min-h-[110px] font-gowun"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white min-h-[110px] font-maplestory font-bold"
             />
           </div>
         </div>
@@ -1930,7 +1927,7 @@ function EventFormModal({
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-gray-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-gowun"
+            className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-sm font-maplestory font-bold"
           >
             취소
           </button>

@@ -41,7 +41,7 @@ const Badge: React.FC<React.PropsWithChildren<{ tone?: BadgeTone }>> = ({
 }) => (
   <span
     className={clsx(
-      "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium font-gowun",
+      "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium font-maplestory font-bold",
       BADGE_TONES[tone]
     )}
   >
@@ -185,7 +185,7 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
     try {
       setLoadingBalance(true);
       const data = await ClubFundApi.getBalance(CLUB_ID);
-      setBalance(data.balance - 60000); // 수수료 2만원 차감
+      setBalance(data.balance - 80000); // 수수료 2만원 차감
     } catch (e: any) {
       console.error(e);
       alert(e?.message || "잔액 조회 중 오류가 발생했습니다.");
@@ -222,7 +222,7 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
         })
         .map(mapDtoToUi);
 
-      setTxs(sorted.slice(3)); // 첫 번째 항목 제외
+      setTxs(sorted.slice(4)); // 첫 번째 항목 제외
       setHasQueried(true);
     } catch (e: any) {
       console.error(e);
@@ -626,22 +626,22 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 bg-orange-50/80 backdrop-blur text-left text-gray-600 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.05)]">
                       <tr>
-                        <th className="px-5 py-3 font-medium font-gowun">
+                        <th className="px-5 py-3 font-medium font-maplestory font-bold">
                           날짜
                         </th>
-                        <th className="px-5 py-3 font-medium font-gowun">
+                        <th className="px-5 py-3 font-medium font-maplestory font-bold">
                           내역
                         </th>
-                        <th className="px-5 py-3 font-medium font-gowun">
+                        <th className="px-5 py-3 font-medium font-maplestory font-bold">
                           구분
                         </th>
-                        <th className="px-5 py-3 font-medium text-right font-gowun">
+                        <th className="px-5 py-3 font-medium text-right font-maplestory font-bold">
                           금액
                         </th>
-                        <th className="px-5 py-3 font-medium text-right font-gowun">
+                        <th className="px-5 py-3 font-medium text-right font-maplestory font-bold">
                           잔액
                         </th>
-                        <th className="px-5 py-3 font-medium text-center font-gowun">
+                        <th className="px-5 py-3 font-medium text-center font-maplestory font-bold">
                           영수증
                         </th>
                       </tr>
@@ -649,10 +649,10 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
                     <tbody>
                       {txs.map((t) => (
                         <tr key={t.id} className="border-t hover:bg-orange-50">
-                          <td className="px-5 py-4 whitespace-nowrap font-gowun">
+                          <td className="px-5 py-4 whitespace-nowrap font-maplestory font-bold">
                             {t.date}
                           </td>
-                          <td className="px-5 py-4 min-w-[16rem] font-gowun">
+                          <td className="px-5 py-4 min-w-[16rem] font-maplestory font-bold">
                             {t.description}
                           </td>
                           <td className="px-5 py-4">
@@ -662,7 +662,7 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
                           </td>
                           <td
                             className={clsx(
-                              "px-5 py-4 text-right tabular-nums font-jua",
+                              "px-5 py-4 text-right tabular-nums font-maplestory font-bold",
                               t.type === "입금"
                                 ? "text-green-600"
                                 : "text-red-600"
@@ -671,7 +671,7 @@ const ClubFund: React.FC<ClubFundProps> = ({ onNavigateToOnboarding }) => {
                             {t.type === "입금" ? "+" : "-"}
                             {krw(t.amount)}
                           </td>
-                          <td className="px-5 py-4 text-right tabular-nums font-jua">
+                          <td className="px-5 py-4 text-right tabular-nums font-maplestory font-bold">
                             {krw(t.balance)}
                           </td>
                           <td className="px-5 py-4 text-center">

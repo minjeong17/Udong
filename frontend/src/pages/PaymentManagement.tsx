@@ -266,7 +266,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
         <div className="mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-gray-800 font-jua">동아리원 회비 관리</h1>
-            <p className="text-gray-600 font-gowun">동아리 회원들의 회비 납부 현황을 관리하고 수금을 진행할 수 있습니다.</p>
+            <p className="text-gray-600 font-maplestory font-bold">동아리 회원들의 회비 납부 현황을 관리하고 수금을 진행할 수 있습니다.</p>
           </div>
         </div>
 
@@ -276,12 +276,12 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
           <div className="flex gap-4">
             <button
               onClick={() => navigate('member-management')}
-              className="bg-white text-gray-600 border border-gray-200 hover:border-orange-300 px-6 py-3 rounded-xl font-medium transition-colors font-gowun"
+              className="bg-white text-gray-600 border border-gray-200 hover:border-orange-300 px-6 py-3 rounded-xl font-medium transition-colors font-maplestory font-bold"
             >
               동아리원 현황
             </button>
             <button
-              className="bg-orange-500 text-white px-6 py-3 rounded-xl font-medium transition-colors font-gowun"
+              className="bg-orange-500 text-white px-6 py-3 rounded-xl font-medium transition-colors font-maplestory font-bold"
             >
               동아리원 회비 관리
             </button>
@@ -335,7 +335,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
             <select
               value={activeCollection}
               onChange={(e) => setActiveCollection(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-200 rounded-lg font-gowun focus:outline-none focus:border-orange-300 bg-white text-sm"
+              className="px-4 py-2 border border-gray-200 rounded-lg font-maplestory font-bold focus:outline-none focus:border-orange-300 bg-white text-sm"
               disabled={!duesList || duesList.duesList.length === 0}
             >
               {duesList && duesList.duesList.length > 0 ? (
@@ -354,7 +354,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
                 placeholder="이름으로 검색..."
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
-                className="px-4 py-2 pl-10 border border-gray-200 rounded-lg font-gowun focus:outline-none focus:border-orange-300 bg-white text-sm w-48"
+                className="px-4 py-2 pl-10 border border-gray-200 rounded-lg font-maplestory font-bold focus:outline-none focus:border-orange-300 bg-white text-sm w-48"
               />
               <svg
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -402,7 +402,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
 
         {/* 테이블 헤더 */}
         <div className="bg-white rounded-t-2xl shadow-lg border border-orange-100 p-4">
-          <div className="grid gap-4 text-base font-medium text-gray-600 font-gowun" style={{gridTemplateColumns: '1fr 1fr 1fr'}}>
+          <div className="grid gap-4 text-base font-medium text-gray-600 font-maplestory font-bold" style={{gridTemplateColumns: '1fr 1fr 1fr'}}>
             <div className="flex items-center gap-2">
               <span>이름</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -428,7 +428,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({
                   index === filteredRecords.length - 1 ? 'border-b-0' : ''
                 } hover:bg-gray-50 transition-colors h-16`}
               >
-                <div className="grid gap-4 text-sm font-gowun items-center h-full" style={{gridTemplateColumns: '1fr 1fr 1fr'}}>
+                <div className="grid gap-4 text-sm font-maplestory font-bold items-center h-full" style={{gridTemplateColumns: '1fr 1fr 1fr'}}>
                   <div className="font-medium text-gray-800 flex items-center">{record.userName}</div>
                   <div className="text-gray-600 flex items-center">{record.userEmail}</div>
                   <div className="flex items-center">

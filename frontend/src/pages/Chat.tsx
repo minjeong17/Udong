@@ -50,7 +50,7 @@ const renderSystemMessage = (content: string) => {
           <div className="text-2xl">📊</div>
           <div>
             <div className="font-semibold text-blue-700 font-jua">새로운 투표</div>
-            <div className="text-sm text-blue-600 font-gowun">투표에 참여해보세요</div>
+            <div className="text-sm text-blue-600 font-maplestory font-bold">투표에 참여해보세요</div>
           </div>
           <div className="ml-auto text-blue-500">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@ const renderSystemMessage = (content: string) => {
           <div className="text-2xl">💰</div>
           <div>
             <div className="font-semibold text-green-700 font-jua">새로운 정산</div>
-            <div className="text-sm text-green-600 font-gowun">정산에 참여해보세요</div>
+            <div className="text-sm text-green-600 font-maplestory font-bold">정산에 참여해보세요</div>
           </div>
           <div className="ml-auto text-green-500">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -695,7 +695,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
               ))}
 
               {channels.length === 0 && (
-                <div className="h-full flex items-center justify-center text-gray-400 text-sm font-gowun">
+                <div className="h-full flex items-center justify-center text-gray-400 text-sm font-maplestory font-bold">
                   채팅방이 없습니다.
                 </div>
               )}
@@ -706,7 +706,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
           <div className="sticky bottom-0 z-10 bg-white border-t border-orange-200">
             <div className="p-4 space-y-3">
               {!selectedChannel && (
-                <div className="text-xs text-gray-500 text-center font-gowun">
+                <div className="text-xs text-gray-500 text-center font-maplestory font-bold">
                   채팅방을 선택하세요
                 </div>
               )}
@@ -787,7 +787,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                       : "채팅"}
                   </h1>
                   {selectedChannel && (
-                    <p className="text-gray-600 font-gowun">
+                    <p className="text-gray-600 font-maplestory font-bold">
                       인원{" "}
                       {
                         channels.find((c) => c.id === selectedChannel)
@@ -821,7 +821,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   <div className="mb-1 text-xl font-jua">
                     채팅방을 선택하세요
                   </div>
-                  <div className="font-gowun">
+                  <div className="font-maplestory font-bold">
                     왼쪽 목록에서 채팅방을 선택하면 대화가 표시됩니다.
                   </div>
                 </div>
@@ -869,7 +869,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                                   <span className="font-semibold text-gray-800 font-jua">
                                     {msg.user}
                                   </span>
-                                  <span className="text-xs text-gray-500 font-gowun">
+                                  <span className="text-xs text-gray-500 font-maplestory font-bold">
                                     {msg.timestamp}
                                   </span>
                                 </div>
@@ -883,7 +883,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                                 }`}
                               >
                                 <p
-                                  className={`font-gowun ${
+                                  className={`font-maplestory font-bold ${
                                     msg.isOwn ? "text-white" : "text-gray-800"
                                   } whitespace-pre-wrap break-keep`}
                                 >
@@ -892,7 +892,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                               </div>
 
                               {msg.isOwn && (
-                                <div className="mt-1 text-xs text-right text-gray-500 font-gowun">
+                                <div className="mt-1 text-xs text-right text-gray-500 font-maplestory font-bold">
                                   {msg.timestamp}
                                 </div>
                               )}
@@ -965,18 +965,18 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
             </div>
 
             <div className="p-6">
-              <p className="mb-4 text-gray-600 font-gowun">
+              <p className="mb-4 text-gray-600 font-maplestory font-bold">
                 정산에 참여할 실제 인원을 선택해주세요.
               </p>
 
               {participantsLoading && (
-                <div className="py-4 text-center text-gray-500 font-gowun">
+                <div className="py-4 text-center text-gray-500 font-maplestory font-bold">
                   불러오는 중…
                 </div>
               )}
 
               {participantsError && !participantsLoading && (
-                <div className="p-3 mb-4 text-red-700 rounded-lg bg-red-50 font-gowun">
+                <div className="p-3 mb-4 text-red-700 rounded-lg bg-red-50 font-maplestory font-bold">
                   {participantsError}
                 </div>
               )}
@@ -1002,7 +1002,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                         </div>
                         <label
                           htmlFor={`member-${id}`}
-                          className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
+                          className="flex-1 font-medium text-gray-800 cursor-pointer font-maplestory font-bold"
                         >
                           {member.name}
                         </label>
@@ -1010,7 +1010,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     );
                   })}
                   {participants.length === 0 && (
-                    <div className="py-6 text-center text-gray-400 font-gowun">
+                    <div className="py-6 text-center text-gray-400 font-maplestory font-bold">
                       참여자가 없습니다.
                     </div>
                   )}
@@ -1100,20 +1100,20 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     {settlementReceipt ? (
                       <div className="space-y-2">
                         <div className="text-2xl text-green-600">📄</div>
-                        <div className="font-medium text-green-700 font-gowun">
+                        <div className="font-medium text-green-700 font-maplestory font-bold">
                           {settlementReceipt.name}
                         </div>
-                        <div className="text-sm text-gray-500 font-gowun">
+                        <div className="text-sm text-gray-500 font-maplestory font-bold">
                           클릭하여 다른 파일 선택
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <div className="text-2xl text-gray-400">📷</div>
-                        <div className="text-gray-600 font-gowun">
+                        <div className="text-gray-600 font-maplestory font-bold">
                           영수증 이미지를 업로드하세요
                         </div>
-                        <div className="text-sm text-gray-500 font-gowun">
+                        <div className="text-sm text-gray-500 font-maplestory font-bold">
                           JPG, PNG 파일만 가능
                         </div>
                       </div>
@@ -1150,7 +1150,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                           </div>
                           <label
                             htmlFor={`settlement-${id}`}
-                            className="flex-1 font-medium text-gray-800 cursor-pointer font-gowun"
+                            className="flex-1 font-medium text-gray-800 cursor-pointer font-maplestory font-bold"
                           >
                             {m.name}
                           </label>
@@ -1192,7 +1192,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   <div className="mb-2 font-semibold text-green-800 font-jua">
                     정산 정보 미리보기
                   </div>
-                  <div className="space-y-1 text-sm text-green-700 font-gowun">
+                  <div className="space-y-1 text-sm text-green-700 font-maplestory font-bold">
                     <div>
                       총 금액:{" "}
                       <span className="font-semibold">
@@ -1272,13 +1272,13 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
 
             <div className="p-6">
               {participantsLoading && (
-                <div className="py-6 text-center text-gray-500 font-gowun">
+                <div className="py-6 text-center text-gray-500 font-maplestory font-bold">
                   불러오는 중…
                 </div>
               )}
 
               {participantsError && !participantsLoading && (
-                <div className="p-3 mb-4 text-red-700 rounded-lg bg-red-50 font-gowun">
+                <div className="p-3 mb-4 text-red-700 rounded-lg bg-red-50 font-maplestory font-bold">
                   {participantsError}
                 </div>
               )}
@@ -1301,7 +1301,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                           {twoLetters(p.name)}
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-gray-800 font-gowun">
+                          <div className="font-medium text-gray-800 font-maplestory font-bold">
                             {p.name}
                           </div>
                         </div>
@@ -1317,7 +1317,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   </ul>
 
                   {participants && participants.length === 0 && (
-                    <div className="py-6 text-center text-gray-400 font-gowun">
+                    <div className="py-6 text-center text-gray-400 font-maplestory font-bold">
                       참여자가 없습니다.
                     </div>
                   )}
@@ -1386,7 +1386,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                   <div className="font-semibold text-gray-800 font-jua">
                     다중 투표 허용
                   </div>
-                  <div className="text-sm text-gray-600 font-gowun">
+                  <div className="text-sm text-gray-600 font-maplestory font-bold">
                     참여자가 여러 선택지를 선택할 수 있습니다
                   </div>
                 </div>
@@ -1445,7 +1445,7 @@ export default function ChatPage({ onNavigateToOnboarding }: ChatProps) {
                     className="flex items-center justify-center w-full gap-2 py-3 text-gray-600 transition-colors border-2 border-gray-300 border-dashed hover:border-orange-400 rounded-xl hover:text-orange-600"
                   >
                     <span className="text-lg">+</span>
-                    <span className="font-gowun">선택지 추가</span>
+                    <span className="font-maplestory font-bold">선택지 추가</span>
                   </button>
                 </div>
               </div>

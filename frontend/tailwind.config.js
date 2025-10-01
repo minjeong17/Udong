@@ -10,6 +10,7 @@ export default {
         'gowun': ['Gowun Dodum', 'sans-serif'],
         'jua': ['Jua', 'sans-serif'],
         'gamja': ['Gamja Flower', 'sans-serif'],
+        'maplestory': ['Maplestory', 'sans-serif'],
       },
       keyframes: {
         'mascot-wiggle': {

@@ -310,7 +310,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
         <div className="mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-gray-800 font-jua">동아리원 현황</h1>
-            <p className="text-gray-600 font-gowun">동아리 회원들의 정보를 관리하고 현황을 확인할 수 있습니다.</p>
+            <p className="text-gray-600 font-maplestory font-bold">동아리 회원들의 정보를 관리하고 현황을 확인할 수 있습니다.</p>
           </div>
         </div>
 
@@ -333,7 +333,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
                 <button
                   onClick={() => setShowAccountNumber(!showAccountNumber)}
                   disabled={!clubManagementInfo?.accountNumber}
-                  className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                  className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-maplestory font-bold text-xs transition-colors"
                 >
                   👁️ {showAccountNumber ? '숨기기' : '보기'}
                 </button>
@@ -350,7 +350,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
                     }
                   }}
                   disabled={!clubManagementInfo?.accountNumber}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-maplestory font-bold text-xs transition-colors"
                 >
                   📋 복사
                 </button>
@@ -371,14 +371,14 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
                 <button
                   onClick={handleCopyInviteCode}
                   disabled={!clubManagementInfo?.codeUrl}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-maplestory font-bold text-xs transition-colors"
                 >
                   📋 복사
                 </button>
                 <button
                   onClick={handleRegenerateInviteCode}
                   disabled={isRegeneratingCode || !clubManagementInfo?.codeUrl}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-gowun text-xs transition-colors"
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg font-maplestory font-bold text-xs transition-colors"
                 >
                   {isRegeneratingCode ? '재발급 중...' : '🔄 재발급'}
                 </button>
@@ -392,7 +392,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
           <div className="flex gap-4">
             <button
               onClick={() => setActiveTab('status')}
-              className={`px-6 py-3 rounded-xl font-medium transition-colors font-gowun ${
+              className={`px-6 py-3 rounded-xl font-medium transition-colors font-maplestory font-bold ${
                 activeTab === 'status'
                   ? 'bg-orange-500 text-white'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'
@@ -402,7 +402,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
             </button>
             <button
               onClick={() => navigate('payment-management')}
-              className="bg-white text-gray-600 border border-gray-200 hover:border-orange-300 px-6 py-3 rounded-xl font-medium transition-colors font-gowun"
+              className="bg-white text-gray-600 border border-gray-200 hover:border-orange-300 px-6 py-3 rounded-xl font-medium transition-colors font-maplestory font-bold"
             >
               동아리원 회비 관리
             </button>
@@ -414,19 +414,19 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
           <div className="grid grid-cols-4 gap-6 text-center">
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-2xl font-bold text-gray-800 font-jua">{roleStats.total}명</div>
-              <div className="text-sm text-gray-600 font-gowun">총 회원</div>
+              <div className="text-sm text-gray-600 font-maplestory font-bold">총 회원</div>
             </div>
             <div className="bg-red-50 rounded-xl p-4">
               <div className="text-2xl font-bold text-red-600 font-jua">{roleStats.leader}명</div>
-              <div className="text-sm text-gray-600 font-gowun">회장</div>
+              <div className="text-sm text-gray-600 font-maplestory font-bold">회장</div>
             </div>
             <div className="bg-blue-50 rounded-xl p-4">
               <div className="text-2xl font-bold text-blue-600 font-jua">{roleStats.manager}명</div>
-              <div className="text-sm text-gray-600 font-gowun">임원</div>
+              <div className="text-sm text-gray-600 font-maplestory font-bold">임원</div>
             </div>
             <div className="bg-green-50 rounded-xl p-4">
               <div className="text-2xl font-bold text-green-600 font-jua">{roleStats.member}명</div>
-              <div className="text-sm text-gray-600 font-gowun">회원</div>
+              <div className="text-sm text-gray-600 font-maplestory font-bold">회원</div>
             </div>
           </div>
         </div>
@@ -437,7 +437,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={() => setRoleFilter('ALL')}
-                className={`px-4 py-2 rounded-lg font-gowun transition-colors ${
+                className={`px-4 py-2 rounded-lg font-maplestory font-bold transition-colors ${
                   roleFilter === 'ALL'
                     ? 'bg-orange-500 text-white'
                     : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
@@ -447,7 +447,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
               </button>
               <button
                 onClick={() => setRoleFilter('LEADER')}
-                className={`px-4 py-2 rounded-lg font-gowun transition-colors ${
+                className={`px-4 py-2 rounded-lg font-maplestory font-bold transition-colors ${
                   roleFilter === 'LEADER'
                     ? 'bg-red-500 text-white'
                     : 'bg-red-100 text-red-600 hover:bg-red-200'
@@ -457,7 +457,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
               </button>
               <button
                 onClick={() => setRoleFilter('MANAGER')}
-                className={`px-4 py-2 rounded-lg font-gowun transition-colors ${
+                className={`px-4 py-2 rounded-lg font-maplestory font-bold transition-colors ${
                   roleFilter === 'MANAGER'
                     ? 'bg-blue-500 text-white'
                     : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
@@ -467,7 +467,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
               </button>
               <button
                 onClick={() => setRoleFilter('MEMBER')}
-                className={`px-4 py-2 rounded-lg font-gowun transition-colors ${
+                className={`px-4 py-2 rounded-lg font-maplestory font-bold transition-colors ${
                   roleFilter === 'MEMBER'
                     ? 'bg-gray-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -482,10 +482,10 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
                 placeholder="이름, 이메일, 전화번호로 검색"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-4 py-2 border border-gray-200 rounded-lg font-gowun focus:outline-none focus:border-orange-300 w-72"
+                className="px-4 py-2 border border-gray-200 rounded-lg font-maplestory font-bold focus:outline-none focus:border-orange-300 w-72"
               />
               {(searchTerm || roleFilter !== 'ALL') && (
-                <span className="text-orange-500 font-gowun text-sm">
+                <span className="text-orange-500 font-maplestory font-bold text-sm">
                   {filteredMembers.length}명 필터됨
                 </span>
               )}
@@ -496,10 +496,10 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
         {/* 에러 메시지 */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-8">
-            <p className="text-red-600 font-gowun">{error}</p>
+            <p className="text-red-600 font-maplestory font-bold">{error}</p>
             <button
               onClick={fetchMembers}
-              className="mt-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg font-gowun hover:bg-red-200 transition-colors"
+              className="mt-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg font-maplestory font-bold hover:bg-red-200 transition-colors"
             >
               다시 시도
             </button>
@@ -508,7 +508,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
 
         {/* 테이블 헤더 */}
         <div className="bg-white rounded-t-2xl shadow-lg border border-orange-100 p-4">
-          <div className="grid gap-4 text-sm font-medium text-gray-600 font-gowun" style={{gridTemplateColumns: '1fr 1.2fr 1.8fr 0.7fr 1.2fr 1.8fr 1fr 0.8fr 0.8fr'}}>
+          <div className="grid gap-4 text-sm font-medium text-gray-600 font-maplestory font-bold" style={{gridTemplateColumns: '1fr 1.2fr 1.8fr 0.7fr 1.2fr 1.8fr 1fr 0.8fr 0.8fr'}}>
             <div>이름</div>
             <div>연락처</div>
             <div>이메일</div>
@@ -528,14 +528,14 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
               <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
                 <span className="text-gray-400 text-xl">⏳</span>
               </div>
-              <p className="text-gray-500 font-gowun">멤버 목록을 불러오는 중...</p>
+              <p className="text-gray-500 font-maplestory font-bold">멤버 목록을 불러오는 중...</p>
             </div>
           ) : filteredMembers.length === 0 ? (
             <div className="p-8 text-center">
               <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
                 <span className="text-gray-400 text-xl">👥</span>
               </div>
-              <p className="text-gray-500 font-gowun">멤버가 없습니다.</p>
+              <p className="text-gray-500 font-maplestory font-bold">멤버가 없습니다.</p>
             </div>
           ) : (
             filteredMembers.map((member, index) => (
@@ -545,7 +545,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
                 index === filteredMembers.length - 1 ? 'border-b-0' : ''
               } hover:bg-gray-50 transition-colors`}
             >
-              <div className="grid gap-4 text-sm font-gowun items-center" style={{gridTemplateColumns: '1fr 1.2fr 1.8fr 0.7fr 1.2fr 1.8fr 1fr 0.8fr 0.8fr'}}>
+              <div className="grid gap-4 text-sm font-maplestory font-bold items-center" style={{gridTemplateColumns: '1fr 1.2fr 1.8fr 0.7fr 1.2fr 1.8fr 1fr 0.8fr 0.8fr'}}>
                 <div className="font-medium text-gray-800">{member.name}</div>
                 <div className="text-gray-600">{member.phone}</div>
                 <div className="text-gray-600">{member.email}</div>
@@ -591,12 +591,12 @@ const MemberManagement: React.FC<MemberManagementProps> = ({
                   {myRole === 'LEADER' && member.role !== 'LEADER' ? (
                     <button
                       onClick={() => handleKickMember(member)}
-                      className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs transition-colors font-gowun"
+                      className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs transition-colors font-maplestory font-bold"
                     >
                       추방
                     </button>
                   ) : (
-                    <span className="text-gray-400 text-xs font-gowun">-</span>
+                    <span className="text-gray-400 text-xs font-maplestory font-bold">-</span>
                   )}
                 </div>
               </div>

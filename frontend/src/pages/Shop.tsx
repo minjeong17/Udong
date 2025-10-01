@@ -15,7 +15,7 @@ function MyPageTextLink({ onClick, className = "" }: { onClick?: () => void; cla
   return (
     <button
       onClick={onClick}
-      className={`text-sm text-slate-600 hover:text-slate-800 hover:underline underline-offset-4 no-underline bg-transparent border-none cursor-pointer font-gowun ${className}`}
+      className={`text-sm text-slate-600 hover:text-slate-800 hover:underline underline-offset-4 no-underline bg-transparent border-none cursor-pointer font-maplestory font-bold ${className}`}
     >
       마이페이지에서 보기 →
     </button>
@@ -232,7 +232,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
         <header className="bg-white border-b border-slate-200 px-6 md:px-8 py-5 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-800 font-jua">아이템 상점</h1>
-            <p className="text-slate-500 text-sm mt-1 font-gowun">포인트로 아이템을 구매하세요</p>
+            <p className="text-slate-500 text-sm mt-1 font-maplestory font-bold">포인트로 아이템을 구매하세요</p>
           </div>
           <div />
         </header>
@@ -243,7 +243,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800 font-jua">🛍️ 아이템 상점</h3>
-                <p className="text-sm text-slate-500 font-gowun">아이템을 선택해 구매하세요</p>
+                <p className="text-sm text-slate-500 font-maplestory font-bold">아이템을 선택해 구매하세요</p>
               </div>
               <PointsBadge points={points} />
             </div>
@@ -254,8 +254,8 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
                   <div className="flex items-start gap-3">
                     <div className="text-3xl shrink-0">{itemIcons[it.id] ?? "❔"}</div>
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-slate-800 truncate font-jua">{it.name}</h4>
-                      <p className="text-sm text-slate-600 font-gowun">{it.description}</p>
+                      <h4 className="font-semibold text-black truncate font-jua">{it.name}</h4>
+                      <p className="text-sm text-black font-maplestory font-bold">{it.description}</p>
                     </div>
                   </div>
 
@@ -279,7 +279,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
               <span className="text-xl" aria-hidden>📦</span>
               <h3 className="text-lg font-semibold text-slate-800 font-jua">내 아이템</h3>
             </div>
-            <p className="text-sm text-slate-500 font-gowun">보유 중인 아이템과 사용 현황</p>
+            <p className="text-sm text-slate-500 font-maplestory font-bold">보유 중인 아이템과 사용 현황</p>
             <div className="mt-1">
               <MyPageTextLink onClick={() => navigate('mypage')} />
             </div>
@@ -290,7 +290,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
                   <div className="text-2xl">{itemIcons[inv.itemId] ?? "❔"}</div>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-slate-800 truncate font-jua">{inv.itemName}</div>
-                    <div className="text-xs text-slate-500 font-gowun">{inv.qty}개 보유</div>
+                    <div className="text-xs text-slate-500 font-maplestory font-bold">{inv.qty}개 보유</div>
                   </div>
 
                   {inv.itemId === 3 && inv.qty > 0 && (
@@ -325,8 +325,8 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
               <>
                 <div className="text-center pt-6 pb-4">
                   <div className="text-4xl mb-4">🎭</div>
-                  <h2 className="text-xl font-bold text-gray-700 font-jua mb-2">마스코트 리롤권 사용</h2>
-                  <p className="text-sm text-gray-600 font-gowun px-6">
+                  <h2 className="text-xl font-bold text-black font-jua mb-2">마스코트 리롤권 사용</h2>
+                  <p className="text-sm text-black font-maplestory font-bold px-6">
                     마스코트 리롤권을 사용하시겠습니까?<br/>
                     마스코트 리롤권은 한 장 소모되고 메인 대시보드에서 새로운 마스코트로 변경할 수 있습니다.
                   </p>
@@ -334,7 +334,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
                 <div className="px-6 py-4 flex gap-3 justify-center">
                   <button
                     onClick={() => setShowMascotRerollModal(false)}
-                    className="bg-gray-300 text-gray-700 rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-gray-400 transition-colors"
+                    className="bg-gray-300 text-black rounded-xl px-6 py-2 font-semibold font-jua text-sm hover:bg-gray-400 transition-colors"
                   >
                     취소
                   </button>
@@ -356,7 +356,7 @@ export default function Shop({ onNavigateToOnboarding }: ShopProps) {
                     className="w-32 h-32 mx-auto object-contain animate-bounce"
                   />
                 </div>
-                <h2 className="text-xl font-bold text-gray-700 font-jua mb-2">마스코트 생성 중입니다...</h2>
+                <h2 className="text-xl font-bold text-black font-jua mb-2">마스코트 생성 중입니다...</h2>
                 <div className="flex justify-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
                 </div>

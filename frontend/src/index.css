@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Maplestory 폰트 */
+@font-face {
+  font-family: 'Maplestory';
+  src: url('/fonts/Maplestory Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Maplestory';
+  src: url('/fonts/Maplestory Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 /* 사이드바 스크롤바 스타일 */
 .sidebar-scrollbar::-webkit-scrollbar {
   width: 8px;
